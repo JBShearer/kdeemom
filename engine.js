@@ -146,12 +146,31 @@ function showInteraction(h){
     });
     choices.appendChild(btn);
   }
+  // If has a take action (non-quest), show as collectible
+  else if(h.take&&!usedHS[curRoom+"_"+h.id+"_take"]){
+    document.getElementById("dlg-text").textContent=h.look||"Hmm...";
+    var takeUid=curRoom+"_"+h.id+"_take";
+    var btn=document.createElement("div");btn.className="dlg-ch";
+    btn.textContent="\uD83E\uDD1A TAKE";
+    btn.addEventListener("click",function(e){
+      e.stopPropagation();
+      usedHS[takeUid]=true;
+      var itemName=h.id;
+      inv.push(itemName);
+      invEmoji[itemName]=invEmoji[itemName]||"\uD83D\uDCE6";
+      document.getElementById("dlg-portrait").textContent=invEmoji[itemName];
+      document.getElementById("dlg-text").textContent=h.take;
+      choices.innerHTML="";
+      updateInv();
+    });
+    choices.appendChild(btn);
+  }
   // Otherwise, show the most interesting response
   else{
     var allText=[];
     if(h.look)allText.push(h.look);
     // Show any other verb responses as bonus text
-    var extras=["talk","use","open","push"];
+    var extras=["talk","use","open","push","take"];
     extras.forEach(function(v){
       if(!h[v])return;
       if(v==="open"&&h.open&&h.open.indexOf("goto:")===0)return;
@@ -281,16 +300,16 @@ function interactWith(h){
 function updateInv(){
   var bar=document.getElementById("inv-bar");bar.innerHTML="";
   if(inv.length>0){
-    bar.classList.add("has-items");
+    bar.style.display="flex";
     var lbl=document.createElement("span");
-    lbl.id="inv-label";lbl.style.cssText="font-size:8px;color:#666;margin-right:4px;letter-spacing:1px";
+    lbl.style.cssText="font-size:8px;color:#666;margin-right:4px;letter-spacing:1px;flex-shrink:0";
     lbl.textContent="BAG:";bar.appendChild(lbl);
     inv.forEach(function(it){
       var s=document.createElement("div");s.className="inv-slot";
       s.textContent=invEmoji[it]||"\u2753";s.title=it;bar.appendChild(s);
     });
   } else {
-    bar.classList.remove("has-items");
+    bar.style.display="none";
   }
 }
 
