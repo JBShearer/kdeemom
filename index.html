@@ -678,20 +678,173 @@ function tick(){
     var dx=targetX-playerX;
     if(Math.abs(dx)<4){playerX=targetX;walking=false;}
     else{playerX+=dx>0?3:-3;}
-    renderScene();
   }
+  // Always re-render for pulsing exit arrows
+  renderScene();
 }
 
 function renderScene(){
   ctx.clearRect(0,0,SCENE_W,SCENE_H);
   var room=ROOM_LIST[roomIdx];
   room.drawBg(ctx);
-  // Draw hotspot highlights on hover? No — keep it classic
   // Draw non-taken quest items with draw function
   var hs=hotspots[roomIdx];
   hs.forEach(function(h){if(h.draw&&!h.taken)h.draw(ctx,h);});
   // Player
   drawKdee(ctx,playerX,playerY,2,walking?Math.floor(frame/8):0);
+  // Draw exit arrows on top of everything
+  drawExitArrows(ctx);
+}
+
+// ==================== EXIT ARROWS ON CANVAS ====================
+function drawExitArrows(c){
+  var hs=hotspots[roomIdx];
+  var pulse=0.5+0.5*Math.sin(Date.now()*0.004); // 0..1 pulsing
+  var alpha=0.6+0.4*pulse;
+  var bounce=Math.sin(Date.now()*0.003)*4;
+
+  hs.forEach(function(h){
+    if(!h.open||h.open.indexOf("goto:")!==0)return;
+    var targetIdx=parseInt(h.open.split(":")[1]);
+    var targetName=ROOM_LIST[targetIdx]?ROOM_LIST[targetIdx].name:"";
+    var cx=h.x+h.w/2;
+    var cy=h.y+h.h/2;
+
+    // Determine direction based on hotspot position
+    if(h.x<=5){ // LEFT exit
+      drawLeftArrow(c,8+bounce,cy,targetName,alpha);
+    } else if(h.x+h.w>=635){ // RIGHT exit
+      drawRightArrow(c,632-bounce,cy,targetName,alpha);
+    } else if(h.y<=5){ // UP exit
+      drawUpArrow(c,cx,12+bounce,targetName,alpha);
+    } else if(h.y+h.h>=355){ // DOWN exit
+      drawDownArrow(c,cx,348-bounce,targetName,alpha);
+    } else {
+      // Door in the middle of the scene — draw arrow pointing at it
+      drawDoorIndicator(c,cx,h.y-8+bounce,targetName,alpha);
+    }
+  });
+}
+
+function drawLeftArrow(c,x,y,label,alpha){
+  c.save();
+  c.globalAlpha=alpha;
+  // Arrow shape
+  c.fillStyle="#00CED1";
+  c.beginPath();
+  c.moveTo(x,y);
+  c.lineTo(x+18,y-12);
+  c.lineTo(x+18,y-5);
+  c.lineTo(x+30,y-5);
+  c.lineTo(x+30,y+5);
+  c.lineTo(x+18,y+5);
+  c.lineTo(x+18,y+12);
+  c.closePath();
+  c.fill();
+  // Glow
+  c.shadowColor="#00CED1";c.shadowBlur=12;
+  c.fill();
+  c.shadowBlur=0;
+  // Label
+  c.fillStyle="#fff";
+  c.font="bold 9px monospace";
+  c.textAlign="left";
+  c.fillText(label,x+34,y+3);
+  c.restore();
+}
+
+function drawRightArrow(c,x,y,label,alpha){
+  c.save();
+  c.globalAlpha=alpha;
+  c.fillStyle="#00CED1";
+  c.beginPath();
+  c.moveTo(x,y);
+  c.lineTo(x-18,y-12);
+  c.lineTo(x-18,y-5);
+  c.lineTo(x-30,y-5);
+  c.lineTo(x-30,y+5);
+  c.lineTo(x-18,y+5);
+  c.lineTo(x-18,y+12);
+  c.closePath();
+  c.fill();
+  c.shadowColor="#00CED1";c.shadowBlur=12;
+  c.fill();
+  c.shadowBlur=0;
+  c.fillStyle="#fff";
+  c.font="bold 9px monospace";
+  c.textAlign="right";
+  c.fillText(label,x-34,y+3);
+  c.restore();
+}
+
+function drawUpArrow(c,x,y,label,alpha){
+  c.save();
+  c.globalAlpha=alpha;
+  c.fillStyle="#00CED1";
+  c.beginPath();
+  c.moveTo(x,y);
+  c.lineTo(x-12,y+18);
+  c.lineTo(x-5,y+18);
+  c.lineTo(x-5,y+30);
+  c.lineTo(x+5,y+30);
+  c.lineTo(x+5,y+18);
+  c.lineTo(x+12,y+18);
+  c.closePath();
+  c.fill();
+  c.shadowColor="#00CED1";c.shadowBlur=12;
+  c.fill();
+  c.shadowBlur=0;
+  c.fillStyle="#fff";
+  c.font="bold 9px monospace";
+  c.textAlign="center";
+  c.fillText(label,x,y+42);
+  c.restore();
+}
+
+function drawDownArrow(c,x,y,label,alpha){
+  c.save();
+  c.globalAlpha=alpha;
+  c.fillStyle="#00CED1";
+  c.beginPath();
+  c.moveTo(x,y);
+  c.lineTo(x-12,y-18);
+  c.lineTo(x-5,y-18);
+  c.lineTo(x-5,y-30);
+  c.lineTo(x+5,y-30);
+  c.lineTo(x+5,y-18);
+  c.lineTo(x+12,y-18);
+  c.closePath();
+  c.fill();
+  c.shadowColor="#00CED1";c.shadowBlur=12;
+  c.fill();
+  c.shadowBlur=0;
+  c.fillStyle="#fff";
+  c.font="bold 9px monospace";
+  c.textAlign="center";
+  c.fillText(label,x,y-34);
+  c.restore();
+}
+
+function drawDoorIndicator(c,x,y,label,alpha){
+  c.save();
+  c.globalAlpha=alpha;
+  // Down-pointing triangle above the door
+  c.fillStyle="#FFD700";
+  c.beginPath();
+  c.moveTo(x,y+10);
+  c.lineTo(x-8,y);
+  c.lineTo(x+8,y);
+  c.closePath();
+  c.fill();
+  c.shadowColor="#FFD700";c.shadowBlur=10;
+  c.fill();
+  c.shadowBlur=0;
+  // Label above
+  c.fillStyle="#fff";
+  c.font="bold 9px monospace";
+  c.textAlign="center";
+  c.fillText("→ "+label,x,y-4);
+  c.restore();
 }
 
 function gotoRoom(idx){
