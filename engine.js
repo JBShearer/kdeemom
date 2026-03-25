@@ -1,14 +1,14 @@
 /* K'DEE MOM — GAME ENGINE (portrait 360x640 canvas) */
 (function(){
-var CW=360,CH=640,curRoom=0,verb="look",keys=0,timer=780,inv=[],usedHS={},questItems={},paused=false,gameOver=false;
+var CW=360,CH=640,curRoom=0,keys=0,timer=780,inv=[],usedHS={},questItems={},paused=false,gameOver=false;
 var canvas=document.getElementById("scene"),ctx=canvas.getContext("2d");
 var hotspots=makeHS();
 var invEmoji={banana:"\uD83C\uDF4C",duck:"\uD83E\uDD86",bible:"\uD83D\uDCD6",flashlight:"\uD83D\uDD26",necronomicon:"\uD83D\uDCDA",shovel:"\u26CF\uFE0F",wrench:"\uD83D\uDD27",towel:"\uD83E\uDDF4",book:"\uD83D\uDCDA",tidepen:"\uD83E\uDDF4"};
+var verbLabels={use:"\u270B USE",take:"\uD83E\uDD1A TAKE",talk:"\uD83D\uDCAC TALK",open:"\uD83D\uDCE6 OPEN",push:"\uD83D\uDC4A PUSH"};
 
 /* K'Dee position & walking */
 var kdeeX=180,kdeeY=560,kdeeTargetX=180,kdeeTargetY=560,kdeeWalking=false,walkSpeed=4;
-var walkAnim=0;
-var frameTick=0; /* for glow pulse */
+var walkAnim=0,frameTick=0;
 
 function drawKdee(c,x,y){
   var bob=kdeeWalking?Math.sin(walkAnim*0.3)*2:0;
@@ -28,28 +28,18 @@ function updateWalk(){
   walkAnim++;
   var dx=kdeeTargetX-kdeeX,dy=kdeeTargetY-kdeeY;
   var dist=Math.sqrt(dx*dx+dy*dy);
-  if(dist<walkSpeed+1){
-    kdeeX=kdeeTargetX;kdeeY=kdeeTargetY;
-    kdeeWalking=false;walkAnim=0;
-    return;
-  }
-  kdeeX+=dx/dist*walkSpeed;
-  kdeeY+=dy/dist*walkSpeed;
+  if(dist<walkSpeed+1){kdeeX=kdeeTargetX;kdeeY=kdeeTargetY;kdeeWalking=false;walkAnim=0;return;}
+  kdeeX+=dx/dist*walkSpeed;kdeeY+=dy/dist*walkSpeed;
 }
 
 function walkTo(tx,ty,cb){
-  var clampY=Math.max(480,Math.min(600,ty));
-  var clampX=Math.max(20,Math.min(340,tx));
-  kdeeTargetX=clampX;kdeeTargetY=clampY;
+  kdeeTargetX=Math.max(20,Math.min(340,tx));
+  kdeeTargetY=Math.max(480,Math.min(600,ty));
   kdeeWalking=true;
-  if(cb){
-    var check=setInterval(function(){
-      if(!kdeeWalking){clearInterval(check);cb();}
-    },50);
-  }
+  if(cb){var check=setInterval(function(){if(!kdeeWalking){clearInterval(check);cb();}},50);}
 }
 
-/* Draw glowing navigation arrows for door hotspots */
+/* Draw glowing navigation arrows */
 function drawNavArrows(c){
   var hs=hotspots[curRoom]||[];
   var pulse=0.5+0.5*Math.sin(frameTick*0.06);
@@ -57,46 +47,19 @@ function drawNavArrows(c){
     if(!h.open||h.open.indexOf("goto:")!==0)return;
     var cx=h.x+h.w/2,cy=h.y+h.h/2;
     var isLeft=h.x<20,isRight=h.x>320,isTop=h.y<40,isBottom=h.y>580;
-    c.save();
-    c.globalAlpha=0.5+0.5*pulse;
-    c.fillStyle=P.gold;
-    c.strokeStyle=P.gold;
-    c.lineWidth=2;
-    if(isLeft){
-      // Left arrow
-      c.beginPath();c.moveTo(8,cy-10);c.lineTo(0,cy);c.lineTo(8,cy+10);c.closePath();c.fill();
-      c.fillStyle="rgba(255,215,0,0.3)";D(c,0,cy-15,12,30,"rgba(255,215,0,"+0.15*pulse+")");
-    } else if(isRight){
-      // Right arrow
-      c.beginPath();c.moveTo(352,cy-10);c.lineTo(360,cy);c.lineTo(352,cy+10);c.closePath();c.fill();
-      D(c,348,cy-15,12,30,"rgba(255,215,0,"+0.15*pulse+")");
-    } else if(isTop){
-      // Up arrow
-      c.beginPath();c.moveTo(cx-10,8);c.lineTo(cx,0);c.lineTo(cx+10,8);c.closePath();c.fill();
-    } else if(isBottom){
-      // Down arrow
-      c.beginPath();c.moveTo(cx-10,632);c.lineTo(cx,640);c.lineTo(cx+10,632);c.closePath();c.fill();
-    } else {
-      // Non-edge door: just a small label arrow, no big glow rectangle
-      c.fillStyle="rgba(255,215,0,"+0.8*pulse+")";
-      c.font="bold 9px monospace";
-      c.textAlign="center";
-      c.fillText("\u25B6 "+h.name,cx,h.y+h.h+14);
-      c.textAlign="left";
-    }
+    c.save();c.globalAlpha=0.5+0.5*pulse;c.fillStyle=P.gold;
+    if(isLeft){c.beginPath();c.moveTo(8,cy-10);c.lineTo(0,cy);c.lineTo(8,cy+10);c.closePath();c.fill();D(c,0,cy-15,12,30,"rgba(255,215,0,"+0.15*pulse+")");}
+    else if(isRight){c.beginPath();c.moveTo(352,cy-10);c.lineTo(360,cy);c.lineTo(352,cy+10);c.closePath();c.fill();D(c,348,cy-15,12,30,"rgba(255,215,0,"+0.15*pulse+")");}
+    else if(isTop){c.beginPath();c.moveTo(cx-10,8);c.lineTo(cx,0);c.lineTo(cx+10,8);c.closePath();c.fill();}
+    else if(isBottom){c.beginPath();c.moveTo(cx-10,632);c.lineTo(cx,640);c.lineTo(cx+10,632);c.closePath();c.fill();}
+    else{c.fillStyle="rgba(255,215,0,"+0.8*pulse+")";c.font="bold 9px monospace";c.textAlign="center";c.fillText("\u25B6 "+h.name,cx,h.y+h.h+14);c.textAlign="left";}
     c.restore();
   });
 }
 
-/* Draw hover highlights for non-door hotspots */
 function drawHoverHighlights(c){
   var hs=hotspots[curRoom]||[];
-  hs.forEach(function(h){
-    if(h._hover){
-      c.strokeStyle="rgba(255,215,0,0.6)";c.lineWidth=2;
-      c.strokeRect(h.x-1,h.y-1,h.w+2,h.h+2);
-    }
-  });
+  hs.forEach(function(h){if(h._hover){c.strokeStyle="rgba(255,215,0,0.6)";c.lineWidth=2;c.strokeRect(h.x-1,h.y-1,h.w+2,h.h+2);}});
 }
 
 function drawScene(){
@@ -112,16 +75,8 @@ function drawScene(){
 }
 
 var animRunning=false;
-function gameLoop(){
-  if(!animRunning)return;
-  frameTick++;
-  updateWalk();
-  drawScene();
-  requestAnimationFrame(gameLoop);
-}
-function startLoop(){
-  if(!animRunning){animRunning=true;gameLoop();}
-}
+function gameLoop(){if(!animRunning)return;frameTick++;updateWalk();drawScene();requestAnimationFrame(gameLoop);}
+function startLoop(){if(!animRunning){animRunning=true;gameLoop();}}
 
 function updateHUD(){
   document.getElementById("hk").textContent="\uD83D\uDD11 KEYS: "+keys+"/3";
@@ -132,7 +87,120 @@ function updateHUD(){
 
 function setDesc(t){document.getElementById("desc-text").textContent=t;}
 
-function showDlg(name,text,emoji){
+/* --- NEW INTERACTION DIALOG --- */
+/* Shows LOOK description + available action buttons for clicked object */
+var activeHS=null;
+
+function showInteraction(h){
+  activeHS=h;
+  var d=document.getElementById("dlg");d.classList.add("on");
+  document.getElementById("dlg-portrait").textContent="\uD83D\uDC69";
+  document.getElementById("dlg-name").textContent=h.name;
+  
+  // Show look text as the description
+  var lookText=h.look||"Nothing special.";
+  document.getElementById("dlg-text").textContent=lookText;
+  
+  // Build action buttons for available verbs
+  var choices=document.getElementById("dlg-choices");
+  choices.innerHTML="";
+  
+  var verbs=["use","take","talk","open","push"];
+  verbs.forEach(function(v){
+    if(!h[v])return;
+    // Skip if this is a door open (handled separately)
+    if(v==="open"&&h.open&&h.open.indexOf("goto:")===0)return;
+    var uid=curRoom+"_"+h.id+"_"+v;
+    var btn=document.createElement("div");
+    btn.className="dlg-ch";
+    var label=verbLabels[v]||v.toUpperCase();
+    if(usedHS[uid]){
+      btn.textContent=label+" ✓";
+      btn.style.opacity="0.4";
+    } else {
+      btn.textContent=label;
+    }
+    btn.addEventListener("click",function(e){
+      e.stopPropagation();
+      performAction(h,v);
+    });
+    choices.appendChild(btn);
+  });
+  
+  paused=true;
+}
+
+function performAction(h,v){
+  var uid=curRoom+"_"+h.id+"_"+v;
+  var txt=h[v];
+  if(!txt){return;}
+  
+  // Key discovery
+  if(h.hasKey&&v==="push"&&!usedHS[uid]){
+    keys++;usedHS[uid]=true;
+    document.getElementById("dlg-portrait").textContent="\uD83D\uDD11";
+    document.getElementById("dlg-text").textContent=txt+"\n\uD83D\uDD11 KEY FOUND! ("+keys+"/3)";
+    document.getElementById("dlg-choices").innerHTML="";
+    updateHUD();
+    if(keys>=3)setTimeout(function(){winGame();},1500);
+    return;
+  }
+  
+  // Quest item pickup
+  if(h.quest&&v==="take"&&!usedHS[uid]){
+    inv.push(h.quest);usedHS[uid]=true;
+    questItems[h.quest]=true;
+    document.getElementById("dlg-portrait").textContent=invEmoji[h.quest]||"\uD83C\uDF81";
+    document.getElementById("dlg-text").textContent=txt;
+    document.getElementById("dlg-choices").innerHTML="";
+    updateInv();return;
+  }
+  
+  // Regular action
+  if(usedHS[uid]){
+    document.getElementById("dlg-text").textContent="Already did that.";
+    return;
+  }
+  if(v!=="look")usedHS[uid]=true;
+  
+  document.getElementById("dlg-text").textContent=txt;
+  
+  // Gray out the used button
+  var choices=document.getElementById("dlg-choices").children;
+  for(var i=0;i<choices.length;i++){
+    var cuid=curRoom+"_"+h.id+"_"+choices[i].getAttribute("data-verb");
+    // Refresh the button states
+  }
+  // Rebuild buttons to show updated state
+  showInteractionButtons(h);
+}
+
+function showInteractionButtons(h){
+  var choices=document.getElementById("dlg-choices");
+  choices.innerHTML="";
+  var verbs=["use","take","talk","open","push"];
+  verbs.forEach(function(v){
+    if(!h[v])return;
+    if(v==="open"&&h.open&&h.open.indexOf("goto:")===0)return;
+    var uid=curRoom+"_"+h.id+"_"+v;
+    var btn=document.createElement("div");
+    btn.className="dlg-ch";
+    var label=verbLabels[v]||v.toUpperCase();
+    if(usedHS[uid]){
+      btn.textContent=label+" ✓";
+      btn.style.opacity="0.4";
+    } else {
+      btn.textContent=label;
+    }
+    btn.addEventListener("click",function(e){
+      e.stopPropagation();
+      performAction(h,v);
+    });
+    choices.appendChild(btn);
+  });
+}
+
+function showSimpleDlg(name,text,emoji){
   var d=document.getElementById("dlg");d.classList.add("on");
   document.getElementById("dlg-portrait").textContent=emoji||"\uD83D\uDC69";
   document.getElementById("dlg-name").textContent=name;
@@ -143,7 +211,7 @@ function showDlg(name,text,emoji){
 
 function hideDlg(){
   document.getElementById("dlg").classList.remove("on");
-  paused=false;
+  activeHS=null;paused=false;
 }
 
 function goToRoom(roomIdx){
@@ -157,48 +225,17 @@ function navigateToRoom(h){
   var targetRoom=parseInt(h.open.split(":")[1]);
   var doorX=h.x+h.w/2,doorY=Math.max(480,Math.min(600,h.y+h.h));
   setDesc("Going to "+h.name+"...");
-  walkTo(doorX,doorY,function(){
-    goToRoom(targetRoom);
-  });
+  walkTo(doorX,doorY,function(){goToRoom(targetRoom);});
 }
 
-function isDoor(h){
-  return h.open&&h.open.indexOf("goto:")===0;
-}
+function isDoor(h){return h.open&&h.open.indexOf("goto:")===0;}
 
-function doVerb(h,forceVerb){
-  var v=forceVerb||verb;
-  var uid=curRoom+"_"+h.id+"_"+v;
-
-  // Navigation - clicking a door always navigates (regardless of verb)
-  if(isDoor(h)){
-    navigateToRoom(h);
-    return;
-  }
-
-  var txt=h[v];
-  if(!txt){setDesc("Can't "+v+" the "+h.name+".");return;}
-
+/* Click an object → walk to it → show interaction dialog */
+function interactWith(h){
+  if(isDoor(h)){navigateToRoom(h);return;}
   var hx=h.x+h.w/2,hy=Math.max(480,Math.min(600,h.y+h.h+20));
-  walkTo(hx,hy,function(){
-    if(h.hasKey&&v==="push"&&!usedHS[uid]){
-      keys++;usedHS[uid]=true;
-      showDlg("K'DEE",txt+"\n\uD83D\uDD11 KEY FOUND! ("+keys+"/3)","\uD83D\uDD11");
-      updateHUD();
-      if(keys>=3)setTimeout(function(){winGame();},1200);
-      return;
-    }
-    if(h.quest&&v==="take"&&!usedHS[uid]){
-      inv.push(h.quest);usedHS[uid]=true;
-      questItems[h.quest]=true;
-      showDlg("K'DEE",txt,invEmoji[h.quest]||"\uD83C\uDF81");
-      updateInv();return;
-    }
-    if(v==="take"&&!h.quest&&!h.take){setDesc("Can't take that.");return;}
-    if(usedHS[uid]){setDesc("Already did that.");return;}
-    if(v!=="look")usedHS[uid]=true;
-    showDlg(h.name,txt,"\uD83D\uDC69");
-  });
+  setDesc(h.name+"...");
+  walkTo(hx,hy,function(){showInteraction(h);});
 }
 
 function updateInv(){
@@ -219,10 +256,7 @@ function updateNav(){
   doors.forEach(function(h){
     var b=document.createElement("div");b.className="room-btn";
     b.textContent="\u25B6 "+h.name;
-    b.addEventListener("click",function(){
-      if(paused||gameOver)return;
-      navigateToRoom(h);
-    });
+    b.addEventListener("click",function(){if(paused||gameOver)return;navigateToRoom(h);});
     bar.appendChild(b);
   });
 }
@@ -238,18 +272,10 @@ function getCanvasCoords(e){
 
 function findHS(mx,my){
   var hs=hotspots[curRoom]||[];
-  // Priority 1: non-door interactive hotspots (so mirror beats door overlap)
+  for(var i=hs.length-1;i>=0;i--){var h=hs[i];if(isDoor(h))continue;if(mx>=h.x&&mx<=h.x+h.w&&my>=h.y&&my<=h.y+h.h)return h;}
   for(var i=hs.length-1;i>=0;i--){
-    var h=hs[i];
-    if(isDoor(h))continue;
-    if(mx>=h.x&&mx<=h.x+h.w&&my>=h.y&&my<=h.y+h.h)return h;
-  }
-  // Priority 2: door hotspots (with expanded touch area for edge doors)
-  for(var i=hs.length-1;i>=0;i--){
-    var h=hs[i];
-    if(!isDoor(h))continue;
+    var h=hs[i];if(!isDoor(h))continue;
     var ex=h.x,ey=h.y,ew=h.w,eh=h.h;
-    // Expand edge doors for easier tapping on mobile
     if(h.x<20){ex=0;ew=Math.max(h.w,40);}
     if(h.x>300){ex=Math.min(h.x,320);ew=360-ex;}
     if(h.y<40){ey=0;eh=Math.max(h.h,50);}
@@ -261,58 +287,25 @@ function findHS(mx,my){
 
 canvas.addEventListener("click",function(e){
   if(paused||gameOver)return;
-  var p=getCanvasCoords(e);
-  var h=findHS(p.x,p.y);
-  if(h){
-    doVerb(h);
-  } else {
-    walkTo(p.x,p.y);
-    setDesc("Nothing interesting there.");
-  }
+  var p=getCanvasCoords(e);var h=findHS(p.x,p.y);
+  if(h){interactWith(h);}else{walkTo(p.x,p.y);setDesc("Nothing interesting there.");}
 });
 
 canvas.addEventListener("touchstart",function(e){
-  if(paused||gameOver)return;
-  e.preventDefault();
-  var p=getCanvasCoords(e);
-  var h=findHS(p.x,p.y);
-  if(h){
-    doVerb(h);
-  } else {
-    walkTo(p.x,p.y);
-    setDesc("Nothing interesting there.");
-  }
+  if(paused||gameOver)return;e.preventDefault();
+  var p=getCanvasCoords(e);var h=findHS(p.x,p.y);
+  if(h){interactWith(h);}else{walkTo(p.x,p.y);setDesc("Nothing interesting there.");}
 },{passive:false});
 
 canvas.addEventListener("mousemove",function(e){
-  var p=getCanvasCoords(e);
-  var hs=hotspots[curRoom]||[];
-  var found=null;
-  hs.forEach(function(h){
-    h._hover=false;
-    if(p.x>=h.x&&p.x<=h.x+h.w&&p.y>=h.y&&p.y<=h.y+h.h){found=h;h._hover=true;}
-  });
-  if(found){
-    if(isDoor(found)){setDesc("\u25B6 Go to "+found.name);}
-    else{setDesc(verb.toUpperCase()+" "+found.name);}
-    canvas.style.cursor="pointer";
-  } else {
-    setDesc("What should K'Dee do?");canvas.style.cursor="crosshair";
-  }
-});
-
-document.querySelectorAll(".vb").forEach(function(b){
-  b.addEventListener("click",function(){
-    document.querySelectorAll(".vb").forEach(function(v){v.classList.remove("active");});
-    b.classList.add("active");verb=b.dataset.v;
-    setDesc(verb.toUpperCase()+" what?");
-  });
+  var p=getCanvasCoords(e);var hs=hotspots[curRoom]||[];var found=null;
+  hs.forEach(function(h){h._hover=false;if(p.x>=h.x&&p.x<=h.x+h.w&&p.y>=h.y&&p.y<=h.y+h.h){found=h;h._hover=true;}});
+  if(found){if(isDoor(found)){setDesc("\u25B6 Go to "+found.name);}else{setDesc("\uD83D\uDC41 "+found.name);}canvas.style.cursor="pointer";}
+  else{setDesc("What should K'Dee do?");canvas.style.cursor="crosshair";}
 });
 
 document.getElementById("dlg-continue").addEventListener("click",hideDlg);
-document.getElementById("dlg").addEventListener("click",function(e){
-  if(e.target===document.getElementById("dlg"))hideDlg();
-});
+document.getElementById("dlg").addEventListener("click",function(e){if(e.target===document.getElementById("dlg"))hideDlg();});
 
 function winGame(){
   gameOver=true;paused=true;
@@ -336,13 +329,7 @@ function loseGame(){
 }
 
 var timerInterval;
-function startTimer(){
-  timerInterval=setInterval(function(){
-    if(paused||gameOver)return;
-    timer--;updateHUD();
-    if(timer<=0){clearInterval(timerInterval);loseGame();}
-  },1000);
-}
+function startTimer(){timerInterval=setInterval(function(){if(paused||gameOver)return;timer--;updateHUD();if(timer<=0){clearInterval(timerInterval);loseGame();}},1000);}
 
 document.getElementById("startbtn").addEventListener("click",function(){
   document.getElementById("title").style.display="none";
@@ -353,11 +340,7 @@ document.getElementById("startbtn").addEventListener("click",function(){
 });
 
 document.getElementById("qbtn").addEventListener("click",function(){
-  if(confirm("Quit game?")){
-    gameOver=true;animRunning=false;clearInterval(timerInterval);
-    document.getElementById("game").classList.remove("on");
-    document.getElementById("title").style.display="flex";
-  }
+  if(confirm("Quit game?")){gameOver=true;animRunning=false;clearInterval(timerInterval);document.getElementById("game").classList.remove("on");document.getElementById("title").style.display="flex";}
 });
 
 })();
