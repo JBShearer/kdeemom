@@ -282,6 +282,9 @@ function updateInv(){
   var bar=document.getElementById("inv-bar");bar.innerHTML="";
   if(inv.length>0){
     bar.classList.add("has-items");
+    var lbl=document.createElement("span");
+    lbl.id="inv-label";lbl.style.cssText="font-size:8px;color:#666;margin-right:4px;letter-spacing:1px";
+    lbl.textContent="BAG:";bar.appendChild(lbl);
     inv.forEach(function(it){
       var s=document.createElement("div");s.className="inv-slot";
       s.textContent=invEmoji[it]||"\u2753";s.title=it;bar.appendChild(s);
