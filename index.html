@@ -31,7 +31,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:mon
 
 /* Scene canvas - portrait optimized */
 #scene-wrap{flex:1;display:flex;align-items:center;justify-content:center;background:#000;position:relative;min-height:0;overflow:hidden}
-#scene{image-rendering:pixelated;cursor:crosshair;display:block;max-width:100%;max-height:100%;object-fit:contain}
+#scene{image-rendering:pixelated;cursor:crosshair;display:block;width:100%;height:auto;object-fit:contain}
 
 /* Room navigation bar */
 #room-nav{background:#12082a;border-top:1px solid #333;border-bottom:1px solid #333;display:flex;align-items:center;justify-content:center;gap:0;padding:0;flex-shrink:0;overflow:hidden;min-height:36px}
@@ -73,26 +73,49 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:mon
 /* CRT effect */
 #crt{position:fixed;inset:0;z-index:60;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,0.15) 0px,rgba(0,0,0,0.15) 1px,transparent 1px,transparent 3px);opacity:0.3}
 
-/* iPhone / portrait optimizations */
-@media (max-width:480px),(max-aspect-ratio:3/4){
-  #topbar{height:28px}
-  #topbar span{font-size:10px}
-  .vb{padding:7px 8px;font-size:0.65rem}
-  #desc-bar{height:24px}
+/* Portrait / mobile: scene fills width, UI compact */
+@media (max-width:480px),(orientation:portrait){
+  #game{overflow:hidden}
+  #scene-wrap{flex:none;width:100%;height:auto;aspect-ratio:auto}
+  #scene{width:100%;height:auto;max-height:none}
+  #topbar{height:26px}
+  #topbar span{font-size:9px;letter-spacing:0.5px}
+  #room-nav{min-height:32px}
+  .room-btn{font-size:0.65rem;padding:6px 4px}
+  #desc-bar{height:22px}
   #desc-text{font-size:9px}
-  .inv-slot{width:34px;height:34px;font-size:1rem}
-  #inv-bar{height:42px}
-  .room-btn{font-size:0.6rem;padding:7px 4px}
+  #verb-bar{padding:4px 2px;gap:3px}
+  .vb{padding:6px 7px;font-size:0.6rem;letter-spacing:0.5px}
+  #inv-bar{height:36px;padding:0 2px;gap:2px}
+  .inv-slot{width:30px;height:30px;font-size:0.9rem}
   #dlg-text{font-size:0.85rem}
   .dlg-ch{font-size:0.8rem;padding:8px 12px}
+  #qbtn{font-size:0.6rem;padding:1px 6px}
 }
 
-@media (max-height:600px) and (orientation:landscape){
+/* Very tall phones (iPhone Pro Max etc) - even more compact */
+@media (max-width:430px) and (min-height:700px){
   #topbar{height:24px}
-  #verb-bar{padding:3px 4px}
-  .vb{padding:4px 8px}
-  #inv-bar{height:38px}
-  .inv-slot{width:32px;height:32px}
+  #topbar span{font-size:8px}
+  .room-btn{font-size:0.6rem;padding:5px 3px}
+  #desc-bar{height:20px}
+  #desc-text{font-size:8px}
+  .vb{padding:5px 6px;font-size:0.55rem}
+  #inv-bar{height:32px}
+  .inv-slot{width:28px;height:28px;font-size:0.8rem}
+}
+
+/* Landscape on small screens */
+@media (max-height:500px) and (orientation:landscape){
+  #topbar{height:22px}
+  #topbar span{font-size:8px}
+  #verb-bar{padding:2px 4px}
+  .vb{padding:3px 6px;font-size:0.55rem}
+  #inv-bar{height:30px}
+  .inv-slot{width:26px;height:26px;font-size:0.75rem}
+  #room-nav{min-height:24px}
+  .room-btn{padding:4px 3px;font-size:0.55rem}
+  #desc-bar{height:18px}
 }
 </style>
 </head>
