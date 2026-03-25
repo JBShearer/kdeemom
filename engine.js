@@ -97,35 +97,73 @@ function showInteraction(h){
   document.getElementById("dlg-portrait").textContent="\uD83D\uDC69";
   document.getElementById("dlg-name").textContent=h.name;
   
-  // Show look text as the description
-  var lookText=h.look||"Nothing special.";
-  document.getElementById("dlg-text").textContent=lookText;
-  
-  // Build action buttons for available verbs
   var choices=document.getElementById("dlg-choices");
   choices.innerHTML="";
   
-  var verbs=["use","take","talk","open","push"];
-  verbs.forEach(function(v){
-    if(!h[v])return;
-    // Skip if this is a door open (handled separately)
-    if(v==="open"&&h.open&&h.open.indexOf("goto:")===0)return;
-    var uid=curRoom+"_"+h.id+"_"+v;
-    var btn=document.createElement("div");
-    btn.className="dlg-ch";
-    var label=verbLabels[v]||v.toUpperCase();
-    if(usedHS[uid]){
-      btn.textContent=label+" ✓";
-      btn.style.opacity="0.4";
-    } else {
-      btn.textContent=label;
-    }
+  // Check: does this object have an undiscovered key or quest item?
+  var keyVerb=null,questVerb=null;
+  if(h.hasKey){
+    var verbs=["push","open","use"];
+    for(var i=0;i<verbs.length;i++){if(h[verbs[i]]){keyVerb=verbs[i];break;}}
+  }
+  if(h.quest){
+    questVerb="take";
+  }
+  
+  var keyUid=keyVerb?(curRoom+"_"+h.id+"_"+keyVerb):null;
+  var questUid=questVerb?(curRoom+"_"+h.id+"_"+questVerb):null;
+  
+  // If key not yet found, show look text + big action button
+  if(keyVerb&&!usedHS[keyUid]){
+    document.getElementById("dlg-text").textContent=h.look||"Hmm...";
+    var btn=document.createElement("div");btn.className="dlg-ch";
+    btn.textContent="\uD83D\uDD0D INTERACT";
+    btn.style.fontSize="clamp(0.85rem,3vw,1rem)";
     btn.addEventListener("click",function(e){
       e.stopPropagation();
-      performAction(h,v);
+      keys++;usedHS[keyUid]=true;
+      document.getElementById("dlg-portrait").textContent="\uD83D\uDD11";
+      document.getElementById("dlg-text").textContent=h[keyVerb]+"\n\n\uD83D\uDD11 KEY FOUND! ("+keys+"/3)";
+      choices.innerHTML="";
+      updateHUD();
+      if(keys>=3)setTimeout(function(){winGame();},1500);
     });
     choices.appendChild(btn);
-  });
+  }
+  // If quest item not yet taken
+  else if(questVerb&&!usedHS[questUid]){
+    document.getElementById("dlg-text").textContent=h.look||"Hmm...";
+    var btn=document.createElement("div");btn.className="dlg-ch";
+    btn.textContent="\uD83E\uDD1A TAKE "+h.quest.toUpperCase();
+    btn.addEventListener("click",function(e){
+      e.stopPropagation();
+      inv.push(h.quest);usedHS[questUid]=true;
+      questItems[h.quest]=true;
+      document.getElementById("dlg-portrait").textContent=invEmoji[h.quest]||"\uD83C\uDF81";
+      document.getElementById("dlg-text").textContent=h[questVerb]||("Picked up "+h.quest+"!");
+      choices.innerHTML="";
+      updateInv();
+    });
+    choices.appendChild(btn);
+  }
+  // Otherwise, show the most interesting response
+  else{
+    var allText=[];
+    if(h.look)allText.push(h.look);
+    // Show any other verb responses as bonus text
+    var extras=["talk","use","open","push"];
+    extras.forEach(function(v){
+      if(!h[v])return;
+      if(v==="open"&&h.open&&h.open.indexOf("goto:")===0)return;
+      var uid=curRoom+"_"+h.id+"_"+v;
+      if(!usedHS[uid]){
+        allText.push(h[v]);
+        usedHS[uid]=true;
+      }
+    });
+    if(allText.length===0)allText.push("Nothing more here.");
+    document.getElementById("dlg-text").textContent=allText.join("\n\n");
+  }
   
   paused=true;
 }
