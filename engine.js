@@ -5,23 +5,62 @@ var canvas=document.getElementById("scene"),ctx=canvas.getContext("2d");
 var hotspots=makeHS();
 var invEmoji={banana:"\uD83C\uDF4C",duck:"\uD83E\uDD86",bible:"\uD83D\uDCD6",flashlight:"\uD83D\uDD26",necronomicon:"\uD83D\uDCDA",shovel:"\u26CF\uFE0F",wrench:"\uD83D\uDD27",towel:"\uD83E\uDDF4",book:"\uD83D\uDCDA",tidepen:"\uD83E\uDDF4"};
 
+/* K'Dee position & walking */
+var kdeeX=180,kdeeY=560,kdeeTargetX=180,kdeeTargetY=560,kdeeWalking=false,walkSpeed=3;
+var walkAnim=0,walkFrame=0;
+
 function drawKdee(c,x,y){
-  var s=1;
-  D(c,x-7*s,y-38*s,14*s,26*s,P.pink);
-  D(c,x-6*s,y-12*s,12*s,14*s,"#4169E1");
-  c.fillStyle=P.skin;c.beginPath();c.arc(x,y-44*s,9*s,0,Math.PI*2);c.fill();
-  c.fillStyle=P.hair;c.beginPath();c.arc(x,y-50*s,9*s,Math.PI,2*Math.PI);c.fill();
-  D(c,x-9*s,y-48*s,4*s,6*s,P.hair);D(c,x+5*s,y-48*s,4*s,6*s,P.hair);
-  c.fillStyle=P.eye;c.fillRect(x-4*s,y-44*s,2*s,2*s);c.fillRect(x+2*s,y-44*s,2*s,2*s);
-  c.fillStyle=P.pink;c.fillRect(x-2*s,y-40*s,4*s,1*s);
-  D(c,x-5*s,y-2*s,4*s,4*s,P.skin);D(c,x+1*s,y-2*s,4*s,4*s,P.skin);
+  var bob=kdeeWalking?Math.sin(walkAnim*0.3)*2:0;
+  var legOff=kdeeWalking?Math.sin(walkAnim*0.4)*3:0;
+  // Body (pink top)
+  D(c,x-7,y-38+bob,14,26,P.pink);
+  // Jeans
+  D(c,x-6,y-12+bob,12,14,"#4169E1");
+  // Head
+  c.fillStyle=P.skin;c.beginPath();c.arc(x,y-44+bob,9,0,Math.PI*2);c.fill();
+  // Hair
+  c.fillStyle=P.hair;c.beginPath();c.arc(x,y-50+bob,9,Math.PI,2*Math.PI);c.fill();
+  D(c,x-9,y-48+bob,4,6,P.hair);D(c,x+5,y-48+bob,4,6,P.hair);
+  // Eyes
+  c.fillStyle=P.eye;c.fillRect(x-4,y-44+bob,2,2);c.fillRect(x+2,y-44+bob,2,2);
+  // Smile
+  c.fillStyle=P.pink;c.fillRect(x-2,y-40+bob,4,1);
+  // Feet (animate when walking)
+  D(c,x-5+legOff,y-2+bob,4,4,P.skin);D(c,x+1-legOff,y-2+bob,4,4,P.skin);
+}
+
+function updateWalk(){
+  if(!kdeeWalking)return;
+  walkAnim++;
+  var dx=kdeeTargetX-kdeeX,dy=kdeeTargetY-kdeeY;
+  var dist=Math.sqrt(dx*dx+dy*dy);
+  if(dist<walkSpeed+1){
+    kdeeX=kdeeTargetX;kdeeY=kdeeTargetY;
+    kdeeWalking=false;walkAnim=0;
+    return;
+  }
+  kdeeX+=dx/dist*walkSpeed;
+  kdeeY+=dy/dist*walkSpeed;
+}
+
+function walkTo(tx,ty,cb){
+  // Clamp to walkable area (lower portion of canvas)
+  var clampY=Math.max(420,Math.min(600,ty));
+  var clampX=Math.max(20,Math.min(340,tx));
+  kdeeTargetX=clampX;kdeeTargetY=clampY;
+  kdeeWalking=true;
+  if(cb){
+    var check=setInterval(function(){
+      if(!kdeeWalking){clearInterval(check);cb();}
+    },50);
+  }
 }
 
 function drawScene(){
   ctx.clearRect(0,0,CW,CH);
   var room=ROOMS[curRoom];
   if(room&&room.bg)room.bg(ctx);
-  drawKdee(ctx,180,560);
+  drawKdee(ctx,Math.round(kdeeX),Math.round(kdeeY));
   // hotspot outlines on hover
   var hs=hotspots[curRoom]||[];
   hs.forEach(function(h){
@@ -34,6 +73,18 @@ function drawScene(){
   ctx.fillStyle="rgba(0,0,0,0.55)";ctx.fillRect(0,0,CW,22);
   ctx.fillStyle=P.gold;ctx.font="bold 10px monospace";ctx.textAlign="center";
   ctx.fillText(room.name,CW/2,15);ctx.textAlign="left";
+}
+
+/* Game loop for animation */
+var animRunning=false;
+function gameLoop(){
+  if(!animRunning)return;
+  updateWalk();
+  drawScene();
+  requestAnimationFrame(gameLoop);
+}
+function startLoop(){
+  if(!animRunning){animRunning=true;gameLoop();}
 }
 
 function updateHUD(){
@@ -60,32 +111,49 @@ function hideDlg(){
   paused=false;
 }
 
-function doVerb(h){
-  var uid=curRoom+"_"+h.id+"_"+verb;
-  if(verb==="open"&&h.open&&h.open.indexOf("goto:")===0){
-    curRoom=parseInt(h.open.split(":")[1]);
-    drawScene();updateHUD();setDesc("Entered "+ROOMS[curRoom].name);
-    updateNav();return;
-  }
-  var txt=h[verb];
-  if(!txt){setDesc("Can't "+verb+" the "+h.name+".");return;}
-  if(h.hasKey&&verb==="push"&&!usedHS[uid]){
-    keys++;usedHS[uid]=true;
-    showDlg("K'DEE",txt+"\n\uD83D\uDD11 KEY FOUND! ("+keys+"/3)","\uD83D\uDD11");
-    updateHUD();
-    if(keys>=3)setTimeout(function(){winGame();},1200);
+function goToRoom(roomIdx){
+  curRoom=roomIdx;
+  kdeeX=180;kdeeY=560;kdeeTargetX=180;kdeeTargetY=560;kdeeWalking=false;
+  drawScene();updateHUD();setDesc("Entered "+ROOMS[curRoom].name);
+  updateNav();
+}
+
+function doVerb(h,forceVerb){
+  var v=forceVerb||verb;
+  var uid=curRoom+"_"+h.id+"_"+v;
+  // Navigation - goto rooms
+  if(h.open&&h.open.indexOf("goto:")===0&&(v==="open"||forceVerb==="open")){
+    var targetRoom=parseInt(h.open.split(":")[1]);
+    // Walk toward the door then go
+    var doorX=h.x+h.w/2,doorY=Math.max(420,Math.min(600,h.y+h.h));
+    walkTo(doorX,doorY,function(){
+      goToRoom(targetRoom);
+    });
     return;
   }
-  if(h.quest&&verb==="take"&&!usedHS[uid]){
-    inv.push(h.quest);usedHS[uid]=true;
-    questItems[h.quest]=true;
-    showDlg("K'DEE",txt,invEmoji[h.quest]||"\uD83C\uDF81");
-    updateInv();return;
-  }
-  if(verb==="take"&&!h.quest&&!h.take){setDesc("Can't take that.");return;}
-  if(usedHS[uid]){setDesc("Already did that.");return;}
-  if(verb!=="look")usedHS[uid]=true;
-  showDlg(h.name,txt,"\uD83D\uDC69");
+  var txt=h[v];
+  if(!txt){setDesc("Can't "+v+" the "+h.name+".");return;}
+  // Walk to the hotspot first, then do the action
+  var hx=h.x+h.w/2,hy=Math.max(420,Math.min(600,h.y+h.h+20));
+  walkTo(hx,hy,function(){
+    if(h.hasKey&&v==="push"&&!usedHS[uid]){
+      keys++;usedHS[uid]=true;
+      showDlg("K'DEE",txt+"\n\uD83D\uDD11 KEY FOUND! ("+keys+"/3)","\uD83D\uDD11");
+      updateHUD();
+      if(keys>=3)setTimeout(function(){winGame();},1200);
+      return;
+    }
+    if(h.quest&&v==="take"&&!usedHS[uid]){
+      inv.push(h.quest);usedHS[uid]=true;
+      questItems[h.quest]=true;
+      showDlg("K'DEE",txt,invEmoji[h.quest]||"\uD83C\uDF81");
+      updateInv();return;
+    }
+    if(v==="take"&&!h.quest&&!h.take){setDesc("Can't take that.");return;}
+    if(usedHS[uid]){setDesc("Already did that.");return;}
+    if(v!=="look")usedHS[uid]=true;
+    showDlg(h.name,txt,"\uD83D\uDC69");
+  });
 }
 
 function updateInv(){
@@ -106,7 +174,10 @@ function updateNav(){
   doors.forEach(function(h){
     var b=document.createElement("div");b.className="room-btn";
     b.textContent="\u25B6 "+h.name;
-    b.addEventListener("click",function(){doVerb(h);});
+    b.addEventListener("click",function(){
+      if(paused||gameOver)return;
+      doVerb(h,"open");
+    });
     bar.appendChild(b);
   });
 }
@@ -133,8 +204,13 @@ canvas.addEventListener("click",function(e){
   if(paused||gameOver)return;
   var p=getCanvasCoords(e);
   var h=findHS(p.x,p.y);
-  if(h){doVerb(h);}
-  else{setDesc("Nothing interesting there.");}
+  if(h){
+    doVerb(h);
+  } else {
+    // Walk to clicked spot
+    walkTo(p.x,p.y);
+    setDesc("Nothing interesting there.");
+  }
 });
 
 canvas.addEventListener("touchstart",function(e){
@@ -142,8 +218,12 @@ canvas.addEventListener("touchstart",function(e){
   e.preventDefault();
   var p=getCanvasCoords(e);
   var h=findHS(p.x,p.y);
-  if(h){doVerb(h);}
-  else{setDesc("Nothing interesting there.");}
+  if(h){
+    doVerb(h);
+  } else {
+    walkTo(p.x,p.y);
+    setDesc("Nothing interesting there.");
+  }
 },{passive:false});
 
 canvas.addEventListener("mousemove",function(e){
@@ -156,7 +236,6 @@ canvas.addEventListener("mousemove",function(e){
   });
   if(found){setDesc(verb.toUpperCase()+" "+found.name);canvas.style.cursor="pointer";}
   else{setDesc("What should K'Dee do?");canvas.style.cursor="crosshair";}
-  drawScene();
 });
 
 document.querySelectorAll(".vb").forEach(function(b){
@@ -209,13 +288,15 @@ function startTimer(){
 document.getElementById("startbtn").addEventListener("click",function(){
   document.getElementById("title").style.display="none";
   document.getElementById("game").classList.add("on");
+  kdeeX=180;kdeeY=560;
   drawScene();updateHUD();updateInv();updateNav();
+  startLoop();
   startTimer();
 });
 
 document.getElementById("qbtn").addEventListener("click",function(){
   if(confirm("Quit game?")){
-    gameOver=true;clearInterval(timerInterval);
+    gameOver=true;animRunning=false;clearInterval(timerInterval);
     document.getElementById("game").classList.remove("on");
     document.getElementById("title").style.display="flex";
   }
