@@ -77,15 +77,11 @@ function drawNavArrows(c){
       // Down arrow
       c.beginPath();c.moveTo(cx-10,632);c.lineTo(cx,640);c.lineTo(cx+10,632);c.closePath();c.fill();
     } else {
-      // Door glow - draw a glowing outline around the door
-      c.strokeStyle="rgba(255,215,0,"+0.4*pulse+")";
-      c.lineWidth=2;
-      c.strokeRect(h.x-1,h.y-1,h.w+2,h.h+2);
-      // Arrow pointing to door
-      c.fillStyle="rgba(255,215,0,"+0.7*pulse+")";
-      c.font="bold 12px monospace";
+      // Non-edge door: just a small label arrow, no big glow rectangle
+      c.fillStyle="rgba(255,215,0,"+0.8*pulse+")";
+      c.font="bold 9px monospace";
       c.textAlign="center";
-      c.fillText("\u25B6",cx,h.y+h.h+16);
+      c.fillText("\u25B6 "+h.name,cx,h.y+h.h+14);
       c.textAlign="left";
     }
     c.restore();
@@ -242,9 +238,23 @@ function getCanvasCoords(e){
 
 function findHS(mx,my){
   var hs=hotspots[curRoom]||[];
+  // Priority 1: non-door interactive hotspots (so mirror beats door overlap)
   for(var i=hs.length-1;i>=0;i--){
     var h=hs[i];
+    if(isDoor(h))continue;
     if(mx>=h.x&&mx<=h.x+h.w&&my>=h.y&&my<=h.y+h.h)return h;
+  }
+  // Priority 2: door hotspots (with expanded touch area for edge doors)
+  for(var i=hs.length-1;i>=0;i--){
+    var h=hs[i];
+    if(!isDoor(h))continue;
+    var ex=h.x,ey=h.y,ew=h.w,eh=h.h;
+    // Expand edge doors for easier tapping on mobile
+    if(h.x<20){ex=0;ew=Math.max(h.w,40);}
+    if(h.x>300){ex=Math.min(h.x,320);ew=360-ex;}
+    if(h.y<40){ey=0;eh=Math.max(h.h,50);}
+    if(h.y+h.h>600){eh=640-h.y;}
+    if(mx>=ex&&mx<=ex+ew&&my>=ey&&my<=ey+eh)return h;
   }
   return null;
 }
