@@ -27,8 +27,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:mon
 .room-btn:last-child{border-right:none}
 #desc-bar{height:24px;background:#0a0a1a;border-top:1px solid #222;border-bottom:1px solid #222;display:flex;align-items:center;justify-content:center;padding:0 8px;flex-shrink:0}
 #desc-text{font-size:9px;color:#ccc;letter-spacing:1px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
-#inv-bar{height:40px;background:#0d0520;display:flex;align-items:center;padding:0 3px;gap:2px;overflow-x:auto;flex-shrink:0;border-top:1px solid #333}
-.inv-slot{width:32px;height:32px;border:1px solid #333;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;cursor:pointer;background:rgba(255,255,255,0.02)}
+#inv-bar{min-height:0;background:#0d0520;display:flex;align-items:center;padding:0 3px;gap:2px;overflow-x:auto;flex-shrink:0;border-top:1px solid #333;transition:min-height 0.3s}
+#inv-bar.has-items{min-height:40px}
+.inv-slot{width:32px;height:32px;border:1px solid #555;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;cursor:pointer;background:rgba(255,215,0,0.06)}
 #dlg{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.92);display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px}
 #dlg.on{display:flex}
 #dlg-portrait{width:70px;height:70px;border:2px solid #FFD700;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;font-size:2.4rem;background:#1a0a2e}

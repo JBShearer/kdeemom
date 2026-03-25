@@ -280,12 +280,14 @@ function interactWith(h){
 
 function updateInv(){
   var bar=document.getElementById("inv-bar");bar.innerHTML="";
-  inv.forEach(function(it){
-    var s=document.createElement("div");s.className="inv-slot";
-    s.textContent=invEmoji[it]||"\u2753";s.title=it;bar.appendChild(s);
-  });
-  for(var i=inv.length;i<8;i++){
-    var s=document.createElement("div");s.className="inv-slot";bar.appendChild(s);
+  if(inv.length>0){
+    bar.classList.add("has-items");
+    inv.forEach(function(it){
+      var s=document.createElement("div");s.className="inv-slot";
+      s.textContent=invEmoji[it]||"\u2753";s.title=it;bar.appendChild(s);
+    });
+  } else {
+    bar.classList.remove("has-items");
   }
 }
 
