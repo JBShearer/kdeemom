@@ -6,26 +6,20 @@ var hotspots=makeHS();
 var invEmoji={banana:"\uD83C\uDF4C",duck:"\uD83E\uDD86",bible:"\uD83D\uDCD6",flashlight:"\uD83D\uDD26",necronomicon:"\uD83D\uDCDA",shovel:"\u26CF\uFE0F",wrench:"\uD83D\uDD27",towel:"\uD83E\uDDF4",book:"\uD83D\uDCDA",tidepen:"\uD83E\uDDF4"};
 
 /* K'Dee position & walking */
-var kdeeX=180,kdeeY=560,kdeeTargetX=180,kdeeTargetY=560,kdeeWalking=false,walkSpeed=3;
-var walkAnim=0,walkFrame=0;
+var kdeeX=180,kdeeY=560,kdeeTargetX=180,kdeeTargetY=560,kdeeWalking=false,walkSpeed=4;
+var walkAnim=0;
+var frameTick=0; /* for glow pulse */
 
 function drawKdee(c,x,y){
   var bob=kdeeWalking?Math.sin(walkAnim*0.3)*2:0;
   var legOff=kdeeWalking?Math.sin(walkAnim*0.4)*3:0;
-  // Body (pink top)
   D(c,x-7,y-38+bob,14,26,P.pink);
-  // Jeans
   D(c,x-6,y-12+bob,12,14,"#4169E1");
-  // Head
   c.fillStyle=P.skin;c.beginPath();c.arc(x,y-44+bob,9,0,Math.PI*2);c.fill();
-  // Hair
   c.fillStyle=P.hair;c.beginPath();c.arc(x,y-50+bob,9,Math.PI,2*Math.PI);c.fill();
   D(c,x-9,y-48+bob,4,6,P.hair);D(c,x+5,y-48+bob,4,6,P.hair);
-  // Eyes
   c.fillStyle=P.eye;c.fillRect(x-4,y-44+bob,2,2);c.fillRect(x+2,y-44+bob,2,2);
-  // Smile
   c.fillStyle=P.pink;c.fillRect(x-2,y-40+bob,4,1);
-  // Feet (animate when walking)
   D(c,x-5+legOff,y-2+bob,4,4,P.skin);D(c,x+1-legOff,y-2+bob,4,4,P.skin);
 }
 
@@ -44,8 +38,7 @@ function updateWalk(){
 }
 
 function walkTo(tx,ty,cb){
-  // Clamp to walkable area (lower portion of canvas)
-  var clampY=Math.max(420,Math.min(600,ty));
+  var clampY=Math.max(480,Math.min(600,ty));
   var clampX=Math.max(20,Math.min(340,tx));
   kdeeTargetX=clampX;kdeeTargetY=clampY;
   kdeeWalking=true;
@@ -56,29 +49,76 @@ function walkTo(tx,ty,cb){
   }
 }
 
+/* Draw glowing navigation arrows for door hotspots */
+function drawNavArrows(c){
+  var hs=hotspots[curRoom]||[];
+  var pulse=0.5+0.5*Math.sin(frameTick*0.06);
+  hs.forEach(function(h){
+    if(!h.open||h.open.indexOf("goto:")!==0)return;
+    var cx=h.x+h.w/2,cy=h.y+h.h/2;
+    var isLeft=h.x<20,isRight=h.x>320,isTop=h.y<40,isBottom=h.y>580;
+    c.save();
+    c.globalAlpha=0.5+0.5*pulse;
+    c.fillStyle=P.gold;
+    c.strokeStyle=P.gold;
+    c.lineWidth=2;
+    if(isLeft){
+      // Left arrow
+      c.beginPath();c.moveTo(8,cy-10);c.lineTo(0,cy);c.lineTo(8,cy+10);c.closePath();c.fill();
+      c.fillStyle="rgba(255,215,0,0.3)";D(c,0,cy-15,12,30,"rgba(255,215,0,"+0.15*pulse+")");
+    } else if(isRight){
+      // Right arrow
+      c.beginPath();c.moveTo(352,cy-10);c.lineTo(360,cy);c.lineTo(352,cy+10);c.closePath();c.fill();
+      D(c,348,cy-15,12,30,"rgba(255,215,0,"+0.15*pulse+")");
+    } else if(isTop){
+      // Up arrow
+      c.beginPath();c.moveTo(cx-10,8);c.lineTo(cx,0);c.lineTo(cx+10,8);c.closePath();c.fill();
+    } else if(isBottom){
+      // Down arrow
+      c.beginPath();c.moveTo(cx-10,632);c.lineTo(cx,640);c.lineTo(cx+10,632);c.closePath();c.fill();
+    } else {
+      // Door glow - draw a glowing outline around the door
+      c.strokeStyle="rgba(255,215,0,"+0.4*pulse+")";
+      c.lineWidth=2;
+      c.strokeRect(h.x-1,h.y-1,h.w+2,h.h+2);
+      // Arrow pointing to door
+      c.fillStyle="rgba(255,215,0,"+0.7*pulse+")";
+      c.font="bold 12px monospace";
+      c.textAlign="center";
+      c.fillText("\u25B6",cx,h.y+h.h+16);
+      c.textAlign="left";
+    }
+    c.restore();
+  });
+}
+
+/* Draw hover highlights for non-door hotspots */
+function drawHoverHighlights(c){
+  var hs=hotspots[curRoom]||[];
+  hs.forEach(function(h){
+    if(h._hover){
+      c.strokeStyle="rgba(255,215,0,0.6)";c.lineWidth=2;
+      c.strokeRect(h.x-1,h.y-1,h.w+2,h.h+2);
+    }
+  });
+}
+
 function drawScene(){
   ctx.clearRect(0,0,CW,CH);
   var room=ROOMS[curRoom];
   if(room&&room.bg)room.bg(ctx);
+  drawNavArrows(ctx);
   drawKdee(ctx,Math.round(kdeeX),Math.round(kdeeY));
-  // hotspot outlines on hover
-  var hs=hotspots[curRoom]||[];
-  hs.forEach(function(h){
-    if(h._hover){
-      ctx.strokeStyle="rgba(255,215,0,0.5)";ctx.lineWidth=1;
-      ctx.strokeRect(h.x,h.y,h.w,h.h);
-    }
-  });
-  // Room name overlay
+  drawHoverHighlights(ctx);
   ctx.fillStyle="rgba(0,0,0,0.55)";ctx.fillRect(0,0,CW,22);
   ctx.fillStyle=P.gold;ctx.font="bold 10px monospace";ctx.textAlign="center";
   ctx.fillText(room.name,CW/2,15);ctx.textAlign="left";
 }
 
-/* Game loop for animation */
 var animRunning=false;
 function gameLoop(){
   if(!animRunning)return;
+  frameTick++;
   updateWalk();
   drawScene();
   requestAnimationFrame(gameLoop);
@@ -97,8 +137,7 @@ function updateHUD(){
 function setDesc(t){document.getElementById("desc-text").textContent=t;}
 
 function showDlg(name,text,emoji){
-  var d=document.getElementById("dlg");
-  d.classList.add("on");
+  var d=document.getElementById("dlg");d.classList.add("on");
   document.getElementById("dlg-portrait").textContent=emoji||"\uD83D\uDC69";
   document.getElementById("dlg-name").textContent=name;
   document.getElementById("dlg-text").textContent=text;
@@ -118,23 +157,33 @@ function goToRoom(roomIdx){
   updateNav();
 }
 
+function navigateToRoom(h){
+  var targetRoom=parseInt(h.open.split(":")[1]);
+  var doorX=h.x+h.w/2,doorY=Math.max(480,Math.min(600,h.y+h.h));
+  setDesc("Going to "+h.name+"...");
+  walkTo(doorX,doorY,function(){
+    goToRoom(targetRoom);
+  });
+}
+
+function isDoor(h){
+  return h.open&&h.open.indexOf("goto:")===0;
+}
+
 function doVerb(h,forceVerb){
   var v=forceVerb||verb;
   var uid=curRoom+"_"+h.id+"_"+v;
-  // Navigation - goto rooms
-  if(h.open&&h.open.indexOf("goto:")===0&&(v==="open"||forceVerb==="open")){
-    var targetRoom=parseInt(h.open.split(":")[1]);
-    // Walk toward the door then go
-    var doorX=h.x+h.w/2,doorY=Math.max(420,Math.min(600,h.y+h.h));
-    walkTo(doorX,doorY,function(){
-      goToRoom(targetRoom);
-    });
+
+  // Navigation - clicking a door always navigates (regardless of verb)
+  if(isDoor(h)){
+    navigateToRoom(h);
     return;
   }
+
   var txt=h[v];
   if(!txt){setDesc("Can't "+v+" the "+h.name+".");return;}
-  // Walk to the hotspot first, then do the action
-  var hx=h.x+h.w/2,hy=Math.max(420,Math.min(600,h.y+h.h+20));
+
+  var hx=h.x+h.w/2,hy=Math.max(480,Math.min(600,h.y+h.h+20));
   walkTo(hx,hy,function(){
     if(h.hasKey&&v==="push"&&!usedHS[uid]){
       keys++;usedHS[uid]=true;
@@ -170,13 +219,13 @@ function updateInv(){
 function updateNav(){
   var bar=document.getElementById("room-nav");bar.innerHTML="";
   var hs=hotspots[curRoom]||[];
-  var doors=hs.filter(function(h){return h.open&&h.open.indexOf("goto:")===0;});
+  var doors=hs.filter(function(h){return isDoor(h);});
   doors.forEach(function(h){
     var b=document.createElement("div");b.className="room-btn";
     b.textContent="\u25B6 "+h.name;
     b.addEventListener("click",function(){
       if(paused||gameOver)return;
-      doVerb(h,"open");
+      navigateToRoom(h);
     });
     bar.appendChild(b);
   });
@@ -207,7 +256,6 @@ canvas.addEventListener("click",function(e){
   if(h){
     doVerb(h);
   } else {
-    // Walk to clicked spot
     walkTo(p.x,p.y);
     setDesc("Nothing interesting there.");
   }
@@ -234,8 +282,13 @@ canvas.addEventListener("mousemove",function(e){
     h._hover=false;
     if(p.x>=h.x&&p.x<=h.x+h.w&&p.y>=h.y&&p.y<=h.y+h.h){found=h;h._hover=true;}
   });
-  if(found){setDesc(verb.toUpperCase()+" "+found.name);canvas.style.cursor="pointer";}
-  else{setDesc("What should K'Dee do?");canvas.style.cursor="crosshair";}
+  if(found){
+    if(isDoor(found)){setDesc("\u25B6 Go to "+found.name);}
+    else{setDesc(verb.toUpperCase()+" "+found.name);}
+    canvas.style.cursor="pointer";
+  } else {
+    setDesc("What should K'Dee do?");canvas.style.cursor="crosshair";
+  }
 });
 
 document.querySelectorAll(".vb").forEach(function(b){
@@ -259,9 +312,7 @@ function winGame(){
   var m=Math.floor((780-timer)/60),s=(780-timer)%60;
   document.getElementById("dlg-text").textContent="K'Dee found all 3 keys in "+m+"m "+s+"s! She grabs her purse, kisses the kids, and heads out the door. Have fun, don't die!";
   document.getElementById("dlg-choices").innerHTML='<div class="dlg-ch" id="play-again">PLAY AGAIN</div>';
-  document.getElementById("play-again").addEventListener("click",function(){
-    location.reload();
-  });
+  document.getElementById("play-again").addEventListener("click",function(){location.reload();});
 }
 
 function loseGame(){
@@ -271,9 +322,7 @@ function loseGame(){
   document.getElementById("dlg-name").textContent="TIME'S UP!";
   document.getElementById("dlg-text").textContent="K'Dee is officially late. The kids are feral. The dog ate something suspicious. "+keys+"/3 keys found. Try again?";
   document.getElementById("dlg-choices").innerHTML='<div class="dlg-ch" id="play-again2">TRY AGAIN</div>';
-  document.getElementById("play-again2").addEventListener("click",function(){
-    location.reload();
-  });
+  document.getElementById("play-again2").addEventListener("click",function(){location.reload();});
 }
 
 var timerInterval;
@@ -290,8 +339,7 @@ document.getElementById("startbtn").addEventListener("click",function(){
   document.getElementById("game").classList.add("on");
   kdeeX=180;kdeeY=560;
   drawScene();updateHUD();updateInv();updateNav();
-  startLoop();
-  startTimer();
+  startLoop();startTimer();
 });
 
 document.getElementById("qbtn").addEventListener("click",function(){
