@@ -1,4 +1,4 @@
-s<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -30,7 +30,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:mon
 .tk{color:#FFD700}.tr{color:#00CED1}.ts{color:#FF69B4}
 
 /* Scene canvas - portrait optimized */
-#scene-wrap{flex:1;display:flex;align-items:center;justify-content:center;background:#000;position:relative;min-height:0;overflow:hidden}
+#scene-wrap{flex:1;display:flex;align-items:flex-start;justify-content:center;background:#000;position:relative;min-height:0;overflow:hidden}
 #scene{image-rendering:pixelated;cursor:crosshair;display:block;width:100%;height:auto;object-fit:contain}
 
 /* Room navigation bar */
@@ -76,8 +76,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:mon
 /* Portrait / mobile: scene fills width, UI compact */
 @media (max-width:480px),(orientation:portrait){
   #game{overflow:hidden}
-  #scene-wrap{flex:none;width:100%;height:auto;aspect-ratio:auto}
-  #scene{width:100%;height:auto;max-height:none}
+  #scene-wrap{flex:1;width:100%;height:auto;min-height:0}
+  #scene{width:100%;height:100%;max-height:none;object-fit:contain}
   #topbar{height:26px}
   #topbar span{font-size:9px;letter-spacing:0.5px}
   #room-nav{min-height:32px}
@@ -139,7 +139,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:mon
     <span class="ts" id="hs">⏰ 13:00</span>
     <button id="qbtn">QUIT</button>
   </div>
-  <div id="scene-wrap"><canvas id="scene" width="640" height="360"></canvas></div>
+  <div id="scene-wrap"><canvas id="scene" width="360" height="640"></canvas></div>
   <div id="room-nav"></div>
   <div id="desc-bar"><span id="desc-text">What should K'Dee do?</span></div>
   <div id="verb-bar">
@@ -217,7 +217,10 @@ function drawKdee(ctx,x,y,scale,frame){
 }
 
 // ==================== ROOM RENDERING ====================
-var SCENE_W=640, SCENE_H=360;
+var SCENE_W=360, SCENE_H=640;
+var ROOM_W=640, ROOM_H=360;
+var ROOM_SCALE=SCENE_W/ROOM_W; // 0.5625
+var ROOM_RENDER_H=Math.round(ROOM_H*ROOM_SCALE); // 202
 
 function drawRoom(ctx,room,hotspots,playerX,playerY,frame){
   // Background
@@ -911,6 +914,7 @@ Oh NOW you tell me."},
 // ==================== GAME STATE ====================
 var cv,ctx,hotspots,roomIdx,verb,keysFound,invItems,playerX,playerY,targetX,walking,frame,ticker;
 var questFlags={};
+var lastActionText="";
 var kidTimer,gameOn=false;
 var descEl,dlgQueue=[];
 
@@ -955,6 +959,9 @@ function tick(){
 
 function renderScene(){
   ctx.clearRect(0,0,SCENE_W,SCENE_H);
+  // Draw room scene scaled to portrait top area
+  ctx.save();
+  ctx.scale(ROOM_SCALE,ROOM_SCALE);
   var room=ROOM_LIST[roomIdx];
   room.drawBg(ctx);
   // Draw non-taken quest items with draw function
@@ -964,6 +971,69 @@ function renderScene(){
   drawKdee(ctx,playerX,playerY,2,walking?Math.floor(frame/8):0);
   // Draw exit arrows on top of everything
   drawExitArrows(ctx);
+  ctx.restore();
+  // Draw portrait bottom panel (room info + log)
+  drawPortraitPanel(ctx);
+}
+function drawPortraitPanel(c){
+  var py=ROOM_RENDER_H+2;
+  // Dark panel background
+  c.fillStyle='#0a0a1a';c.fillRect(0,py,SCENE_W,SCENE_H-py);
+  // Gold separator line
+  c.fillStyle='#FFD700';c.fillRect(0,py,SCENE_W,2);
+  // Room name
+  c.fillStyle='#FFD700';c.font='bold 14px monospace';c.textAlign='center';
+  c.fillText(ROOM_LIST[roomIdx].name,SCENE_W/2,py+22);
+  // Current verb indicator
+  c.fillStyle='#FF69B4';c.font='11px monospace';
+  c.fillText('[ '+(typeof verb!=='undefined'?verb.toUpperCase():'LOOK')+' ]',SCENE_W/2,py+40);
+  // Description text (if hovering)
+  var descEl=document.getElementById('desc-text');
+  if(descEl&&descEl.textContent){
+    c.fillStyle='#ccc';c.font='10px monospace';
+    var txt=descEl.textContent;
+    // Word wrap
+    var words=txt.split(' '),lines=[],line='';
+    words.forEach(function(w){
+      var test=line?line+' '+w:w;
+      if(c.measureText(test).width>SCENE_W-20){lines.push(line);line=w;}
+      else line=test;
+    });
+    if(line)lines.push(line);
+    for(var i=0;i<Math.min(lines.length,8);i++){
+      c.fillText(lines[i],SCENE_W/2,py+60+i*14);
+    }
+  }
+  // Last action log
+  if(typeof lastActionText!=='undefined'&&lastActionText){
+    c.fillStyle='#00CED1';c.font='10px monospace';
+    var words2=lastActionText.split(' '),lines2=[],line2='';
+    words2.forEach(function(w){
+      var test=line2?line2+' '+w:w;
+      if(c.measureText(test).width>SCENE_W-20){lines2.push(line2);line2=w;}
+      else line2=test;
+    });
+    if(line2)lines2.push(line2);
+    var startY=py+130;
+    for(var i=0;i<Math.min(lines2.length,12);i++){
+      c.fillText(lines2[i],SCENE_W/2,startY+i*14);
+    }
+  }
+  // Inventory display at bottom
+  c.fillStyle='#333';c.fillRect(0,SCENE_H-50,SCENE_W,50);
+  c.fillStyle='#555';c.fillRect(0,SCENE_H-50,SCENE_W,1);
+  c.fillStyle='#FFD700';c.font='bold 9px monospace';c.textAlign='left';
+  c.fillText('INVENTORY:',5,SCENE_H-36);
+  if(typeof invItems!=='undefined'){
+    for(var i=0;i<invItems.length;i++){
+      var ix=80+i*36;
+      c.fillStyle='#1a0a2e';c.fillRect(ix,SCENE_H-46,30,30);
+      c.strokeStyle='#FFD700';c.lineWidth=1;c.strokeRect(ix,SCENE_H-46,30,30);
+      c.fillStyle='#fff';c.font='16px monospace';c.textAlign='center';
+      c.fillText(invItems[i].e||'?',ix+15,SCENE_H-26);
+    }
+  }
+  c.textAlign='left';
 }
 
 // ==================== EXIT ARROWS ON CANVAS ====================
@@ -1166,8 +1236,12 @@ function handleSceneClick(e){
   var rect=cv.getBoundingClientRect();
   var scaleX=SCENE_W/rect.width;
   var scaleY=SCENE_H/rect.height;
-  var mx=(e.clientX-rect.left)*scaleX;
-  var my=(e.clientY-rect.top)*scaleY;
+  var canvasX=(e.clientX-rect.left)*scaleX;
+  var canvasY=(e.clientY-rect.top)*scaleY;
+  // Remap to room coordinates (scene is scaled at top of portrait canvas)
+  var mx=canvasX/ROOM_SCALE;
+  var my=canvasY/ROOM_SCALE;
+  if(canvasY>ROOM_RENDER_H){return;} // Clicked below scene area
 
   // Check hotspots
   var hs=hotspots[roomIdx];
@@ -1341,8 +1415,11 @@ function winGame(){
 function handleSceneMove(e){
   if(!gameOn)return;
   var rect=cv.getBoundingClientRect();
-  var mx=(e.clientX-rect.left)*(SCENE_W/rect.width);
-  var my=(e.clientY-rect.top)*(SCENE_H/rect.height);
+  var canvasX2=(e.clientX-rect.left)*(SCENE_W/rect.width);
+  var canvasY2=(e.clientY-rect.top)*(SCENE_H/rect.height);
+  var mx=canvasX2/ROOM_SCALE;
+  var my=canvasY2/ROOM_SCALE;
+  if(canvasY2>ROOM_RENDER_H){document.getElementById("desc-text").textContent="";return;}
   var hs=hotspots[roomIdx];
   var found="";
   for(var i=hs.length-1;i>=0;i--){
