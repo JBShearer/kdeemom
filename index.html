@@ -219,8 +219,9 @@ function drawKdee(ctx,x,y,scale,frame){
 // ==================== ROOM RENDERING ====================
 var SCENE_W=360, SCENE_H=640;
 var ROOM_W=640, ROOM_H=360;
-var ROOM_SCALE=SCENE_W/ROOM_W; // 0.5625
-var ROOM_RENDER_H=Math.round(ROOM_H*ROOM_SCALE); // 202
+var ROOM_SCALE_X=SCENE_W/ROOM_W; // 0.5625
+var ROOM_SCALE_Y=SCENE_H/ROOM_H; // 1.778 - fills entire canvas height
+var ROOM_RENDER_H=SCENE_H; // 640 - room fills whole canvas
 
 function drawRoom(ctx,room,hotspots,playerX,playerY,frame){
   // Background
@@ -960,7 +961,7 @@ function renderScene(){
   ctx.clearRect(0,0,SCENE_W,SCENE_H);
   // Draw room scene scaled to portrait top area
   ctx.save();
-  ctx.scale(ROOM_SCALE,ROOM_SCALE);
+  ctx.scale(ROOM_SCALE_X,ROOM_SCALE_Y);
   var room=ROOM_LIST[roomIdx];
   room.drawBg(ctx);
   // Draw non-taken quest items with draw function
@@ -1238,9 +1239,9 @@ function handleSceneClick(e){
   var canvasX=(e.clientX-rect.left)*scaleX;
   var canvasY=(e.clientY-rect.top)*scaleY;
   // Remap to room coordinates (scene is scaled at top of portrait canvas)
-  var mx=canvasX/ROOM_SCALE;
-  var my=canvasY/ROOM_SCALE;
-  if(canvasY>ROOM_RENDER_H){return;} // Clicked below scene area
+  var mx=canvasX/ROOM_SCALE_X;
+  var my=canvasY/ROOM_SCALE_Y;
+  if(canvasY>ROOM_RENDER_H){return;}
 
   // Check hotspots
   var hs=hotspots[roomIdx];
@@ -1416,8 +1417,8 @@ function handleSceneMove(e){
   var rect=cv.getBoundingClientRect();
   var canvasX2=(e.clientX-rect.left)*(SCENE_W/rect.width);
   var canvasY2=(e.clientY-rect.top)*(SCENE_H/rect.height);
-  var mx=canvasX2/ROOM_SCALE;
-  var my=canvasY2/ROOM_SCALE;
+  var mx=canvasX2/ROOM_SCALE_X;
+  var my=canvasY2/ROOM_SCALE_Y;
   if(canvasY2>ROOM_RENDER_H){document.getElementById("desc-text").textContent="";return;}
   var hs=hotspots[roomIdx];
   var found="";
