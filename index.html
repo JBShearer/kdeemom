@@ -2,268 +2,922 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kdeemom — Coming Soon</title>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Quicksand:wght@400;500;600&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>K'Dee Mom: The Search for the Lost Keys</title>
 <style>
-  :root {
-    --coral: #FF6B6B;
-    --sunny: #FFD93D;
-    --mint: #6BCB77;
-    --sky: #4D96FF;
-    --grape: #9B5DE5;
-    --pink: #F15BB5;
-    --cream: #FFF8F0;
-    --dark: #2D2B3D;
-  }
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:monospace;touch-action:none;user-select:none;-webkit-user-select:none}
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+#title{position:fixed;inset:0;z-index:100;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;image-rendering:pixelated}
+#title h1{font-family:monospace;font-size:clamp(1.4rem,5vw,2.2rem);color:#FFD700;text-shadow:2px 2px 0 #8B4513,0 0 20px rgba(255,215,0,0.3);margin-bottom:4px;letter-spacing:2px}
+#title .sub{font-size:clamp(0.9rem,3vw,1.3rem);color:#FF69B4;margin-bottom:6px;letter-spacing:3px}
+#title .sub2{font-size:clamp(1.2rem,4vw,1.8rem);color:#00CED1;margin-bottom:24px;letter-spacing:1px}
+#title .story{color:#aaa;font-size:clamp(0.7rem,2vw,0.85rem);max-width:500px;line-height:1.7;margin-bottom:28px}
+#title .story em{color:#FF69B4;font-style:normal}
+#title canvas{margin-bottom:20px;image-rendering:pixelated;border:2px solid #333}
+.tbtn{font-family:monospace;font-size:clamp(0.9rem,3vw,1.1rem);font-weight:bold;border:2px solid;padding:12px 36px;cursor:pointer;background:transparent;letter-spacing:2px;transition:all 0.15s}
+.tbtn:active{transform:scale(0.96)}
+.tbtn.go{color:#FFD700;border-color:#FFD700}
+.tbtn.go:hover{background:rgba(255,215,0,0.1)}
 
-  body {
-    font-family: 'Quicksand', sans-serif;
-    background: var(--cream);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    position: relative;
-  }
+/* GAME */
+#game{position:fixed;inset:0;z-index:50;display:none;flex-direction:column;background:#000}
+#game.on{display:flex}
 
-  /* floating shapes */
-  .shape {
-    position: absolute;
-    border-radius: 50%;
-    opacity: 0.15;
-    animation: drift 20s infinite ease-in-out;
-    z-index: 0;
-  }
-  .shape:nth-child(1) {
-    width: 300px; height: 300px;
-    background: var(--coral);
-    top: -80px; left: -60px;
-    animation-delay: 0s;
-  }
-  .shape:nth-child(2) {
-    width: 200px; height: 200px;
-    background: var(--sky);
-    top: 60%; right: -40px;
-    animation-delay: -5s;
-    animation-duration: 25s;
-  }
-  .shape:nth-child(3) {
-    width: 250px; height: 250px;
-    background: var(--sunny);
-    bottom: -60px; left: 30%;
-    animation-delay: -10s;
-    animation-duration: 22s;
-  }
-  .shape:nth-child(4) {
-    width: 180px; height: 180px;
-    background: var(--grape);
-    top: 10%; right: 20%;
-    animation-delay: -3s;
-    animation-duration: 28s;
-  }
-  .shape:nth-child(5) {
-    width: 150px; height: 150px;
-    background: var(--mint);
-    bottom: 20%; left: 10%;
-    animation-delay: -8s;
-    animation-duration: 18s;
-  }
-  .shape:nth-child(6) {
-    width: 120px; height: 120px;
-    background: var(--pink);
-    top: 40%; left: 50%;
-    animation-delay: -13s;
-    animation-duration: 24s;
-  }
+/* Top bar */
+#topbar{height:28px;background:#1a0a2e;display:flex;align-items:center;justify-content:space-between;padding:0 8px;flex-shrink:0;border-bottom:1px solid #333}
+#topbar span{font-size:11px;letter-spacing:1px}
+.tk{color:#FFD700}.tr{color:#00CED1}.ts{color:#FF69B4}
 
-  @keyframes drift {
-    0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
-    25% { transform: translate(40px, -30px) scale(1.1) rotate(5deg); }
-    50% { transform: translate(-20px, 40px) scale(0.95) rotate(-3deg); }
-    75% { transform: translate(30px, 20px) scale(1.05) rotate(4deg); }
-  }
+/* Scene canvas */
+#scene-wrap{flex:1;display:flex;align-items:center;justify-content:center;background:#000;position:relative;min-height:0;overflow:hidden}
+#scene{image-rendering:pixelated;cursor:crosshair;display:block;max-width:100%;max-height:100%}
 
-  .container {
-    text-align: center;
-    z-index: 1;
-    padding: 2rem;
-    max-width: 600px;
-  }
+/* Description bar */
+#desc-bar{height:32px;background:#0a0a1a;border-top:1px solid #222;border-bottom:1px solid #222;display:flex;align-items:center;justify-content:center;padding:0 8px;flex-shrink:0;overflow:hidden}
+#desc-text{font-size:11px;color:#ccc;letter-spacing:1px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
 
-  .logo {
-    font-family: 'Fredoka', sans-serif;
-    font-weight: 700;
-    font-size: clamp(3rem, 10vw, 5.5rem);
-    letter-spacing: -2px;
-    margin-bottom: 0.2em;
-    animation: popIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-  }
+/* Verb bar */
+#verb-bar{height:42px;background:#1a0a2e;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 6px;flex-shrink:0;flex-wrap:nowrap}
+.vb{font-family:monospace;font-size:clamp(0.65rem,2.2vw,0.8rem);font-weight:bold;padding:6px 10px;border:1px solid #555;border-radius:4px;background:rgba(255,255,255,0.03);color:#aaa;cursor:pointer;letter-spacing:1px;white-space:nowrap;transition:all 0.1s}
+.vb.active{color:#FFD700;border-color:#FFD700;background:rgba(255,215,0,0.08)}
+.vb:active{transform:scale(0.95)}
 
-  .logo .k { color: var(--coral); }
-  .logo .d { color: var(--sunny); }
-  .logo .e1 { color: var(--mint); }
-  .logo .e2 { color: var(--sky); }
-  .logo .m { color: var(--grape); }
-  .logo .o { color: var(--pink); }
-  .logo .m2 { color: var(--coral); }
-  .logo .dot { color: var(--dark); }
+/* Inventory */
+#inv-bar{height:52px;background:#0d0520;display:flex;align-items:center;padding:0 6px;gap:4px;overflow-x:auto;flex-shrink:0;border-top:1px solid #333}
+.inv-slot{width:42px;height:42px;border:1px solid #333;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;cursor:pointer;background:rgba(255,255,255,0.02);transition:all 0.1s}
+.inv-slot:active{border-color:#FFD700}
+.inv-slot.selected{border-color:#FF69B4;background:rgba(255,105,180,0.1)}
 
-  @keyframes popIn {
-    0% { transform: scale(0.3) rotate(-8deg); opacity: 0; }
-    100% { transform: scale(1) rotate(0deg); opacity: 1; }
-  }
+/* Dialogue overlay */
+#dlg{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.92);display:none;flex-direction:column;align-items:center;justify-content:flex-end;padding:0 0 20px 0}
+#dlg.on{display:flex}
+#dlg-portrait{width:80px;height:80px;border:2px solid #FFD700;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;font-size:2.8rem;background:#1a0a2e}
+#dlg-name{font-size:0.8rem;color:#FFD700;letter-spacing:2px;margin-bottom:6px}
+#dlg-text{font-size:clamp(0.8rem,2.5vw,0.95rem);color:#fff;text-align:center;max-width:420px;line-height:1.6;padding:0 20px;margin-bottom:16px;min-height:50px}
+#dlg-choices{display:flex;flex-direction:column;gap:8px;width:100%;max-width:400px;padding:0 20px}
+.dlg-ch{font-family:monospace;font-size:0.85rem;padding:10px 16px;border:1px solid #444;border-radius:6px;background:rgba(255,255,255,0.03);color:#ccc;cursor:pointer;text-align:left;letter-spacing:0.5px}
+.dlg-ch:active{background:rgba(255,105,180,0.15);border-color:#FF69B4;color:#fff}
+#dlg-continue{font-family:monospace;font-size:0.8rem;color:#666;cursor:pointer;padding:8px 20px;letter-spacing:2px}
+#dlg-continue:active{color:#FFD700}
 
-  .tagline {
-    font-family: 'Fredoka', sans-serif;
-    font-weight: 600;
-    font-size: clamp(1.2rem, 4vw, 1.8rem);
-    color: var(--dark);
-    margin-bottom: 2rem;
-    animation: slideUp 0.6s 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-  }
+/* Quit */
+#qbtn{position:absolute;top:2px;right:6px;z-index:20;font-family:monospace;font-size:0.7rem;color:#666;background:none;border:1px solid #333;padding:2px 8px;border-radius:4px;cursor:pointer}
 
-  @keyframes slideUp {
-    0% { transform: translateY(30px); opacity: 0; }
-    100% { transform: translateY(0); opacity: 1; }
-  }
-
-  .fun-bar {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    margin-bottom: 2.5rem;
-    animation: slideUp 0.6s 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-  }
-  .fun-bar span {
-    display: block;
-    width: 40px;
-    height: 8px;
-    border-radius: 4px;
-    animation: barBounce 2s infinite ease-in-out;
-  }
-  .fun-bar span:nth-child(1) { background: var(--coral); animation-delay: 0s; }
-  .fun-bar span:nth-child(2) { background: var(--sunny); animation-delay: 0.15s; }
-  .fun-bar span:nth-child(3) { background: var(--mint); animation-delay: 0.3s; }
-  .fun-bar span:nth-child(4) { background: var(--sky); animation-delay: 0.45s; }
-  .fun-bar span:nth-child(5) { background: var(--grape); animation-delay: 0.6s; }
-  .fun-bar span:nth-child(6) { background: var(--pink); animation-delay: 0.75s; }
-
-  @keyframes barBounce {
-    0%, 100% { transform: scaleX(1); }
-    50% { transform: scaleX(1.8); }
-  }
-
-  .message {
-    font-size: clamp(1rem, 3vw, 1.15rem);
-    color: var(--dark);
-    opacity: 0.7;
-    line-height: 1.7;
-    margin-bottom: 2.5rem;
-    animation: slideUp 0.6s 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-  }
-
-  .emoji-row {
-    font-size: 2rem;
-    letter-spacing: 0.3em;
-    animation: slideUp 0.6s 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-    user-select: none;
-  }
-  .emoji-row span {
-    display: inline-block;
-    animation: wiggle 3s infinite ease-in-out;
-    cursor: default;
-    transition: transform 0.2s;
-  }
-  .emoji-row span:hover {
-    transform: scale(1.4) rotate(10deg);
-  }
-  .emoji-row span:nth-child(1) { animation-delay: 0s; }
-  .emoji-row span:nth-child(2) { animation-delay: 0.4s; }
-  .emoji-row span:nth-child(3) { animation-delay: 0.8s; }
-  .emoji-row span:nth-child(4) { animation-delay: 1.2s; }
-  .emoji-row span:nth-child(5) { animation-delay: 1.6s; }
-
-  @keyframes wiggle {
-    0%, 100% { transform: rotate(0deg) translateY(0); }
-    25% { transform: rotate(-6deg) translateY(-4px); }
-    75% { transform: rotate(6deg) translateY(-4px); }
-  }
-
-  /* confetti burst on click */
-  .confetti {
-    position: fixed;
-    width: 10px;
-    height: 10px;
-    border-radius: 2px;
-    pointer-events: none;
-    z-index: 100;
-    animation: confettiFall 1.5s forwards ease-out;
-  }
-
-  @keyframes confettiFall {
-    0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
-    100% { transform: translateY(400px) rotate(720deg) scale(0); opacity: 0; }
-  }
+/* CRT effect */
+#crt{position:fixed;inset:0;z-index:60;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,0.15) 0px,rgba(0,0,0,0.15) 1px,transparent 1px,transparent 3px);opacity:0.3}
 </style>
 </head>
 <body>
 
-<div class="shape"></div>
-<div class="shape"></div>
-<div class="shape"></div>
-<div class="shape"></div>
-<div class="shape"></div>
-<div class="shape"></div>
-
-<div class="container">
-  <div class="logo">
-    <span class="k">K</span><span class="d">d</span><span class="e1">e</span><span class="e2">e</span><span class="m">m</span><span class="o">o</span><span class="m2">m</span>
-  </div>
-
-  <div class="tagline">Something fun is on the way!</div>
-
-  <div class="fun-bar">
-    <span></span><span></span><span></span><span></span><span></span><span></span>
-  </div>
-
-  <div class="message">
-    We're putting the finishing touches on something special.<br>
-    Check back soon!
-  </div>
-
-  <div class="emoji-row">
-    <span>🎨</span>
-    <span>✨</span>
-    <span>🚀</span>
-    <span>🎉</span>
-    <span>💜</span>
-  </div>
+<!-- TITLE SCREEN -->
+<div id="title">
+  <canvas id="title-art" width="320" height="180"></canvas>
+  <div class="sub">A K'DEE MOM ADVENTURE</div>
+  <h1>THE SEARCH FOR THE LOST KEYS</h1>
+  <div class="sub2">"Have Fun, Don't Die!"</div>
+  <div class="story">It's 8:47 AM. <em>K'Dee Lyne Shearer</em> — blonde hair, big green eyes, and a smile that could power a small city — has exactly <em>13 minutes</em> before she needs to leave. The problem? Her keys have vanished. Again. Somewhere in this ridiculous house, between the LEGO minefields and the rubber duck army, three keys are hiding. The kids are "helping." The dog is suspicious. The clock is ticking.<br><br>Find the keys. Survive the children. <em>Have fun, don't die.</em></div>
+  <button class="tbtn go" id="startbtn">► INSERT COIN TO BEGIN ◄</button>
 </div>
 
-<script>
-  // confetti burst on click anywhere
-  document.addEventListener('click', (e) => {
-    const colors = ['#FF6B6B','#FFD93D','#6BCB77','#4D96FF','#9B5DE5','#F15BB5'];
-    for (let i = 0; i < 15; i++) {
-      const c = document.createElement('div');
-      c.className = 'confetti';
-      c.style.left = e.clientX + 'px';
-      c.style.top = e.clientY + 'px';
-      c.style.background = colors[Math.floor(Math.random() * colors.length)];
-      c.style.transform = `translate(${(Math.random()-0.5)*200}px, 0)`;
-      c.style.animation = `confettiFall ${1+Math.random()}s forwards ease-out`;
-      c.style.width = (6+Math.random()*8)+'px';
-      c.style.height = (6+Math.random()*8)+'px';
-      c.style.borderRadius = Math.random()>0.5 ? '50%' : '2px';
-      document.body.appendChild(c);
-      setTimeout(() => c.remove(), 2000);
-    }
-  });
-</script>
+<!-- GAME -->
+<div id="game">
+  <div id="topbar">
+    <span class="tk" id="hk">🔑 KEYS: 0/3</span>
+    <span class="tr" id="hr">THE FOYER</span>
+    <span class="ts" id="hs">⏰ 13:00</span>
+    <button id="qbtn">QUIT</button>
+  </div>
+  <div id="scene-wrap"><canvas id="scene" width="640" height="360"></canvas></div>
+  <div id="desc-bar"><span id="desc-text">What should K'Dee do?</span></div>
+  <div id="verb-bar">
+    <div class="vb active" data-v="look">LOOK</div>
+    <div class="vb" data-v="use">USE</div>
+    <div class="vb" data-v="take">TAKE</div>
+    <div class="vb" data-v="talk">TALK</div>
+    <div class="vb" data-v="open">OPEN</div>
+    <div class="vb" data-v="push">PUSH</div>
+  </div>
+  <div id="inv-bar"></div>
+</div>
 
+<!-- DIALOGUE -->
+<div id="dlg">
+  <div id="dlg-portrait"></div>
+  <div id="dlg-name"></div>
+  <div id="dlg-text"></div>
+  <div id="dlg-choices"></div>
+  <div id="dlg-continue">[ CLICK TO CONTINUE ]</div>
+</div>
+
+<!-- CRT scanlines -->
+<div id="crt"></div>
+
+<script>
+(function(){
+"use strict";
+
+// ==================== PIXEL ART ENGINE ====================
+var PAL = {
+  black:"#0a0a1a", dblue:"#1a0a2e", navy:"#16213e", dpurp:"#2d132c",
+  brown:"#5c3a1e", dbrown:"#3d2b1f", lbrown:"#8B7355", tan:"#c9a56c",
+  pink:"#FF69B4", lpink:"#FFB6C1", hotpink:"#FF1493",
+  gold:"#FFD700", yellow:"#FFEC8B", orange:"#FF8C00",
+  teal:"#00CED1", cyan:"#7FFFD4", sky:"#87CEEB",
+  green:"#228B22", lgreen:"#90EE90", dgreen:"#006400",
+  red:"#CD5C5C", dred:"#8B0000",
+  gray:"#888", lgray:"#bbb", dgray:"#444", white:"#f0f0f0",
+  purple:"#9B59B6", wood:"#8B6914", carpet:"#6B2D5B",
+  wall1:"#4a3f5c", wall2:"#3d3450", floor1:"#5c4a6b", floor2:"#4d3c5e",
+  skin:"#FDBCB4", hair:"#F0E68C", eye:"#00AA44",
+};
+
+function drawRect(ctx,x,y,w,h,col){ctx.fillStyle=col;ctx.fillRect(x,y,w,h);}
+
+// Draw K'Dee sprite at position
+function drawKdee(ctx,x,y,scale,frame){
+  var s=scale||2;
+  var f=frame||0;
+  // Body (pink top)
+  drawRect(ctx,x,y,12*s,14*s,PAL.pink);
+  // Jeans
+  drawRect(ctx,x,y+14*s,12*s,10*s,"#4169E1");
+  // Shoes
+  drawRect(ctx,x,y+24*s,5*s,3*s,PAL.white);
+  drawRect(ctx,x+7*s,y+24*s,5*s,3*s,PAL.white);
+  // Head
+  drawRect(ctx,x+1*s,y-12*s,10*s,12*s,PAL.skin);
+  // Hair (blonde)
+  drawRect(ctx,x-1*s,y-14*s,14*s,6*s,PAL.hair);
+  drawRect(ctx,x-1*s,y-8*s,3*s,10*s,PAL.hair);
+  drawRect(ctx,x+10*s,y-8*s,3*s,10*s,PAL.hair);
+  // Eyes (big green!)
+  drawRect(ctx,x+2*s,y-8*s,3*s,3*s,PAL.eye);
+  drawRect(ctx,x+7*s,y-8*s,3*s,3*s,PAL.eye);
+  drawRect(ctx,x+3*s,y-7*s,1*s,1*s,PAL.black);
+  drawRect(ctx,x+8*s,y-7*s,1*s,1*s,PAL.black);
+  // Smile
+  drawRect(ctx,x+3*s,y-4*s,6*s,1*s,PAL.dred);
+  // Arms
+  var armOff = f%2===0 ? 0 : -2*s;
+  drawRect(ctx,x-3*s,y+armOff,3*s,8*s,PAL.skin);
+  drawRect(ctx,x+12*s,y-armOff,3*s,8*s,PAL.skin);
+}
+
+// ==================== ROOM RENDERING ====================
+var SCENE_W=640, SCENE_H=360;
+
+function drawRoom(ctx,room,hotspots,playerX,playerY,frame){
+  // Background
+  room.drawBg(ctx);
+  // Hotspot objects
+  hotspots.forEach(function(h){if(h.draw && !h.taken)h.draw(ctx,h);});
+  // Player
+  drawKdee(ctx,playerX,playerY,2,frame);
+}
+
+// Room background painters
+function paintFoyer(ctx){
+  // Floor
+  drawRect(ctx,0,220,640,140,PAL.carpet);
+  for(var i=0;i<640;i+=40){drawRect(ctx,i,220,1,140,"rgba(0,0,0,0.1)");}
+  // Back wall
+  var grd=ctx.createLinearGradient(0,0,0,220);
+  grd.addColorStop(0,PAL.wall1);grd.addColorStop(1,PAL.wall2);
+  ctx.fillStyle=grd;ctx.fillRect(0,0,640,220);
+  // Wainscoting
+  drawRect(ctx,0,180,640,40,PAL.dbrown);
+  drawRect(ctx,0,178,640,3,PAL.brown);
+  // Door frame (left)
+  drawRect(ctx,20,60,80,160,PAL.dbrown);
+  drawRect(ctx,25,65,70,150,PAL.brown);
+  drawRect(ctx,30,70,60,75,"#1a1a1a");
+  // Door frame (right)
+  drawRect(ctx,540,60,80,160,PAL.dbrown);
+  drawRect(ctx,545,65,70,150,PAL.brown);
+  drawRect(ctx,550,70,60,75,"#1a1a1a");
+  // Front door (center back)
+  drawRect(ctx,260,30,120,190,PAL.dbrown);
+  drawRect(ctx,265,35,110,180,"#654321");
+  drawRect(ctx,350,120,8,8,PAL.gold);
+  // Light fixture
+  drawRect(ctx,300,5,40,15,PAL.gold);
+  drawRect(ctx,310,15,20,5,PAL.yellow);
+  // Welcome mat
+  drawRect(ctx,280,310,80,25,PAL.dgreen);
+  ctx.fillStyle=PAL.lgreen;ctx.font="8px monospace";ctx.fillText("WELCOME",288,327);
+  // Shoe pile
+  drawRect(ctx,460,290,60,30,"#4a3553");
+  drawRect(ctx,465,285,15,12,"#e74c3c");
+  drawRect(ctx,480,288,15,10,"#3498db");
+  drawRect(ctx,495,290,18,10,"#2ecc71");
+  // Coat rack
+  drawRect(ctx,130,100,6,130,PAL.dbrown);
+  drawRect(ctx,118,95,30,8,PAL.dbrown);
+  drawRect(ctx,115,85,14,20,"#e74c3c");
+  drawRect(ctx,140,80,12,22,"#3498db");
+  // Mirror
+  drawRect(ctx,410,70,50,70,"#c0c0c0");
+  drawRect(ctx,413,73,44,64,"#87CEEB");
+  drawRect(ctx,425,90,20,30,PAL.skin);
+  // Plant
+  drawRect(ctx,560,250,30,40,PAL.brown);
+  drawRect(ctx,555,220,40,35,PAL.green);
+  drawRect(ctx,560,210,30,20,PAL.lgreen);
+}
+
+function paintKitchen(ctx){
+  drawRect(ctx,0,200,640,160,"#d4a76a");
+  for(var i=0;i<640;i+=32){for(var j=200;j<360;j+=32){if((Math.floor(i/32)+Math.floor(j/32))%2===0)drawRect(ctx,i,j,32,32,"#c99a5b");}}
+  var grd=ctx.createLinearGradient(0,0,0,200);
+  grd.addColorStop(0,"#f5e6d3");grd.addColorStop(1,"#e8d5b7");
+  ctx.fillStyle=grd;ctx.fillRect(0,0,640,200);
+  // Cabinets
+  for(var c=0;c<5;c++){drawRect(ctx,20+c*90,10,80,80,PAL.dbrown);drawRect(ctx,24+c*90,14,72,72,PAL.brown);drawRect(ctx,55+c*90,45,10,6,PAL.gold);}
+  // Counter
+  drawRect(ctx,0,160,640,40,"#888");
+  drawRect(ctx,0,158,640,4,"#aaa");
+  // Stove
+  drawRect(ctx,240,100,100,60,"#555");
+  drawRect(ctx,250,110,20,20,"#333");drawRect(ctx,280,110,20,20,"#333");drawRect(ctx,310,110,20,20,"#333");
+  // Smoke
+  ctx.fillStyle="rgba(200,200,200,0.3)";
+  ctx.beginPath();ctx.arc(290,70,25,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(280,45,18,0,Math.PI*2);ctx.fill();
+  // Fridge
+  drawRect(ctx,540,50,80,150,"#ccc");
+  drawRect(ctx,545,55,70,70,"#ddd");
+  drawRect(ctx,545,130,70,65,"#ddd");
+  drawRect(ctx,610,85,5,10,"#888");
+  drawRect(ctx,610,155,5,10,"#888");
+  // Sink
+  drawRect(ctx,40,162,80,30,"#bbb");
+  drawRect(ctx,70,140,10,25,"#888");
+  // Banana on counter
+  drawRect(ctx,180,150,20,10,"#FFD700");
+}
+
+function paintLiving(ctx){
+  drawRect(ctx,0,230,640,130,"#5c4a3a");
+  var grd=ctx.createLinearGradient(0,0,0,230);
+  grd.addColorStop(0,"#3d3450");grd.addColorStop(1,"#4d3c5e");
+  ctx.fillStyle=grd;ctx.fillRect(0,0,640,230);
+  // TV
+  drawRect(ctx,250,40,140,100,"#222");
+  drawRect(ctx,255,45,130,90,"#111");
+  drawRect(ctx,260,50,120,80,"#1a3a5a");
+  drawRect(ctx,290,140,60,20,"#333");
+  drawRect(ctx,270,158,100,4,"#222");
+  // Couch
+  drawRect(ctx,80,230,200,60,"#8B4513");
+  drawRect(ctx,85,225,190,10,"#A0522D");
+  drawRect(ctx,75,230,10,65,"#6B3410");
+  drawRect(ctx,280,230,10,65,"#6B3410");
+  // Pillows
+  drawRect(ctx,100,235,30,20,"#FF69B4");drawRect(ctx,140,232,25,22,"#FFD700");drawRect(ctx,175,236,30,18,"#00CED1");drawRect(ctx,220,233,28,20,"#9B59B6");drawRect(ctx,250,238,22,16,"#FF6B6B");
+  // Bookshelf
+  drawRect(ctx,470,60,120,170,PAL.dbrown);
+  for(var s=0;s<4;s++){drawRect(ctx,475,70+s*42,110,4,PAL.brown);for(var b=0;b<5;b++){var bc=["#e74c3c","#3498db","#2ecc71","#9b59b6","#f39c12"][b];drawRect(ctx,478+b*22,75+s*42,18,35,bc);}}
+  // Rug
+  drawRect(ctx,200,280,240,50,"#8B2252");
+  drawRect(ctx,205,285,230,40,"#9B3262");
+  // Lamp
+  drawRect(ctx,395,180,6,55,PAL.gold);
+  drawRect(ctx,380,165,36,20,PAL.yellow);
+  ctx.fillStyle="rgba(255,255,200,0.08)";ctx.beginPath();ctx.arc(398,175,60,0,Math.PI*2);ctx.fill();
+}
+
+function paintKids(ctx){
+  drawRect(ctx,0,220,640,140,"#5c6b8a");
+  var grd=ctx.createLinearGradient(0,0,0,220);
+  grd.addColorStop(0,"#4a6fa5");grd.addColorStop(1,"#3d5a80");
+  ctx.fillStyle=grd;ctx.fillRect(0,0,640,220);
+  // Star stickers on wall
+  ctx.fillStyle=PAL.yellow;
+  [[50,30],[120,60],[500,20],[560,50],[300,15]].forEach(function(p){ctx.fillRect(p[0],p[1],8,8);});
+  // Bunk bed
+  drawRect(ctx,30,80,120,160,PAL.dbrown);
+  drawRect(ctx,35,85,110,35,"#4169E1");
+  drawRect(ctx,35,160,110,35,"#FF69B4");
+  drawRect(ctx,30,145,120,4,PAL.brown);
+  // Toy box
+  drawRect(ctx,200,260,80,50,"#e74c3c");
+  drawRect(ctx,200,255,80,10,"#c0392b");
+  ctx.fillStyle=PAL.yellow;ctx.font="bold 10px monospace";ctx.fillText("TOYS",222,282);
+  // LEGO on floor!!
+  drawRect(ctx,350,310,8,6,"#e74c3c");
+  drawRect(ctx,420,320,8,6,"#3498db");
+  drawRect(ctx,300,330,8,6,"#2ecc71");
+  drawRect(ctx,480,315,8,6,"#FFD700");
+  // Desk
+  drawRect(ctx,440,140,160,10,PAL.brown);
+  drawRect(ctx,450,150,6,80,PAL.dbrown);
+  drawRect(ctx,584,150,6,80,PAL.dbrown);
+  // Drawing on desk
+  drawRect(ctx,470,130,40,12,"#fff");
+  drawRect(ctx,475,132,5,5,"#e74c3c");
+  drawRect(ctx,485,133,8,4,"#3498db");
+  // Poster
+  drawRect(ctx,340,40,80,60,"#fff");
+  drawRect(ctx,345,45,70,50,"#222");
+  ctx.fillStyle="#0f0";ctx.font="8px monospace";ctx.fillText("GAME",360,72);ctx.fillText("OVER",360,82);
+  // Dinosaur
+  drawRect(ctx,530,270,30,40,PAL.green);
+  drawRect(ctx,520,265,15,15,PAL.green);
+  drawRect(ctx,545,305,15,10,PAL.green);
+}
+
+function paintBathroom(ctx){
+  drawRect(ctx,0,240,640,120,"#add8e6");
+  for(var i=0;i<640;i+=24){for(var j=240;j<360;j+=24){drawRect(ctx,i,j,23,23,"#9fc5d8");}}
+  drawRect(ctx,0,0,640,240,"#b0d4e8");
+  for(var i=0;i<640;i+=24){for(var j=0;j<240;j+=24){drawRect(ctx,i,j,23,23,"#a0c4d8");}}
+  // Bathtub
+  drawRect(ctx,20,200,200,80,"#fff");
+  drawRect(ctx,25,205,190,70,"#cceeff");
+  drawRect(ctx,30,195,10,15,"#ccc");
+  // Rubber ducks!!
+  ctx.fillStyle="#FFD700";
+  [[50,210],[80,215],[110,208],[140,212],[170,210]].forEach(function(p){
+    ctx.fillRect(p[0],p[1],12,10);ctx.fillRect(p[0]+8,p[1]-4,8,8);
+    ctx.fillStyle="#FF8C00";ctx.fillRect(p[0]+12,p[1]-2,4,3);ctx.fillStyle="#FFD700";
+  });
+  // Toilet
+  drawRect(ctx,340,210,50,70,"#fff");
+  drawRect(ctx,335,200,60,15,"#eee");
+  drawRect(ctx,345,190,40,15,"#ddd");
+  // Sink
+  drawRect(ctx,500,180,80,40,"#fff");
+  drawRect(ctx,530,160,20,25,"#ccc");
+  // Mirror
+  drawRect(ctx,490,60,100,100,"#c0c0c0");
+  drawRect(ctx,495,65,90,90,"#b0d4e8");
+  // Towel
+  drawRect(ctx,280,100,40,80,"#FF69B4");
+  drawRect(ctx,280,95,40,8,"#ccc");
+}
+
+function paintGarage(ctx){
+  drawRect(ctx,0,260,640,100,"#808080");
+  for(var i=0;i<640;i+=60){drawRect(ctx,i,260,1,100,"rgba(0,0,0,0.15)");}
+  drawRect(ctx,0,0,640,260,"#555");
+  // Garage door
+  drawRect(ctx,150,20,340,240,"#777");
+  for(var i=0;i<6;i++){drawRect(ctx,155,25+i*40,330,35,"#888");drawRect(ctx,155,25+i*40,330,2,"#999");}
+  // Workbench
+  drawRect(ctx,0,200,130,10,PAL.brown);
+  drawRect(ctx,5,210,6,55,PAL.dbrown);
+  drawRect(ctx,115,210,6,55,PAL.dbrown);
+  // Tools on wall
+  drawRect(ctx,20,120,15,50,"#ccc");drawRect(ctx,50,130,8,40,"#aaa");drawRect(ctx,70,110,20,6,PAL.red);drawRect(ctx,70,110,4,50,"#888");
+  // Bike
+  drawRect(ctx,530,200,30,30,"#e74c3c");
+  ctx.strokeStyle="#333";ctx.lineWidth=2;ctx.beginPath();ctx.arc(520,245,20,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(570,245,20,0,Math.PI*2);ctx.stroke();
+  // Boxes
+  drawRect(ctx,540,100,60,50,"#c9a56c");drawRect(ctx,540,95,60,8,PAL.brown);
+  drawRect(ctx,530,140,50,40,"#b89a5a");drawRect(ctx,530,136,50,6,PAL.brown);
+  ctx.fillStyle="#444";ctx.font="8px monospace";ctx.fillText("STUFF",548,122);
+}
+
+function paintBedroom(ctx){
+  drawRect(ctx,0,230,640,130,"#d4a0b0");
+  var grd=ctx.createLinearGradient(0,0,0,230);
+  grd.addColorStop(0,"#e8d0e0");grd.addColorStop(1,"#d4b0c0");
+  ctx.fillStyle=grd;ctx.fillRect(0,0,640,230);
+  // Bed
+  drawRect(ctx,40,170,250,90,"#8B4513");
+  drawRect(ctx,45,165,240,10,PAL.white);
+  drawRect(ctx,45,175,240,80,"#DDA0DD");
+  drawRect(ctx,50,168,60,20,PAL.white);drawRect(ctx,120,168,60,20,PAL.white);
+  // Nightstand
+  drawRect(ctx,300,220,50,50,PAL.dbrown);
+  drawRect(ctx,310,210,10,12,"#FFD700");
+  // Vanity
+  drawRect(ctx,420,160,140,70,PAL.white);
+  drawRect(ctx,430,170,120,4,PAL.lgray);
+  drawRect(ctx,440,100,100,65,"#c0c0c0");
+  drawRect(ctx,445,105,90,55,"#FFE4E1");
+  // Window
+  drawRect(ctx,200,30,120,100,"#87CEEB");
+  drawRect(ctx,195,25,130,5,PAL.white);
+  drawRect(ctx,195,130,130,5,PAL.white);
+  drawRect(ctx,258,30,4,100,PAL.white);
+  // Curtains
+  drawRect(ctx,195,30,20,100,"#DDA0DD");
+  drawRect(ctx,305,30,20,100,"#DDA0DD");
+  // Flowers
+  drawRect(ctx,440,155,20,20,PAL.green);
+  drawRect(ctx,445,145,10,12,"#FF69B4");
+  drawRect(ctx,435,148,8,10,"#FFD700");
+}
+
+function paintLaundry(ctx){
+  drawRect(ctx,0,250,640,110,"#b0b0b0");
+  drawRect(ctx,0,0,640,250,"#d0d0d0");
+  // Washer
+  drawRect(ctx,40,140,100,110,"#eee");
+  drawRect(ctx,55,160,70,70,"#ccc");
+  ctx.strokeStyle="#aaa";ctx.lineWidth=2;ctx.beginPath();ctx.arc(90,195,25,0,Math.PI*2);ctx.stroke();
+  drawRect(ctx,50,145,15,8,"#999");drawRect(ctx,70,145,15,8,"#999");
+  // Dryer
+  drawRect(ctx,160,140,100,110,"#eee");
+  drawRect(ctx,175,160,70,70,"#ccc");
+  ctx.beginPath();ctx.arc(210,195,25,0,Math.PI*2);ctx.stroke();
+  // Mount Washmore
+  drawRect(ctx,340,200,180,100,"#aaa");
+  for(var i=0;i<8;i++){var cc=["#e74c3c","#3498db","#2ecc71","#FF69B4","#FFD700","#9b59b6","#FF8C00","#00CED1"][i];drawRect(ctx,350+rInt(150),210+rInt(60),30+rInt(20),15+rInt(10),cc);}
+  // Iron
+  drawRect(ctx,540,200,50,10,"#888");drawRect(ctx,555,190,20,12,"#666");
+  // Shelf
+  drawRect(ctx,400,60,200,8,PAL.brown);
+  drawRect(ctx,410,30,40,30,"#3498db");drawRect(ctx,460,25,50,35,"#e74c3c");drawRect(ctx,520,30,40,30,"#2ecc71");
+}
+
+function paintBackyard(ctx){
+  // Sky
+  var grd=ctx.createLinearGradient(0,0,0,160);
+  grd.addColorStop(0,"#87CEEB");grd.addColorStop(1,"#b0e0ff");
+  ctx.fillStyle=grd;ctx.fillRect(0,0,640,160);
+  // Sun
+  ctx.fillStyle="#FFD700";ctx.beginPath();ctx.arc(550,50,30,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="rgba(255,215,0,0.1)";ctx.beginPath();ctx.arc(550,50,60,0,Math.PI*2);ctx.fill();
+  // Grass
+  drawRect(ctx,0,160,640,200,"#228B22");
+  for(var i=0;i<640;i+=3){drawRect(ctx,i,158+rInt(6),2,4+rInt(8),"#1a7a1a");}
+  // Tree
+  drawRect(ctx,80,60,20,120,PAL.brown);
+  ctx.fillStyle=PAL.green;ctx.beginPath();ctx.arc(90,50,50,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=PAL.lgreen;ctx.beginPath();ctx.arc(75,40,30,0,Math.PI*2);ctx.fill();
+  // Fence
+  for(var f=0;f<640;f+=30){drawRect(ctx,f,140,8,40,"#c9a56c");drawRect(ctx,f-2,130,12,12,"#c9a56c");}
+  drawRect(ctx,0,155,640,6,"#b89a5a");drawRect(ctx,0,170,640,6,"#b89a5a");
+  // Dog
+  drawRect(ctx,400,260,30,25,"#8B6914");drawRect(ctx,420,250,15,18,"#8B6914");drawRect(ctx,432,253,6,4,PAL.black);drawRect(ctx,428,258,4,3,"#333");
+  drawRect(ctx,395,280,8,10,"#8B6914");drawRect(ctx,420,280,8,10,"#8B6914");
+  // Suspicious hole
+  drawRect(ctx,250,290,40,15,"#1a4a1a");
+  drawRect(ctx,255,295,30,8,"#0a3a0a");
+  // BBQ
+  drawRect(ctx,520,230,40,40,"#333");drawRect(ctx,525,220,30,12,"#555");drawRect(ctx,535,235,5,8,"rgba(255,100,0,0.5)");
+}
+
+function paintAttic(ctx){
+  drawRect(ctx,0,250,640,110,"#5c4a3a");
+  // Angled ceiling
+  ctx.fillStyle="#3a3028";
+  ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(320,80);ctx.lineTo(640,0);ctx.lineTo(640,250);ctx.lineTo(0,250);ctx.closePath();ctx.fill();
+  drawRect(ctx,0,248,640,4,"#4a3a2a");
+  // Exposed beams
+  drawRect(ctx,0,80,640,6,PAL.dbrown);drawRect(ctx,0,160,640,6,PAL.dbrown);
+  drawRect(ctx,160,80,6,170,PAL.dbrown);drawRect(ctx,320,80,6,170,PAL.dbrown);drawRect(ctx,480,80,6,170,PAL.dbrown);
+  // Cobwebs
+  ctx.strokeStyle="rgba(200,200,200,0.15)";ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(0,80);ctx.quadraticCurveTo(40,120,80,80);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(480,80);ctx.quadraticCurveTo(520,130,560,80);ctx.stroke();
+  // Boxes
+  drawRect(ctx,40,210,70,40,"#c9a56c");ctx.fillStyle="#555";ctx.font="8px monospace";ctx.fillText("XMAS",52,235);
+  drawRect(ctx,130,200,60,50,"#b89a5a");ctx.fillStyle="#555";ctx.fillText("????",142,230);
+  drawRect(ctx,340,220,50,30,"#c9a56c");ctx.fillStyle="#555";ctx.fillText("2019",348,240);
+  // Old mirror
+  drawRect(ctx,240,100,60,80,"#8B6914");drawRect(ctx,245,105,50,70,"#2a2a4a");
+  // Trunk
+  drawRect(ctx,440,230,100,30,"#654321");drawRect(ctx,440,225,100,8,"#7a5a31");drawRect(ctx,480,228,20,6,PAL.gold);
+  // Crystal ball
+  ctx.fillStyle="rgba(150,100,200,0.4)";ctx.beginPath();ctx.arc(560,210,18,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="rgba(200,150,255,0.2)";ctx.beginPath();ctx.arc(555,205,6,0,Math.PI*2);ctx.fill();
+  drawRect(ctx,548,226,24,8,"#555");
+}
+
+var ROOM_LIST = [
+  {name:"THE FOYER",drawBg:paintFoyer},
+  {name:"THE KITCHEN",drawBg:paintKitchen},
+  {name:"LIVING ROOM",drawBg:paintLiving},
+  {name:"KIDS' ROOM",drawBg:paintKids},
+  {name:"BATHROOM",drawBg:paintBathroom},
+  {name:"THE GARAGE",drawBg:paintGarage},
+  {name:"LAUNDRY",drawBg:paintLaundry},
+  {name:"BACKYARD",drawBg:paintBackyard},
+  {name:"THE ATTIC",drawBg:paintAttic},
+  {name:"MASTER BEDROOM",drawBg:paintBedroom},
+];
+
+// ==================== HOTSPOTS PER ROOM ====================
+// {id, x, y, w, h, name, look, use, take, talk, open, push, hasKey, quest, draw}
+function makeHotspots(){
+  return [
+    // 0: FOYER
+    [
+      {id:"fdoor",x:260,y:30,w:120,h:190,name:"Front Door",look:"It's locked. You need your keys. That's the whole problem.",use:"Can't leave without the keys!",open:"LOCKED. Hence the adventure."},
+      {id:"shoes",x:460,y:280,w:60,h:40,name:"Shoe Pile",look:"A chaotic mountain of shoes. None match. It's modern art.",take:"K'Dee digs through... found a single flip-flop and what might be a dog toy.",push:"The pile avalanches. A Cheerio rolls out."},
+      {id:"coat",x:115,y:80,w:40,h:60,name:"Coat Rack",look:"Two coats, one umbrella, and something that might be alive.",use:"K'Dee checks every pocket. Gum wrapper, receipt from 2021, and lint."},
+      {id:"mirror",x:410,y:70,w:50,h:70,name:"Mirror",look:"A blonde woman with big green eyes stares back. She looks like she needs coffee. And keys.",talk:"'You got this, K'Dee. Have fun, don't die.'"},
+      {id:"plant",x:555,y:210,w:40,h:60,name:"Suspicious Plant",look:"This plant has been 'watered' with leftover coffee for months. It thrives on chaos.",push:"K'Dee tilts the pot and— a KEY falls out!",hasKey:true},
+      {id:"fmat",x:280,y:310,w:80,h:25,name:"Welcome Mat",look:"Says WELCOME. Feels ironic when you can't leave.",push:"K'Dee lifts the mat. Just a dead bug and disappointment."},
+      {id:"doorL",x:20,y:60,w:80,h:160,name:"Door to Kitchen",look:"Leads to the kitchen. Something is definitely burning.",open:"goto:1"},
+      {id:"doorR",x:540,y:60,w:80,h:160,name:"Door to Living Room",look:"The living room. 47 pillows await.",open:"goto:2"},
+    ],
+    // 1: KITCHEN
+    [
+      {id:"stove",x:240,y:100,w:100,h:70,name:"The Stove",look:"All four burners are on. Nothing is actually cooking. Classic.",use:"K'Dee turns off the burners. Safety first. Have fun, don't die."},
+      {id:"fridge",x:540,y:50,w:80,h:150,name:"Refrigerator",look:"Covered in kids' drawings and expired coupons.",open:"Inside: mystery leftovers, 47 condiments, and one sad yogurt."},
+      {id:"sink",x:40,y:140,w:80,h:50,name:"Kitchen Sink",look:"Full of dishes. Always full of dishes. It's a lifestyle.",use:"K'Dee runs the water. A rubber duck floats to the surface."},
+      {id:"banana",x:175,y:145,w:25,h:15,name:"Banana",look:"It's a banana. On a counter. Groundbreaking.",take:"K'Dee takes the banana. For scale.",quest:"banana"},
+      {id:"cab",x:20,y:10,w:430,h:85,name:"Cabinets",look:"Full of mismatched Tupperware. No lids fit. None.",open:"An avalanche of plastic containers nearly kills K'Dee."},
+      {id:"kdoorL",x:0,y:160,w:20,h:200,name:"Back to Foyer",open:"goto:0"},
+      {id:"kdoorR",x:620,y:160,w:20,h:200,name:"To Laundry",open:"goto:6"},
+    ],
+    // 2: LIVING ROOM
+    [
+      {id:"tv",x:250,y:40,w:140,h:120,name:"Television",look:"It's on a show nobody is watching. The remote is MIA.",use:"K'Dee presses buttons. The volume goes to 100. The dog howls."},
+      {id:"couch",x:80,y:225,w:210,h:65,name:"The Couch",look:"More pillow than couch at this point. A throw-pillow fortress.",push:"K'Dee moves ALL the pillows. Remote found! And... a KEY!",hasKey:true},
+      {id:"bookshelf",x:470,y:60,w:120,h:170,name:"Bookshelf",look:"Organized by color. None have been read since 2018.",take:"K'Dee grabs a random book. 'Parenting Without Losing Your Mind.' Relatable."},
+      {id:"lamp",x:378,y:160,w:40,h:75,name:"Floor Lamp",look:"Provides the only light because the overhead is 'too bright' according to everyone.",push:"K'Dee tilts the lamp. A LEGO rolls out from under the shade."},
+      {id:"rug",x:200,y:280,w:240,h:50,name:"Area Rug",look:"Hides a multitude of sins. And crumbs. So many crumbs.",push:"K'Dee peels back the corner. Three Cheerios, a crayon, and a Monopoly house."},
+      {id:"ldoorL",x:0,y:160,w:20,h:200,name:"Back to Foyer",open:"goto:0"},
+      {id:"ldoorR",x:620,y:160,w:20,h:200,name:"To Kids' Room",open:"goto:3"},
+    ],
+    // 3: KIDS' ROOM
+    [
+      {id:"bunk",x:30,y:80,w:120,h:160,name:"Bunk Bed",look:"Top bunk: a blanket fort. Bottom bunk: a stuffed animal graveyard.",open:"K'Dee checks under the pillows. A half-eaten granola bar. Vintage."},
+      {id:"toybox",x:200,y:255,w:80,h:55,name:"Toy Box",look:"The label says TOYS but it's 90% random objects.",open:"K'Dee opens it. An avalanche of action figures, marbles, and a single shoe."},
+      {id:"lego",x:300,y:300,w:200,h:40,name:"LEGO Minefield",look:"Scattered across the floor like colorful landmines. Step carefully.",push:"K'Dee sweeps them aside with her foot and— OW. OWWW."},
+      {id:"dino",x:520,y:260,w:40,h:50,name:"Mr. Rex",look:"A plastic T-Rex. The kids insist he's real and his name is Mr. Rex.",talk:"K'Dee holds Mr. Rex to her ear. '...he says the keys are in the garage.'"},
+      {id:"poster",x:340,y:40,w:80,h:60,name:"Game Over Poster",look:"A pixel art poster that says GAME OVER. Ominous for a kids' room."},
+      {id:"desk",x:440,y:130,w:160,h:100,name:"Kids' Desk",look:"Covered in crayon drawings. One appears to be K'Dee with laser eyes.",open:"K'Dee finds a crayon masterpiece titled 'Mom But Cool.'"},
+      {id:"kdoorL",x:0,y:160,w:20,h:200,name:"Back to Living Room",open:"goto:2"},
+      {id:"kdoorR",x:620,y:160,w:20,h:200,name:"To Bathroom",open:"goto:4"},
+    ],
+    // 4: BATHROOM
+    [
+      {id:"tub",x:20,y:200,w:200,h:80,name:"Bathtub",look:"Five rubber ducks stare back. They've been expecting you.",talk:"K'Dee addresses the duck council. 'Where are my keys?' Silence."},
+      {id:"ducks",x:45,y:205,w:150,h:25,name:"Rubber Duck Army",look:"General Quackers and his four loyal soldiers. They see everything.",take:"K'Dee takes General Quackers. The others look betrayed.",quest:"duck"},
+      {id:"toilet",x:335,y:200,w:55,h:80,name:"The Toilet",look:"Looks normal. But the kids say it's haunted. Kids say a lot of things.",open:"K'Dee lifts the lid. Nothing haunted. Just... a toilet. Anticlimactic."},
+      {id:"bsink",x:495,y:175,w:85,h:50,name:"Bathroom Sink",look:"Toothpaste everywhere. EVERYWHERE. How.",use:"K'Dee runs the water. A tiny toy boat surfaces."},
+      {id:"towel",x:275,y:95,w:45,h:85,name:"Pink Towel",look:"K'Dee's favorite towel. It's seen better days.",take:"K'Dee grabs the towel. You never know."},
+      {id:"bdoorL",x:0,y:160,w:20,h:200,name:"Back to Kids' Room",open:"goto:3"},
+      {id:"bdoorR",x:620,y:160,w:20,h:200,name:"To Garage",open:"goto:5"},
+    ],
+    // 5: GARAGE
+    [
+      {id:"gdoor",x:150,y:20,w:340,h:240,name:"Garage Door",look:"Closed. The car is somewhere behind it. Also closed.",open:"It's stuck. Has been since the 'incident' of 2022."},
+      {id:"bench",x:0,y:195,w:130,h:70,name:"Workbench",look:"Tools, screws, and a project that was started with great ambition.",use:"K'Dee rummages through the chaos. Finds a flashlight that actually works!",quest:"flashlight"},
+      {id:"bike",x:510,y:190,w:70,h:80,name:"Kid's Bike",look:"Training wheels still on. Covered in stickers.",push:"K'Dee moves the bike. Behind it— a KEY hidden in an old coffee can!",hasKey:true},
+      {id:"boxes",x:525,y:95,w:75,h:70,name:"Mystery Boxes",look:"Labeled 'STUFF.' From a move three houses ago.",open:"K'Dee opens one. Christmas decorations from 2017. The other? More boxes."},
+      {id:"tools",x:15,y:105,w:80,h:60,name:"Tool Wall",look:"Hammers, wrenches, and a mysterious tool nobody can identify.",take:"K'Dee takes the wrench. Mom is always fixing something."},
+      {id:"gdoorL",x:0,y:260,w:20,h:100,name:"Back to Bathroom",open:"goto:4"},
+      {id:"gdoorR",x:620,y:260,w:20,h:100,name:"To Backyard",open:"goto:7"},
+    ],
+    // 6: LAUNDRY
+    [
+      {id:"washer",x:40,y:140,w:100,h:110,name:"Washing Machine",look:"Running. Has been running. Will always be running.",open:"K'Dee checks inside. A single sock. Where is the other one? WHERE."},
+      {id:"dryer",x:160,y:140,w:100,h:110,name:"Dryer",look:"Smells like lavender and regret.",open:"K'Dee opens it. Three socks. None match the one from the washer."},
+      {id:"laundry",x:340,y:200,w:180,h:100,name:"Mount Washmore",look:"A mountain of clean laundry that will never be folded. It has achieved sentience.",push:"K'Dee pushes through the pile. Finds a missing homework assignment from March."},
+      {id:"iron",x:530,y:195,w:55,h:20,name:"Iron",look:"Last used in 2021 for a job interview. Decorative at this point.",use:"K'Dee plugs it in. Decides that's too much commitment. Unplugs it."},
+      {id:"shelf",x:400,y:25,w:200,h:45,name:"Detergent Shelf",look:"Three bottles of detergent. All almost empty. None replaced.",take:"K'Dee grabs the tide pen. Might come in handy."},
+      {id:"ldoorB",x:0,y:160,w:20,h:200,name:"Back to Kitchen",open:"goto:1"},
+    ],
+    // 7: BACKYARD
+    [
+      {id:"tree",x:60,y:40,w:60,h:140,name:"Big Oak Tree",look:"The kids' treehouse plans have been 'in progress' for two years.",talk:"K'Dee talks to the tree. It's been a long morning."},
+      {id:"dog",x:390,y:245,w:45,h:45,name:"The Dog",look:"Golden retriever. Suspiciously calm. Knows something.",talk:"K'Dee: 'Where are the keys, buddy?' Dog: *tail wag* Very helpful.",use:"K'Dee shows the dog the banana. Dog goes WILD. Runs to the suspicious hole!"},
+      {id:"hole",x:245,y:285,w:50,h:25,name:"Suspicious Hole",look:"Something was buried here. Recently. The dog looks guilty.",push:"K'Dee digs with her hands. Dirt, a bone, and... a toy car. No keys though."},
+      {id:"bbq",x:515,y:225,w:50,h:50,name:"BBQ Grill",look:"The sacred grill. Only used on weekends. Smells like memories and charcoal.",open:"K'Dee checks inside. Just old coals and a forgotten corn cob."},
+      {id:"fence",x:0,y:130,w:640,h:45,name:"Fence",look:"Keeps the dog in. Theoretically.",push:"K'Dee checks along the fence. A loose board reveals... the neighbor's yard."},
+      {id:"bdoorB",x:0,y:160,w:20,h:200,name:"Back to Garage",open:"goto:5"},
+      {id:"bdoorA",x:620,y:80,w:20,h:80,name:"Ladder to Attic",open:"goto:8"},
+    ],
+    // 8: ATTIC
+    [
+      {id:"xmasbox",x:40,y:210,w:70,h:40,name:"Christmas Box",look:"Decorations from every year since 2015. The tinsel has merged into one entity.",open:"K'Dee finds a tangled ball of lights and a ornament with Baby's First Christmas."},
+      {id:"mystbox",x:130,y:200,w:60,h:50,name:"Mystery Box (????)",look:"Nobody remembers packing this. Nobody.",open:"K'Dee opens it cautiously... old photo albums! And a VHS tape labeled 'DO NOT WATCH.'"},
+      {id:"mirror2",x:240,y:100,w:60,h:80,name:"Old Mirror",look:"Dusty and cracked. K'Dee sees herself but... spookier.",talk:"K'Dee whispers to mirror-K'Dee: 'Have fun, don't die.' Mirror-K'Dee winks. Wait, what?"},
+      {id:"trunk",x:440,y:225,w:100,h:35,name:"Antique Trunk",look:"Heavy, locked, probably contains treasure. Or tax documents.",open:"It's locked! K'Dee needs something to open it with...",use:"K'Dee uses the wrench! The trunk opens revealing... NOTHING. Just old curtains."},
+      {id:"crystal",x:540,y:195,w:40,h:40,name:"Crystal Ball",look:"Left over from Halloween 2022. Still kind of creepy.",talk:"K'Dee gazes into the crystal ball. It says: 'Check the bedroom, dummy.'"},
+      {id:"adoorB",x:0,y:250,w:20,h:110,name:"Down to Backyard",open:"goto:7"},
+      {id:"adoorR",x:620,y:250,w:20,h:110,name:"To Bedroom",open:"goto:9"},
+    ],
+    // 9: MASTER BEDROOM
+    [
+      {id:"bed",x:40,y:165,w:250,h:95,name:"The Bed",look:"Made this morning. A rare achievement. Don't mess it up.",push:"K'Dee checks under the pillows. Phone charger, lip balm, and a kid's sock. How."},
+      {id:"nightstand",x:300,y:215,w:50,h:55,name:"Nightstand",look:"A book she's been 'reading' for six months. Bookmark on page 12.",open:"K'Dee opens the drawer. Phone charger #3, melatonin, and a KEY!",hasKey:true},
+      {id:"vanity",x:420,y:155,w:140,h:80,name:"Vanity",look:"Where K'Dee becomes K'Dee. Lipstick, mascara, and dry shampoo. The holy trinity.",use:"K'Dee checks the vanity drawers. Hair ties, bobby pins, and a 2019 concert ticket."},
+      {id:"vmirror",x:440,y:100,w:100,h:60,name:"Vanity Mirror",look:"K'Dee sees a woman who has survived another morning. Respect.",talk:"'Almost done. You've got this. Have fun, don't die.'"},
+      {id:"window",x:200,y:30,w:120,h:100,name:"Window",look:"Morning light streams in. The yard looks peaceful. The dog is digging again.",open:"K'Dee opens the window. Hears a child scream 'MOM' from downstairs. Classic."},
+      {id:"flowers",x:430,y:140,w:30,h:30,name:"Flowers",look:"Fresh flowers. K'Dee bought them for herself because self-care.",take:"K'Dee smells them. Nice. Then remembers she's on a mission."},
+      {id:"bdoorL",x:0,y:160,w:20,h:200,name:"Back to Attic",open:"goto:8"},
+    ],
+  ];
+}
+
+// ==================== GAME STATE ====================
+var cv,ctx,hotspots,roomIdx,verb,keysFound,invItems,playerX,playerY,targetX,walking,frame,ticker;
+var questFlags={};
+var kidTimer,gameOn=false;
+var descEl,dlgQueue=[];
+
+function rInt(n){return Math.floor(Math.random()*n);}
+
+// ==================== INIT ====================
+function startGame(){
+  document.getElementById("title").style.display="none";
+  document.getElementById("game").classList.add("on");
+  cv=document.getElementById("scene");
+  ctx=cv.getContext("2d");
+  hotspots=makeHotspots();
+  roomIdx=0;
+  verb="look";
+  keysFound=0;
+  invItems=[];
+  questFlags={};
+  playerX=300;playerY=240;targetX=300;
+  walking=false;frame=0;
+  kidTimer=40+rInt(30);
+  gameOn=true;
+  descEl=document.getElementById("desc-text");
+  setVerb("look");
+  updateHUD();
+  renderScene();
+  tick();
+}
+
+function tick(){
+  if(!gameOn)return;
+  ticker=requestAnimationFrame(tick);
+  frame++;
+  if(walking){
+    var dx=targetX-playerX;
+    if(Math.abs(dx)<4){playerX=targetX;walking=false;}
+    else{playerX+=dx>0?3:-3;}
+    renderScene();
+  }
+}
+
+function renderScene(){
+  ctx.clearRect(0,0,SCENE_W,SCENE_H);
+  var room=ROOM_LIST[roomIdx];
+  room.drawBg(ctx);
+  // Draw hotspot highlights on hover? No — keep it classic
+  // Draw non-taken quest items with draw function
+  var hs=hotspots[roomIdx];
+  hs.forEach(function(h){if(h.draw&&!h.taken)h.draw(ctx,h);});
+  // Player
+  drawKdee(ctx,playerX,playerY,2,walking?Math.floor(frame/8):0);
+}
+
+function gotoRoom(idx){
+  roomIdx=idx;
+  playerX=idx>roomIdx?40:580;
+  targetX=playerX;
+  updateHUD();
+  renderScene();
+  kidTimer--;
+  if(kidTimer<=0){kidTimer=25+rInt(20);triggerKid();}
+}
+
+// ==================== INTERACTION ====================
+function setVerb(v){
+  verb=v;
+  document.querySelectorAll(".vb").forEach(function(el){el.classList.toggle("active",el.dataset.v===v);});
+  descEl.textContent=v.toUpperCase()+"...";
+}
+
+function handleSceneClick(e){
+  if(!gameOn)return;
+  var rect=cv.getBoundingClientRect();
+  var scaleX=SCENE_W/rect.width;
+  var scaleY=SCENE_H/rect.height;
+  var mx=(e.clientX-rect.left)*scaleX;
+  var my=(e.clientY-rect.top)*scaleY;
+
+  // Check hotspots
+  var hs=hotspots[roomIdx];
+  var hit=null;
+  for(var i=hs.length-1;i>=0;i--){
+    var h=hs[i];
+    if(h.taken)continue;
+    if(mx>=h.x&&mx<=h.x+h.w&&my>=h.y&&my<=h.y+h.h){hit=h;break;}
+  }
+
+  if(hit){
+    // Walk toward object first
+    targetX=Math.max(30,Math.min(590,hit.x+hit.w/2));
+    walking=true;
+    setTimeout(function(){doVerb(hit);},400);
+  } else {
+    // Walk to click position
+    targetX=Math.max(30,Math.min(590,mx));
+    walking=true;
+  }
+}
+
+function doVerb(h){
+  var response=h[verb];
+
+  // Special: goto room
+  if(response&&response.indexOf("goto:")===0){
+    var ri=parseInt(response.split(":")[1]);
+    gotoRoom(ri);
+    return;
+  }
+
+  // Special: has key
+  if(h.hasKey&&(verb==="push"||verb==="open")&&!h.taken){
+    keysFound++;
+    h.taken=true;
+    showDialogue("K'DEE",["👩",h[verb]||"K'Dee found a KEY!","🔑 KEY "+keysFound+"/3 FOUND!",keysFound>=3?"ALL KEYS FOUND! Time to go!":"Keep searching..."]);
+    addInvItem("🔑","Key #"+keysFound);
+    updateHUD();
+    if(keysFound>=3)setTimeout(winGame,3000);
+    return;
+  }
+
+  // Special: quest item
+  if(h.quest&&verb==="take"&&!h.taken){
+    h.taken=true;
+    questFlags[h.quest]=true;
+    addInvItem(h.e||"📦",h.name);
+    showDialogue("K'DEE",["👩",response||"K'Dee takes the "+h.name+".",h.name+" added to inventory."]);
+    return;
+  }
+
+  if(response){
+    showDialogue("K'DEE",["👩",response]);
+  } else {
+    var defaults=["K'Dee can't "+verb+" that.","That doesn't work.","Nope. Try something else.","K'Dee stares at the "+h.name+". Nothing happens."];
+    showDialogue("K'DEE",["👩",defaults[rInt(defaults.length)]]);
+  }
+}
+
+// ==================== DIALOGUE ====================
+function showDialogue(name,lines){
+  var dlg=document.getElementById("dlg");
+  var portrait=document.getElementById("dlg-portrait");
+  var nameEl=document.getElementById("dlg-name");
+  var textEl=document.getElementById("dlg-text");
+  var contEl=document.getElementById("dlg-continue");
+  var choicesEl=document.getElementById("dlg-choices");
+
+  portrait.textContent=lines[0];
+  nameEl.textContent=name;
+  choicesEl.innerHTML="";
+  contEl.style.display="block";
+
+  var idx=1;
+  function showNext(){
+    if(idx>=lines.length){dlg.classList.remove("on");return;}
+    textEl.textContent=lines[idx];
+    idx++;
+  }
+  showNext();
+  dlg.classList.add("on");
+
+  var handler=function(){
+    showNext();
+    if(idx>lines.length){
+      dlg.classList.remove("on");
+      contEl.removeEventListener("click",handler);
+      dlg.removeEventListener("click",handler);
+    }
+  };
+  contEl.addEventListener("click",handler);
+  dlg.addEventListener("click",handler);
+}
+
+function showChoiceDialogue(name,emoji,text,choices,callback){
+  var dlg=document.getElementById("dlg");
+  document.getElementById("dlg-portrait").textContent=emoji;
+  document.getElementById("dlg-name").textContent=name;
+  document.getElementById("dlg-text").textContent=text;
+  document.getElementById("dlg-continue").style.display="none";
+  var choicesEl=document.getElementById("dlg-choices");
+  choicesEl.innerHTML="";
+  choices.forEach(function(ch,i){
+    var b=document.createElement("div");
+    b.className="dlg-ch";
+    b.textContent=ch.t;
+    b.addEventListener("click",function(){
+      dlg.classList.remove("on");
+      if(callback)callback(ch);
+    });
+    choicesEl.appendChild(b);
+  });
+  dlg.classList.add("on");
+}
+
+// ==================== KID INTERRUPTS ====================
+var KID_DATA=[
+  {k:"KID #1",e:"👦",m:"Mom. MOM. Can I have a snack?",c:[{t:"🍎 Have an apple.",r:"They stare at you in complete betrayal."},{t:"🍪 Fine. Cookies.",r:"A stampede of small feet begins."},{t:"🤷 Ask your father.",r:"They vanish. Temporarily."}]},
+  {k:"KID #2",e:"👧",m:"Is it 'GIF' or 'JIF'?",c:[{t:"Hard G. Obviously.",r:"A family debate erupts."},{t:"Like peanut butter.",r:"You've chosen violence."},{t:"I'm not having this conversation.",r:"They WILL bring it up again."}]},
+  {k:"KID #1",e:"👦",m:"I'm BORED.",c:[{t:"Clean your room.",r:"They've never moved faster... away from you."},{t:"Be creative.",r:"The walls are now a mural."},{t:"Read a book.",r:"Stunned. Absolute silence."}]},
+  {k:"KID #2",e:"👧",m:"My sibling is LOOKING at me.",c:[{t:"People are allowed to look.",r:"THIS IS NOT ACCEPTED."},{t:"Both of you close your eyes.",r:"Peace for 4 seconds."},{t:"I'm not a judge.",r:"Overruled."}]},
+  {k:"KID #1",e:"👦",m:"Can we get a pet tarantula?",c:[{t:"ABSOLUTELY NOT.",r:"They show you a PowerPoint."},{t:"Let me think about it.",r:"They already named it 'Spicy.'"},{t:"We have a dog.",r:"'The dog wants a friend.'"}]},
+  {k:"KID #2",e:"👧",m:"I accidentally microwaved a fork.",c:[{t:"WHAT?!",r:"The microwave is fine. Somehow."},{t:"*deep breath*",r:"K'Dee counts to twenty."},{t:"Is anything on fire?",r:"'...define fire.'"}]},
+  {k:"KID #1",e:"👦",m:"What's for dinner?",c:[{t:"Pasta.",r:"'We JUST had pasta!' (3 weeks ago.)"},{t:"Whatever I find.",r:"Cereal it is."},{t:"You're cooking tonight.",r:"The fire alarm activates."}]},
+  {k:"KID #2",e:"👧",m:"Can my friend sleep over?",c:[{t:"Sure!",r:"It was never one friend. It's five."},{t:"Not tonight.",r:"The SIGH heard round the world."},{t:"Who?",r:"A 45-minute backstory begins."}]},
+];
+
+function triggerKid(){
+  var d=KID_DATA[rInt(KID_DATA.length)];
+  showChoiceDialogue(d.k,d.e,d.m,d.c,function(ch){
+    showDialogue(d.k,[d.e,ch.r]);
+  });
+}
+
+// ==================== INVENTORY ====================
+function addInvItem(emoji,name){
+  invItems.push({e:emoji,n:name});
+  var bar=document.getElementById("inv-bar");
+  var slot=document.createElement("div");
+  slot.className="inv-slot";
+  slot.textContent=emoji;
+  slot.title=name;
+  bar.appendChild(slot);
+}
+
+function updateHUD(){
+  document.getElementById("hk").textContent="🔑 KEYS: "+keysFound+"/3";
+  document.getElementById("hr").textContent=ROOM_LIST[roomIdx].name;
+}
+
+// ==================== WIN ====================
+function winGame(){
+  gameOn=false;
+  showDialogue("K'DEE",["👩",
+    "K'Dee has all three keys!",
+    "She rushes to the front door...",
+    "...and finds her actual car keys in her back pocket.",
+    "They were there the whole time.",
+    "☆ THE END ☆",
+    '"Have fun, don\'t die!" ✌️',
+    "KEYS FOUND: 3/3 | ITEMS: "+invItems.length+" | YOU WIN!",
+  ]);
+  setTimeout(function(){
+    document.getElementById("game").classList.remove("on");
+    document.getElementById("title").style.display="flex";
+  },20000);
+}
+
+// ==================== SCENE HOVER ====================
+function handleSceneMove(e){
+  if(!gameOn)return;
+  var rect=cv.getBoundingClientRect();
+  var mx=(e.clientX-rect.left)*(SCENE_W/rect.width);
+  var my=(e.clientY-rect.top)*(SCENE_H/rect.height);
+  var hs=hotspots[roomIdx];
+  var found="";
+  for(var i=hs.length-1;i>=0;i--){
+    var h=hs[i];
+    if(h.taken)continue;
+    if(mx>=h.x&&mx<=h.x+h.w&&my>=h.y&&my<=h.y+h.h){found=verb.toUpperCase()+" "+h.name;break;}
+  }
+  descEl.textContent=found||"What should K'Dee do?";
+}
+
+// ==================== EVENT BINDING ====================
+document.getElementById("scene").addEventListener("click",handleSceneClick);
+document.getElementById("scene").addEventListener("mousemove",handleSceneMove);
+document.getElementById("scene").addEventListener("touchstart",function(e){
+  e.preventDefault();
+  var t=e.touches[0];
+  handleSceneClick({clientX:t.clientX,clientY:t.clientY});
+},{passive:false});
+
+document.querySelectorAll(".vb").forEach(function(el){
+  el.addEventListener("click",function(){setVerb(el.dataset.v);});
+});
+
+document.getElementById("startbtn").addEventListener("click",startGame);
+document.getElementById("qbtn").addEventListener("click",function(){
+  gameOn=false;
+  document.getElementById("game").classList.remove("on");
+  document.getElementById("title").style.display="flex";
+});
+
+// ==================== TITLE ART ====================
+(function(){
+  var tc=document.getElementById("title-art");
+  var tx=tc.getContext("2d");
+  // Mini scene
+  drawRect(tx,0,0,320,180,"#1a0a2e");
+  // Floor
+  drawRect(tx,0,130,320,50,PAL.carpet);
+  // Wall
+  drawRect(tx,0,0,320,130,PAL.wall1);
+  drawRect(tx,0,110,320,20,PAL.dbrown);
+  // Door
+  drawRect(tx,130,20,60,110,"#654321");
+  drawRect(tx,175,70,5,5,PAL.gold);
+  // K'Dee
+  drawKdee(tx,90,110,2,0);
+  // Keys floating
+  tx.fillStyle=PAL.gold;tx.font="16px serif";
+  tx.fillText("🔑",200,60);tx.fillText("🔑",50,40);tx.fillText("🔑",260,50);
+  // Question marks
+  tx.fillStyle="rgba(255,255,255,0.3)";tx.font="bold 20px monospace";
+  tx.fillText("?",220,45);tx.fillText("?",70,30);tx.fillText("?",270,70);
+})();
+
+})();
+</script>
 </body>
 </html>
