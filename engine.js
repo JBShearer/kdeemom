@@ -210,7 +210,9 @@ function showSimpleDlg(name,text,emoji){
 }
 
 function hideDlg(){
+  if(gameOver)return; // Don't dismiss win/lose dialogs
   document.getElementById("dlg").classList.remove("on");
+  document.getElementById("dlg-continue").style.display="";
   activeHS=null;paused=false;
 }
 
@@ -308,23 +310,25 @@ document.getElementById("dlg-continue").addEventListener("click",hideDlg);
 document.getElementById("dlg").addEventListener("click",function(e){if(e.target===document.getElementById("dlg"))hideDlg();});
 
 function winGame(){
-  gameOver=true;paused=true;
+  gameOver=true;paused=true;clearInterval(timerInterval);
+  document.getElementById("dlg-continue").style.display="none";
   var d=document.getElementById("dlg");d.classList.add("on");
   document.getElementById("dlg-portrait").textContent="\uD83C\uDF89";
   document.getElementById("dlg-name").textContent="YOU WIN!";
   var m=Math.floor((780-timer)/60),s=(780-timer)%60;
   document.getElementById("dlg-text").textContent="K'Dee found all 3 keys in "+m+"m "+s+"s! She grabs her purse, kisses the kids, and heads out the door. Have fun, don't die!";
-  document.getElementById("dlg-choices").innerHTML='<div class="dlg-ch" id="play-again">PLAY AGAIN</div>';
+  document.getElementById("dlg-choices").innerHTML='<div class="dlg-ch" id="play-again">\uD83C\uDF89 PLAY AGAIN</div>';
   document.getElementById("play-again").addEventListener("click",function(){location.reload();});
 }
 
 function loseGame(){
-  gameOver=true;paused=true;
+  gameOver=true;paused=true;clearInterval(timerInterval);
+  document.getElementById("dlg-continue").style.display="none";
   var d=document.getElementById("dlg");d.classList.add("on");
   document.getElementById("dlg-portrait").textContent="\u23F0";
   document.getElementById("dlg-name").textContent="TIME'S UP!";
   document.getElementById("dlg-text").textContent="K'Dee is officially late. The kids are feral. The dog ate something suspicious. "+keys+"/3 keys found. Try again?";
-  document.getElementById("dlg-choices").innerHTML='<div class="dlg-ch" id="play-again2">TRY AGAIN</div>';
+  document.getElementById("dlg-choices").innerHTML='<div class="dlg-ch" id="play-again2">\u23F0 TRY AGAIN</div>';
   document.getElementById("play-again2").addEventListener("click",function(){location.reload();});
 }
 
