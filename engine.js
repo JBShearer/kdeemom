@@ -239,9 +239,6 @@ function drawHolly(c){
   }
 }
 
-  }
-}
-
 /* Milo follow: update position trailing K'Dee, random chatter */
 var MILO_QUIPS=["'Mom can I tell you something?'","'MOM. Mom. Mommy.'","'Did you know dinosaurs—'","'I made you a drawing!'","'Can we read later?'","'...mom?'","'The book said—'","'I love you!'"];
 function updateMilo(){
