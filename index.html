@@ -47,28 +47,29 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:mon
 #bagbtn.new-item{animation:bagPulse 0.6s ease-in-out 3}
 @keyframes bagPulse{0%{box-shadow:0 0 6px rgba(76,175,80,0.3)}50%{box-shadow:0 0 18px rgba(76,175,80,0.9),0 0 30px rgba(76,175,80,0.4);transform:scale(1.1)}100%{box-shadow:0 0 6px rgba(76,175,80,0.3)}}
 #bag-count{color:#fff;font-weight:bold;background:rgba(0,0,0,0.3);border-radius:8px;padding:0 3px;font-size:0.7rem}
-#inv-screen{position:fixed;inset:0;z-index:250;background:rgba(10,5,30,0.97);display:none;flex-direction:column;padding:0;overflow-y:auto}
+#inv-screen{position:fixed;inset:0;z-index:250;background:#000;display:none;flex-direction:column;align-items:center;justify-content:flex-start}
 #inv-screen.on{display:flex}
+#inv-inner{width:100%;max-width:360px;height:100%;max-height:640px;background:rgba(10,5,30,0.99);display:flex;flex-direction:column;overflow:hidden;margin:auto}
 #inv-header{height:44px;background:linear-gradient(180deg,#2a1040,#1a0a2e);display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-bottom:2px solid #333;flex-shrink:0}
 #inv-header span{font-size:0.85rem;color:#FFD700;letter-spacing:4px;text-shadow:0 0 8px rgba(255,215,0,0.2)}
 #inv-close{font-family:monospace;font-size:1.1rem;color:#888;background:none;border:1px solid #444;border-radius:50%;width:28px;height:28px;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;transition:border-color 0.2s,color 0.2s}
 #inv-close:hover{border-color:#e74c3c;color:#e74c3c}
 #inv-count{font-size:0.6rem;color:#888;letter-spacing:1px}
-#inv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:18px 16px;flex-shrink:0}
-.inv-cell{aspect-ratio:1;border:1px solid #333;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;background:rgba(255,255,255,0.02);transition:background 0.15s,border-color 0.2s,transform 0.15s;position:relative}
+#inv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px;flex-shrink:0}
+.inv-cell{height:72px;border:1px solid #333;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;background:rgba(255,255,255,0.02);transition:background 0.15s,border-color 0.2s,transform 0.15s;position:relative;overflow:hidden}
 .inv-cell:hover{background:rgba(255,215,0,0.06);border-color:#FFD700;transform:scale(1.04)}
-.inv-cell.selected{border-color:#FFD700;background:rgba(255,215,0,0.1);box-shadow:0 0 16px rgba(255,215,0,0.2);transform:scale(1.04)}
-.inv-cell.rarity-battle{border-color:rgba(0,206,209,0.4);box-shadow:0 0 8px rgba(0,206,209,0.1)}
-.inv-cell-emoji{font-size:1.8rem}
-.inv-cell-name{font-size:0.55rem;color:#aaa;letter-spacing:1px;margin-top:3px;text-align:center;max-width:90%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.inv-cell-badge{position:absolute;top:3px;right:3px;font-size:0.45rem;color:#00CED1;border:1px solid rgba(0,206,209,0.3);padding:1px 3px;border-radius:3px;letter-spacing:0.5px}
-#inv-detail{display:none;padding:18px 20px;text-align:center;border-top:1px solid #222;background:rgba(255,255,255,0.01)}
+.inv-cell.selected{border-color:#FFD700;background:rgba(255,215,0,0.1);box-shadow:0 0 12px rgba(255,215,0,0.2);transform:scale(1.04)}
+.inv-cell.rarity-battle{border-color:rgba(0,206,209,0.4);box-shadow:0 0 6px rgba(0,206,209,0.1)}
+.inv-cell-emoji{font-size:1.5rem;line-height:1}
+.inv-cell-name{font-size:0.48rem;color:#aaa;letter-spacing:0.5px;margin-top:3px;text-align:center;width:90%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.inv-cell-badge{position:absolute;top:2px;right:2px;font-size:0.42rem;color:#00CED1;border:1px solid rgba(0,206,209,0.3);padding:1px 2px;border-radius:2px}
+#inv-detail{display:none;padding:14px 20px;text-align:center;border-top:1px solid #222;background:rgba(255,255,255,0.01);flex-shrink:0}
 #inv-detail.on{display:block}
-#inv-detail-emoji{font-size:2.8rem;margin-bottom:8px}
-#inv-detail-name{font-size:0.85rem;color:#FFD700;letter-spacing:3px;margin-bottom:4px;text-transform:uppercase}
-#inv-detail-type{font-size:0.6rem;color:#888;letter-spacing:2px;margin-bottom:10px}
-#inv-detail-desc{font-size:0.75rem;color:#ccc;line-height:1.7;max-width:320px;margin:0 auto}
-#inv-detail-battle{font-size:0.65rem;color:#00CED1;margin-top:10px;letter-spacing:1px;display:none}
+#inv-detail-emoji{font-size:2.2rem;margin-bottom:6px}
+#inv-detail-name{font-size:0.8rem;color:#FFD700;letter-spacing:3px;margin-bottom:3px;text-transform:uppercase}
+#inv-detail-type{font-size:0.58rem;color:#888;letter-spacing:2px;margin-bottom:8px}
+#inv-detail-desc{font-size:0.72rem;color:#ccc;line-height:1.6;max-width:320px;margin:0 auto}
+#inv-detail-battle{font-size:0.62rem;color:#00CED1;margin-top:8px;letter-spacing:1px;display:none}
 #inv-detail-battle.on{display:block}
 #inv-empty{display:none;color:#555;font-size:0.8rem;text-align:center;padding:40px 20px;letter-spacing:1px;line-height:2}
 #crt{position:fixed;inset:0;z-index:60;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,0.12) 0px,rgba(0,0,0,0.12) 1px,transparent 1px,transparent 3px);opacity:0.3}
@@ -95,6 +96,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:mon
   <div id="desc-bar"><span id="desc-text">What should K'Dee do?</span></div>
 </div>
 <div id="inv-screen">
+  <div id="inv-inner">
   <div id="inv-header"><span>K'DEE'S BAG</span><span id="inv-count"></span><button id="inv-close">✕</button></div>
   <div id="inv-grid"></div>
   <div id="inv-detail">
@@ -105,6 +107,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:mon
     <div id="inv-detail-battle"></div>
   </div>
   <div id="inv-empty">Your bag is empty.<br>Explore the house and collect items!<br>Some items are SUPER EFFECTIVE in battles...</div>
+  </div>
 </div>
 <div id="dlg">
   <div id="dlg-inner">

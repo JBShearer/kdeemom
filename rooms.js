@@ -40,35 +40,13 @@ function paintFoyer(c){
   RR(c,245,108,38,52,4,"#c0c0c0");RR(c,248,111,32,46,3,P.sky);
   c.fillStyle="rgba(255,255,255,0.12)";c.fillRect(248,111,10,46);
   D(c,254,122,16,20,P.skin);
-  // Plant — far right floor corner
-  D(c,300,380,35,45,P.brown);SH(c,295,427,45);
-  c.fillStyle=P.green;c.beginPath();c.arc(317,355,22,0,Math.PI*2);c.fill();
-  c.fillStyle=P.lgreen;c.beginPath();c.arc(310,345,15,0,Math.PI*2);c.fill();
-  c.fillStyle=P.lgreen;c.beginPath();c.arc(325,348,12,0,Math.PI*2);c.fill();
-  // Downstairs steps — center bottom floor
-  var sx=140,sy=510;
-  D(c,sx,sy+36,80,10,P.dbrown);
-  c.fillStyle="#0a0a0a";c.beginPath();c.ellipse(sx+40,sy+42,30,8,0,0,Math.PI*2);c.fill();
-  for(var st=0;st<4;st++){var sw=80-st*10,sxo=sx+st*5,syo=sy+st*9;D(c,sxo,syo,sw,9,st%2===0?"#654321":"#7a6040");}
-  D(c,sx+4,sy,3,36,"#8B6914");D(c,sx+76,sy,3,36,"#8B6914");
-  c.strokeStyle="#8B6914";c.lineWidth=2;c.beginPath();c.moveTo(sx+4,sy+2);c.lineTo(sx+76,sy+2);c.stroke();
-  // Upstairs door — on BACK WALL left side (x=75-110), clear of front door and left passage
-  // Drawn as a narrow doorway in the back wall with stairs visible through it
-  var udx=76,udy=130,udw=38,udh=140;
-  D(c,udx,udy,udw,udh,P.dbrown);
-  RR(c,udx+2,udy+2,udw-4,udh-4,4,"#2a1a08");
-  // Arch top
-  c.fillStyle="#2a1a08";c.beginPath();c.arc(udx+udw/2,udy+2,udw/2-2,Math.PI,0);c.fill();
-  // Steps visible through doorway (going up into darkness)
-  var stC=["#6a5030","#5a4020","#4a3010","#3a2000"];
-  for(var us=0;us<4;us++){var uw=udw-8-us*5,uy=udy+udh-20-us*22;D(c,udx+4+us*2,uy,uw,10,stC[us]);}
-  // Banister inside doorway
-  c.strokeStyle="#8B6914";c.lineWidth=1.5;
-  c.beginPath();c.moveTo(udx+6,udy+udh-8);c.lineTo(udx+14,udy+12);c.stroke();
-  c.beginPath();c.moveTo(udx+udw-6,udy+udh-8);c.lineTo(udx+udw-10,udy+12);c.stroke();
-  // "UPSTAIRS" label below doorway
-  c.fillStyle="rgba(255,215,0,0.55)";c.font="bold 5px monospace";c.textAlign="center";
-  c.fillText("UPSTAIRS",udx+udw/2,udy+udh+12);c.textAlign="left";
+  // Plant — center-right floor area, away from doorR passage
+  D(c,250,380,35,45,P.brown);SH(c,244,427,45);
+  c.fillStyle=P.green;c.beginPath();c.arc(267,355,22,0,Math.PI*2);c.fill();
+  c.fillStyle=P.lgreen;c.beginPath();c.arc(260,345,15,0,Math.PI*2);c.fill();
+  c.fillStyle=P.lgreen;c.beginPath();c.arc(275,348,12,0,Math.PI*2);c.fill();
+  // Welcome mat — center floor
+  RR(c,130,482,100,20,4,P.dgreen);c.fillStyle=P.lgreen;c.font="bold 7px monospace";c.fillText("WELCOME",145,496);
 }
 function paintKitchen(c){
   D(c,0,370,360,270,"#d4a76a");for(var i=0;i<360;i+=28)for(var j=370;j<640;j+=28){if((Math.floor(i/28)+Math.floor(j/28))%2===0)D(c,i,j,28,28,"#c99a5b");}
@@ -134,6 +112,18 @@ function paintLiving(c){
   D(c,260,300,5,60,P.gold);
   c.fillStyle=P.yellow;c.beginPath();c.moveTo(248,290);c.lineTo(263,252);c.lineTo(278,290);c.closePath();c.fill();
   c.fillStyle="rgba(255,236,139,0.08)";c.beginPath();c.arc(263,290,40,0,Math.PI*2);c.fill();
+  // Upstairs door — back wall left side, clear of TV and passages
+  var udx=14,udy=120,udw=42,udh=148;
+  D(c,udx,udy,udw,udh,P.dbrown);
+  RR(c,udx+2,udy+2,udw-4,udh-4,4,"#2a1a08");
+  c.fillStyle="#2a1a08";c.beginPath();c.arc(udx+udw/2,udy+2,udw/2-2,Math.PI,0);c.fill();
+  var stC=["#6a5030","#5a4020","#4a3010","#3a2000"];
+  for(var us=0;us<4;us++){var uw=udw-8-us*5,uy=udy+udh-20-us*22;D(c,udx+4+us*2,uy,uw,10,stC[us]);}
+  c.strokeStyle="#8B6914";c.lineWidth=1.5;
+  c.beginPath();c.moveTo(udx+6,udy+udh-8);c.lineTo(udx+14,udy+12);c.stroke();
+  c.beginPath();c.moveTo(udx+udw-6,udy+udh-8);c.lineTo(udx+udw-10,udy+12);c.stroke();
+  c.fillStyle="rgba(255,215,0,0.55)";c.font="bold 5px monospace";c.textAlign="center";
+  c.fillText("UPSTAIRS",udx+udw/2,udy+udh+12);c.textAlign="left";
 }
 function paintKids(c){
   D(c,0,370,360,270,"#5c6b8a");var g=c.createLinearGradient(0,0,0,370);g.addColorStop(0,"#4a6fa5");g.addColorStop(1,"#3d5a80");c.fillStyle=g;c.fillRect(0,0,360,370);
@@ -212,7 +202,7 @@ function paintGarage(c){
   c.fillStyle="#333";c.beginPath();c.arc(58,443,5,0,Math.PI*2);c.fill();c.beginPath();c.arc(140,443,5,0,Math.PI*2);c.fill();
   c.fillStyle="#fff";c.font="bold 6px monospace";c.fillText("'85 VETTE",57,410);
   // Audi
-  RR(c,195,385,140,50,5,"#c0c0c0");RR(c,208,372,100,16,4,"#d0d0d0");
+  RR(c,195,385,140,50,5,"#e74c3c");RR(c,208,372,100,16,4,"#c0392b");
   RR(c,220,375,30,10,3,P.sky);RR(c,262,375,30,10,3,P.sky);
   c.strokeStyle="#333";c.beginPath();c.arc(228,443,12,0,Math.PI*2);c.stroke();c.beginPath();c.arc(312,443,12,0,Math.PI*2);c.stroke();
   c.fillStyle="#333";c.font="bold 6px monospace";c.fillText("'01 AUDI TT",218,408);
@@ -236,6 +226,19 @@ function paintLaundry(c){
   for(var i=0;i<8;i++){RR(c,238+rI(80),380+rI(70),22+rI(14),10+rI(8),3,["#e74c3c","#3498db","#2ecc71",P.pink,P.gold,"#9b59b6",P.orange,"#FF6B6B"][i]);}
   // Shelf
   D(c,240,80,110,6,P.brown);RR(c,248,48,32,32,3,"#3498db");RR(c,286,44,38,36,3,"#e74c3c");RR(c,328,50,22,30,3,"#2ecc71");
+  // Downstairs steps — left floor corner, set into the floor properly
+  var sx=8,sy=488;
+  // Dark opening/pit behind stairs
+  c.fillStyle="#0a0a0a";c.fillRect(sx,sy+20,80,50);
+  c.fillStyle="#0a0a0a";c.beginPath();c.ellipse(sx+40,sy+22,30,8,0,0,Math.PI*2);c.fill();
+  // Steps descending into darkness
+  for(var st=0;st<4;st++){var sw=80-st*10,sxo=sx+st*5,syo=sy+st*8;D(c,sxo,syo,sw,9,st%2===0?"#654321":"#7a6040");}
+  // Handrails
+  D(c,sx+4,sy-8,3,34,"#8B6914");D(c,sx+76,sy-8,3,34,"#8B6914");
+  c.strokeStyle="#8B6914";c.lineWidth=2;c.beginPath();c.moveTo(sx+4,sy-6);c.lineTo(sx+76,sy-6);c.stroke();
+  // "BASEMENT" label
+  c.fillStyle="rgba(255,215,0,0.5)";c.font="bold 5px monospace";c.textAlign="center";
+  c.fillText("BASEMENT",sx+40,sy-10);c.textAlign="left";
 }
 function paintBackyard(c){
   var g=c.createLinearGradient(0,0,0,250);g.addColorStop(0,"#87CEEB");g.addColorStop(1,"#b0e0ff");c.fillStyle=g;c.fillRect(0,0,360,250);
@@ -571,6 +574,23 @@ function paintBasement(c){
   c.fillStyle="rgba(255,69,0,0.08)";c.beginPath();c.arc(18,93,20,0,Math.PI*2);c.fill();
   D(c,338,100,7,38,P.brown);c.fillStyle="#FF4500";c.beginPath();c.arc(341,93,6,0,Math.PI*2);c.fill();
   c.fillStyle="rgba(255,69,0,0.08)";c.beginPath();c.arc(341,93,20,0,Math.PI*2);c.fill();
+  // Stairs going UP — left wall, ascending to laundry room
+  var sx=0,sy=150;
+  // Opening in left wall
+  D(c,sx,sy,72,180,P.dbrown);
+  RR(c,sx+2,sy+4,68,176,4,"#1a0a04");
+  // Arch top
+  c.fillStyle="#1a0a04";c.beginPath();c.arc(sx+36,sy+4,34,Math.PI,0);c.fill();
+  // Steps ascending left to right (going up means far steps are higher)
+  var stC=["#6a5030","#5a4020","#4a3010","#3a2000"];
+  for(var us=0;us<4;us++){var uw=60-us*8,uy=sy+180-40-us*28;D(c,sx+4+us*4,uy,uw,10,stC[us]);}
+  // Handrails
+  c.strokeStyle="#8B6914";c.lineWidth=1.5;
+  c.beginPath();c.moveTo(sx+8,sy+180-8);c.lineTo(sx+18,sy+20);c.stroke();
+  c.beginPath();c.moveTo(sx+62,sy+180-8);c.lineTo(sx+56,sy+20);c.stroke();
+  // "UPSTAIRS" label
+  c.fillStyle="rgba(255,215,0,0.55)";c.font="bold 5px monospace";c.textAlign="center";
+  c.fillText("UPSTAIRS",sx+36,sy+180+12);c.textAlign="left";
 }
 function paintAtticGym(c){
   D(c,0,370,360,270,"#3a3a3a");
@@ -882,58 +902,142 @@ function paintGarden(c){
   c.fillStyle="#333";c.fillRect(153,168,2,6);
 }
 function paintGreyson(c){
-  D(c,0,370,360,270,"#2a2a3a");
-  // Dark floor with slight texture
-  for(var i=0;i<360;i+=30)D(c,i,370,1,270,"rgba(0,0,0,0.06)");
-  // Dark angled ceiling (attic sub-room)
-  c.fillStyle="#1a1a2e";c.beginPath();c.moveTo(0,0);c.lineTo(180,70);c.lineTo(360,0);c.lineTo(360,370);c.lineTo(0,370);c.closePath();c.fill();
+  D(c,0,370,360,270,"#3a3020");
+  // Wooden floor planks
+  for(var i=0;i<360;i+=38){D(c,i,370,1,270,"rgba(0,0,0,0.08)");}
+  // Warm sandy/desert wall tone
+  var g=c.createLinearGradient(0,0,0,370);g.addColorStop(0,"#c8a870");g.addColorStop(1,"#b89a5a");c.fillStyle=g;c.fillRect(0,0,360,370);
   WF(c,370);
-  // RGB LED strip along ceiling
-  var colors=["#f00","#0f0","#00f","#ff0","#f0f","#0ff"];
-  for(var led=0;led<36;led++){
-    c.fillStyle=colors[led%6];c.globalAlpha=0.15;c.beginPath();c.arc(5+led*10,70,3,0,Math.PI*2);c.fill();
+
+  // === SCIENCE CORNER (left wall) ===
+  // Periodic table poster
+  RR(c,10,45,80,65,3,"#fff");
+  c.strokeStyle="#3498db";c.lineWidth=1;c.strokeRect(12,47,76,61);
+  c.fillStyle="#3498db";c.font="bold 5px monospace";c.fillText("PERIODIC TABLE",13,56);
+  // Mini element boxes
+  var elCols=["#e74c3c","#3498db","#2ecc71","#FFD700","#9b59b6","#FF8C00"];
+  for(var ei=0;ei<12;ei++){
+    RR(c,13+(ei%6)*12,58+Math.floor(ei/6)*12,10,10,1,elCols[ei%6]);
+    c.fillStyle="#fff";c.font="bold 4px monospace";c.fillText(["H","He","Li","Be","B","C","N","O","F","Ne","Na","Mg"][ei],15+(ei%6)*12,66+Math.floor(ei/6)*12);
   }
-  c.globalAlpha=1;
-  // Triple monitor gaming setup
-  RR(c,88,138,184,92,4,"#222");
-  // Three screens
-  RR(c,92,142,55,84,2,"#0a1a3a");
-  RR(c,152,142,55,84,2,"#0a1a3a");
-  RR(c,212,142,55,84,2,"#0a1a3a");
-  // Screen content - game on main, chat on sides
-  D(c,96,150,47,26,"#0f0");c.fillStyle="rgba(0,255,0,0.1)";c.fillRect(96,150,47,26);
-  D(c,156,160,47,20,"#333");c.fillStyle="#0ff";c.font="4px monospace";c.fillText("discord",160,172);
-  D(c,216,155,47,18,"#f00");c.fillStyle="rgba(255,0,0,0.1)";c.fillRect(216,155,47,18);
-  // Monitor stand
-  RR(c,165,230,30,8,2,"#333");D(c,177,238,6,20,"#444");RR(c,170,256,20,4,1,"#333");
-  // Gaming chair (rounded, fancy)
-  RR(c,128,288,104,52,6,"#1a1a1a");
-  RR(c,148,272,64,20,4,"#1a1a1a");
-  c.fillStyle="#8a2be2";c.fillRect(148,278,4,30);c.fillRect(208,278,4,30);
-  // Chair wheels
-  for(var w=0;w<3;w++){c.fillStyle="#333";c.beginPath();c.arc(152+w*28,342,4,0,Math.PI*2);c.fill();}
-  // Cyberpunk poster with neon border
-  RR(c,13,93,58,40,3,"#111");
-  c.strokeStyle="#0ff";c.lineWidth=1;c.strokeRect(15,95,54,36);
-  c.fillStyle="#0ff";c.font="bold 6px monospace";c.fillText("CYBER",22,112);c.fillText("PUNK",24,122);
-  // Anime poster
-  RR(c,288,88,58,44,3,"#111");
-  c.strokeStyle="#f0f";c.lineWidth=1;c.strokeRect(290,90,54,40);
-  c.fillStyle="#f0f";c.font="bold 6px monospace";c.fillText("ANIME",298,114);
-  // Energy drink cans (cylindrical look)
-  [[262,388,9,18,"#0f0"],[276,390,9,16,"#00f"],[290,386,9,20,"#f00"]].forEach(function(d){
-    RR(c,d[0],d[1],d[2],d[3],3,d[4]);
-    c.fillStyle="rgba(255,255,255,0.1)";c.fillRect(d[0]+1,d[1],3,d[3]);
+
+  // Chemistry set on left desk
+  D(c,10,250,90,8,P.brown);D(c,15,258,3,80,P.dbrown);D(c,97,258,3,80,P.dbrown);
+  // Beakers and flasks
+  [[18,220,"#3498db","?"],[32,215,"#2ecc71","!"],[48,222,"#e74c3c","X"],[62,218,"#9b59b6","~"]].forEach(function(b){
+    // Flask shape
+    c.fillStyle=b[2];c.globalAlpha=0.5;
+    c.beginPath();c.moveTo(b[0]+4,b[1]);c.lineTo(b[0]+4,b[1]+10);c.lineTo(b[0],b[1]+18);c.lineTo(b[0]+8,b[1]+18);c.lineTo(b[0]+4,b[1]+10);c.fill();
+    c.globalAlpha=1;c.fillStyle=b[2];
+    RR(c,b[0]+1,b[1]-6,6,8,2,b[2]);
+    c.fillStyle="#fff";c.font="4px monospace";c.fillText(b[3],b[0]+2,b[1]+14);
   });
-  // Skateboard
-  RR(c,298,428,44,6,3,"#8a2be2");
-  c.fillStyle="#333";c.beginPath();c.arc(306,436,3,0,Math.PI*2);c.fill();
-  c.beginPath();c.arc(334,436,3,0,Math.PI*2);c.fill();
-  // Headphones on desk
-  c.strokeStyle="#333";c.lineWidth=3;c.beginPath();c.arc(104,148,12,Math.PI,2*Math.PI);c.stroke();
-  c.fillStyle="#333";c.beginPath();c.arc(92,148,5,0,Math.PI*2);c.fill();
-  c.beginPath();c.arc(116,148,5,0,Math.PI*2);c.fill();
+  // Bubbling tube
+  c.strokeStyle="#00CED1";c.lineWidth=1.5;
+  c.beginPath();c.moveTo(78,258);c.quadraticCurveTo(90,240,78,225);c.stroke();
+
+  // Telescope (left corner, pointing at window)
+  D(c,14,165,5,55,"#555");// tripod leg
+  D(c,20,165,5,55,"#555");// tripod leg
+  D(c,10,182,18,4,"#555");// brace
+  // Telescope tube
+  c.save();c.translate(22,162);c.rotate(-0.3);
+  RR(c,-5,-4,50,9,4,"#888");RR(c,-5,-3,12,7,3,"#aaa");
+  c.restore();
+  c.fillStyle="#666";c.font="5px monospace";c.fillText("TELESCOPE",8,230);
+
+  // === THE MARTIAN (center wall, framed poster) ===
+  RR(c,128,40,104,110,4,"#8B6914");RR(c,132,44,96,102,3,"#c0392b");
+  // Red planet surface
+  var mg=c.createLinearGradient(132,44,132,146);mg.addColorStop(0,"#c0392b");mg.addColorStop(1,"#8B3010");c.fillStyle=mg;c.fillRect(132,44,96,102);
+  // Planet curvature at bottom
+  c.fillStyle="#a02800";c.beginPath();c.ellipse(180,146,48,12,0,0,Math.PI);c.fill();
+  // Mars dust swirls
+  c.strokeStyle="rgba(255,150,50,0.3)";c.lineWidth=2;
+  c.beginPath();c.moveTo(138,90);c.quadraticCurveTo(160,70,185,95);c.stroke();
+  c.beginPath();c.moveTo(165,108);c.quadraticCurveTo(185,95,210,115);c.stroke();
+  // Martian figure (little green guy center of poster)
+  c.fillStyle="#2ecc71";
+  c.beginPath();c.ellipse(180,85,8,10,0,0,Math.PI*2);c.fill();// body
+  c.beginPath();c.arc(180,74,7,0,Math.PI*2);c.fill();// head
+  // Antennae
+  c.strokeStyle="#2ecc71";c.lineWidth=1;
+  c.beginPath();c.moveTo(177,68);c.lineTo(174,60);c.stroke();
+  c.beginPath();c.moveTo(183,68);c.lineTo(186,60);c.stroke();
+  c.fillStyle="#2ecc71";c.beginPath();c.arc(174,60,2,0,Math.PI*2);c.fill();
+  c.beginPath();c.arc(186,60,2,0,Math.PI*2);c.fill();
+  // Big eyes
+  c.fillStyle="#fff";c.beginPath();c.ellipse(177,74,3,4,0,0,Math.PI*2);c.fill();
+  c.beginPath();c.ellipse(183,74,3,4,0,0,Math.PI*2);c.fill();
+  c.fillStyle="#000";c.beginPath();c.arc(177,74,1.5,0,Math.PI*2);c.fill();
+  c.beginPath();c.arc(183,74,1.5,0,Math.PI*2);c.fill();
+  // Tiny waving arm
+  c.strokeStyle="#2ecc71";c.lineWidth=1.5;
+  c.beginPath();c.moveTo(188,82);c.lineTo(196,76);c.stroke();
+  c.fillStyle="#fff";c.font="bold 5px monospace";c.textAlign="center";
+  c.fillText("THE MARTIAN",180,150);c.textAlign="left";
+
+  // === WESTERN CORNER (right side) ===
+  // Wanted poster on right wall
+  RR(c,268,42,82,100,3,"#c9a56c");RR(c,272,46,74,92,2,"#b89a5a");
+  c.fillStyle="#3d2b1f";c.font="bold 8px monospace";c.textAlign="center";
+  c.fillText("WANTED",309,58);
+  c.font="4px monospace";c.fillText("DEAD OR ALIVE",309,66);
+  // Sheriff silhouette in wanted poster
+  c.fillStyle="#3d2b1f";c.beginPath();c.arc(309,84,10,0,Math.PI*2);c.fill();// head
+  c.fillStyle="#3d2b1f";c.beginPath();c.moveTo(298,94);c.lineTo(296,118);c.lineTo(322,118);c.lineTo(320,94);c.closePath();c.fill();// body
+  // Cowboy hat on silhouette
+  c.fillStyle="#1a0a00";
+  c.beginPath();c.moveTo(298,84);c.lineTo(309,72);c.lineTo(320,84);c.closePath();c.fill();
+  D(c,296,84,26,4,"#1a0a00");
+  c.fillStyle="#c9a56c";c.font="bold 6px monospace";c.textAlign="center";
+  c.fillText("$500",309,128);c.fillText("REWARD",309,136);c.textAlign="left";
+
+  // Sheriff's badge (star) on shelf
+  c.fillStyle="#FFD700";
+  c.save();c.translate(292,188);
+  c.beginPath();
+  for(var pt=0;pt<5;pt++){
+    var pa=pt*Math.PI*4/5-Math.PI/2;
+    if(pt===0)c.moveTo(Math.cos(pa)*10,Math.sin(pa)*10);
+    else c.lineTo(Math.cos(pa)*10,Math.sin(pa)*10);
+    var pa2=pa+Math.PI*2/5;
+    c.lineTo(Math.cos(pa2)*5,Math.sin(pa2)*5);
+  }
+  c.closePath();c.fill();
+  c.fillStyle="#8B6914";c.font="bold 4px monospace";c.textAlign="center";c.fillText("SHERIFF",0,16);c.textAlign="left";
+  c.restore();
+
+  // Cowboy boots on floor (right side)
+  [[258,455,"#3d2b1f"],[282,450,"#654321"]].forEach(function(b){
+    // Boot shape
+    RR(c,b[0],b[1],20,28,3,b[2]);
+    RR(c,b[0]-2,b[1]+20,24,8,2,b[2]);// toe
+    D(c,b[0]+7,b[1]-8,6,12,b[2]);// heel shaft
+    // Spur
+    c.strokeStyle="#FFD700";c.lineWidth=1;
+    c.beginPath();c.arc(b[0]+22,b[1]+26,4,0,Math.PI*2);c.stroke();
+  });
+
+  // Lasso on wall peg
+  c.strokeStyle="#8B6914";c.lineWidth=2;
+  c.beginPath();c.arc(340,155,12,0,Math.PI*2);c.stroke();
+  c.beginPath();c.moveTo(340,143);c.lineTo(340,130);c.stroke();
+  D(c,337,126,6,4,"#5c3a1e");
+
+  // Science journal / open book on desk
+  RR(c,108,250,55,32,3,"#fff");
+  c.strokeStyle="#3498db";c.lineWidth=0.8;
+  for(var ln=0;ln<4;ln++){c.beginPath();c.moveTo(112,257+ln*6);c.lineTo(158,257+ln*6);c.stroke();}
+  c.fillStyle="#e74c3c";c.font="5px monospace";c.fillText("HYPOTHESIS:",110,256);
+  c.fillStyle="#333";c.font="4px monospace";c.fillText("Mars = Texas??",112,262);
+
+  // Greyson's mixed-vibe desk chair (wooden, old west meets lab)
+  RR(c,155,295,50,60,4,"#654321");
+  D(c,160,260,40,40,"#c9a56c");// seat cushion
+  D(c,160,258,40,4,"#b89a5a");// cushion top
 }
+
 function paintGwynRoom(c){
   // Cool blue floor
   D(c,0,370,360,270,"#c0d8f0");
@@ -1116,18 +1220,18 @@ function makeHS(){return[
 // ustairsF = x:75–115 (back wall left of front door, clear of left passage)
 // jbdoor = x:0, bottom-left floor
 // stairs = center bottom floor
-[{id:"fdoor",x:120,y:60,w:120,h:280,name:"Front Door",look:"Locked. You need keys.",open:"LOCKED."},{id:"shoes",x:260,y:435,w:60,h:35,name:"Shoe Pile",look:"Chaotic. None match.",push:"Cheerio rolls out."},{id:"coat",x:68,y:140,w:35,h:70,name:"Coat Rack",look:"Two coats, something alive.",use:"Gum wrapper and lint."},{id:"mirror",x:244,y:105,w:40,h:55,name:"Mirror",look:"Needs coffee. And keys.",talk:"'Have fun, don't die.'"},{id:"plant",x:295,y:340,w:45,h:60,name:"Suspicious Plant",look:"Thrives on chaos.",push:"A KEY falls out!",hasKey:true},{id:"fmat",x:140,y:475,w:80,h:25,name:"Welcome Mat",look:"WELCOME. Ironic.",push:"Dead bug and disappointment."},{id:"stairs",x:140,y:505,w:80,h:48,name:"Stairs Down",look:"Dark stairs descending.",open:"goto:11"},{id:"ustairsF",x:75,y:128,w:42,h:145,name:"Upstairs",look:"Stairs going up to the bedroom.",open:"goto:9"},{id:"doorL",x:0,y:120,w:75,h:240,name:"Kitchen",open:"goto:1"},{id:"doorR",x:287,y:120,w:73,h:240,name:"Living Room",open:"goto:2"},{id:"jbdoor",x:0,y:430,w:30,h:90,name:"Jesus Bathroom",open:"goto:10"}],
+[{id:"fdoor",x:120,y:60,w:120,h:280,name:"Front Door",look:"Locked. You need keys.",open:"LOCKED."},{id:"shoes",x:260,y:435,w:60,h:35,name:"Shoe Pile",look:"Chaotic. None match.",push:"Cheerio rolls out."},{id:"coat",x:68,y:140,w:35,h:70,name:"Coat Rack",look:"Two coats, something alive.",use:"Gum wrapper and lint."},{id:"mirror",x:244,y:105,w:40,h:55,name:"Mirror",look:"Needs coffee. And keys.",talk:"'Have fun, don't die.'"},{id:"plant",x:244,y:340,w:45,h:60,name:"Suspicious Plant",look:"Thrives on chaos.",push:"A KEY falls out!",hasKey:true},{id:"fmat",x:130,y:480,w:100,h:22,name:"Welcome Mat",look:"WELCOME. Ironic.",push:"Dead bug and disappointment."},{id:"doorL",x:0,y:120,w:75,h:240,name:"Kitchen",open:"goto:1"},{id:"doorR",x:287,y:120,w:73,h:240,name:"Living Room",open:"goto:2"},{id:"jbdoor",x:0,y:430,w:30,h:90,name:"Jesus Bathroom",open:"goto:10"}],
 [{id:"stove",x:110,y:155,w:115,h:65,name:"Stove",look:"All burners on. Nothing cooking.",use:"Turns off burners. Safety first."},{id:"fridge",x:275,y:78,w:78,h:195,name:"Fridge",look:"Kids' drawings. Expired coupons.",open:"Mystery leftovers. One sad yogurt."},{id:"sink",x:10,y:245,w:80,h:55,name:"Sink",look:"Full of dishes. Always.",use:"Rubber duck floats up."},{id:"banana",x:235,y:258,w:25,h:12,name:"Banana",look:"Groundbreaking.",take:"Takes it. For scale.",quest:"banana"},{id:"cab",x:8,y:15,w:345,h:80,name:"Cabinets",look:"Mismatched Tupperware.",open:"Avalanche of containers!"},{id:"kdoorL",x:0,y:300,w:14,h:200,name:"Foyer",open:"goto:0"},{id:"kdoorR",x:346,y:300,w:14,h:200,name:"Laundry",open:"goto:6"},{id:"pantry",x:160,y:320,w:50,h:40,name:"Pantry",open:"goto:13"}],
-[{id:"tv",x:100,y:55,w:165,h:125,name:"TV",look:"Nobody watching. Remote MIA.",use:"Volume to 100. Neighbor's cat yowls in response."},{id:"couch",x:16,y:355,w:232,h:70,name:"Couch",look:"More pillow than couch.",push:"ALL pillows moved. Remote AND a KEY!",hasKey:true},{id:"bookshelf",x:268,y:95,w:85,h:230,name:"Bookshelf",look:"Unread since 2018.",take:"'Parenting Without Losing Your Mind.'"},{id:"lamp",x:245,y:280,w:35,h:70,name:"Lamp",look:"Only approved light.",push:"LEGO rolls out."},{id:"rug",x:60,y:435,w:200,h:50,name:"Rug",look:"Hides crumbs.",push:"Cheerios, crayon, Monopoly house."},{id:"ldoorL",x:0,y:260,w:14,h:200,name:"Foyer",open:"goto:0"},{id:"ldoorR",x:346,y:260,w:14,h:200,name:"Kids' Room",open:"goto:3"}],
+[{id:"tv",x:100,y:55,w:165,h:125,name:"TV",look:"Nobody watching. Remote MIA.",use:"Volume to 100. Neighbor's cat yowls in response."},{id:"couch",x:16,y:355,w:232,h:70,name:"Couch",look:"More pillow than couch.",push:"ALL pillows moved. Remote AND a KEY!",hasKey:true},{id:"bookshelf",x:268,y:95,w:85,h:230,name:"Bookshelf",look:"Unread since 2018.",take:"'Parenting Without Losing Your Mind.'"},{id:"lamp",x:245,y:280,w:35,h:70,name:"Lamp",look:"Only approved light.",push:"LEGO rolls out."},{id:"rug",x:60,y:435,w:200,h:50,name:"Rug",look:"Hides crumbs.",push:"Cheerios, crayon, Monopoly house."},{id:"ustairsL",x:14,y:120,w:42,h:148,name:"Upstairs",look:"Stairs going up to the bedroom.",open:"goto:9"},{id:"ldoorL",x:0,y:260,w:14,h:200,name:"Foyer",open:"goto:0"},{id:"ldoorR",x:346,y:260,w:14,h:200,name:"Kids' Room",open:"goto:3"}],
 [{id:"bunk",x:8,y:135,w:115,h:230,name:"Bunk Bed",look:"Top: fort. Bottom: stuffed animals.",open:"Half-eaten granola bar."},{id:"toybox",x:135,y:410,w:75,h:55,name:"Toy Box",look:"90% random objects.",open:"Avalanche of action figures."},{id:"lego",x:170,y:465,w:180,h:45,name:"LEGO Minefield",look:"Colorful landmines.",push:"OW. OWWW."},{id:"dino",x:298,y:395,w:35,h:45,name:"Mr. Rex",look:"Kids say he's real.",talk:"'Keys are in the garage.'"},{id:"poster",x:178,y:55,w:68,h:60,name:"Poster",look:"GAME OVER. Ominous."},{id:"desk",x:218,y:215,w:135,h:110,name:"Desk",look:"Crayon drawings.",open:"'Mom But Cool.'"},{id:"kdoorL",x:0,y:260,w:14,h:200,name:"Living Room",open:"goto:2"},{id:"kdoorR",x:346,y:260,w:14,h:200,name:"Bathroom",open:"goto:4"}],
 [{id:"tub",x:5,y:285,w:190,h:85,name:"Bathtub",look:"Five ducks stare back.",talk:"'Where are my keys?' Silence."},{id:"ducks",x:22,y:295,w:140,h:20,name:"Duck Army",look:"General Quackers sees all.",take:"Takes General Quackers.",quest:"duck"},{id:"toilet",x:216,y:305,w:55,h:70,name:"Toilet",look:"Kids say haunted.",open:"Just a toilet."},{id:"bsink",x:276,y:265,w:75,h:40,name:"Sink",look:"Toothpaste EVERYWHERE.",use:"Toy boat surfaces."},{id:"towel",x:162,y:125,w:42,h:80,name:"Towel",look:"Seen better days.",take:"Grabs it."},{id:"bdoorL",x:0,y:260,w:14,h:200,name:"Kids' Room",open:"goto:3"},{id:"bdoorR",x:346,y:260,w:14,h:200,name:"Garage",open:"goto:5"}],
 [{id:"gdoor",x:70,y:25,w:220,h:310,name:"Garage Door",look:"Stuck since 2022.",open:"Still stuck."},{id:"bench",x:8,y:160,w:58,h:60,name:"Workbench",look:"Tools and abandoned ambition.",use:"Finds a flashlight!",quest:"flashlight"},{id:"car",x:25,y:375,w:145,h:70,name:"'85 Corvette",look:"Golden beauty.",push:"Behind it: a KEY in a coffee can!",hasKey:true},{id:"boxes",x:308,y:135,w:45,h:45,name:"Boxes",look:"'STUFF.' 3 moves ago.",open:"Christmas decs from 2017."},{id:"tools",x:10,y:160,w:60,h:55,name:"Tools",look:"Hammers, wrenches.",take:"Takes the wrench."},{id:"gdoorL",x:0,y:380,w:14,h:150,name:"Bathroom",open:"goto:4"},{id:"gdoorR",x:346,y:380,w:14,h:150,name:"Backyard",open:"goto:7"}],
-[{id:"washer",x:10,y:205,w:100,h:120,name:"Washer",look:"Running. Always.",open:"One sock."},{id:"dryer",x:120,y:205,w:100,h:120,name:"Dryer",look:"Lavender and regret.",open:"Three socks. None match."},{id:"laundry",x:225,y:355,w:128,h:125,name:"Mt. Washmore",look:"Sentient laundry.",push:"Missing homework."},{id:"iron",x:275,y:335,w:45,h:18,name:"Iron",look:"Last used 2021.",use:"Too much commitment."},{id:"shelf",x:236,y:44,w:115,h:48,name:"Shelf",look:"Almost empty bottles.",take:"Grabs tide pen."},{id:"ldoorB",x:0,y:260,w:14,h:200,name:"Kitchen",open:"goto:1"},{id:"mazedoor",x:346,y:380,w:14,h:150,name:"Strange Door",look:"Goes... down?",open:"goto:14"}],
-[{id:"tree",x:28,y:80,w:45,h:200,name:"Oak Tree",look:"Treehouse 'in progress' 2 years.",talk:"Talks to the tree."},{id:"cat",x:225,y:400,w:45,h:38,name:"Neighbor's Cat",look:"Judging everyone from next door. Again.",talk:"*slow blink* This cat owns all it surveys.",use:"Cat stares. Unmoving. Untouched."},{id:"hole",x:136,y:445,w:42,h:18,name:"Hole",look:"Someone dug this. Mysterious.",push:"Dirt, a toy car, and something sparkly."},{id:"bbq",x:296,y:375,w:42,h:42,name:"BBQ",look:"The BBQ sits in a minefield. The whole yard is covered in... evidence. The neighbor's cat is NOT responsible.",open:"K'Dee opens the BBQ lid. The smell triggers a chain reaction. Poop everywhere. Time to navigate."},{id:"fence",x:0,y:222,w:360,h:48,name:"Fence",look:"Keeps the cat out. Theoretically. It doesn't."},{id:"bdoorB",x:0,y:310,w:14,h:200,name:"Garage",open:"goto:5"},{id:"bdoorA",x:346,y:100,w:14,h:120,name:"Attic",open:"goto:8"},{id:"shed",x:100,y:340,w:70,h:55,name:"Shed",open:"goto:17"},{id:"garden",x:270,y:490,w:80,h:50,name:"Garden",open:"goto:18"}],
-[{id:"xmas",x:15,y:315,w:60,h:45,name:"Xmas Box",look:"Tinsel entity.",open:"Tangled lights."},{id:"myst",x:80,y:305,w:55,h:55,name:"Mystery Box",look:"Nobody remembers this.",open:"Photo albums! VHS: DO NOT WATCH."},{id:"mirror2",x:130,y:155,w:60,h:80,name:"Old Mirror",look:"Spookier K'Dee.",talk:"Mirror-K'Dee winks."},{id:"trunk",x:255,y:335,w:85,h:30,name:"Trunk",look:"Locked. Treasure or taxes.",open:"Locked!",use:"Wrench opens it: old curtains."},{id:"crystal",x:310,y:300,w:35,h:35,name:"Crystal Ball",look:"Halloween 2022.",talk:"'Check the bedroom, dummy.'"},{id:"adoorB",x:0,y:370,w:14,h:150,name:"Backyard",open:"goto:7"},{id:"adoorR",x:346,y:370,w:14,h:150,name:"Bedroom",open:"goto:9"},{id:"gymdoor",x:200,y:365,w:50,h:30,name:"Gym",open:"goto:12"},{id:"gdoor",x:100,y:365,w:60,h:30,name:"Greyson's",open:"goto:19"}],
-[{id:"bed",x:12,y:255,w:215,h:95,name:"Bed",look:"Made this morning. Clothes pile using it as a base camp.",push:"More clothes. Not what you need."},{id:"clothespile",x:38,y:465,w:105,h:60,name:"Clothes Mountain",look:"Mt. Washmore's bedroom cousin. Phone is definitely in here.",push:"K'Dee digs in. Found it! The phone was right in the middle!",take:"Digs out the phone from the pile!",quest:"phone"},{id:"nightstand",x:232,y:305,w:55,h:60,name:"Nightstand",look:"Book page 12 for 6 months.",open:"Charger #3, melatonin, and a KEY!",hasKey:true},{id:"vanity",x:238,y:205,w:115,h:65,name:"Vanity",look:"Lipstick, mascara, dry shampoo.",use:"Hair ties, bobby pins."},{id:"vmirror",x:258,y:130,w:75,h:65,name:"Mirror",look:"Survived another morning.",talk:"'Have fun, don't die.'"},{id:"window",x:95,y:30,w:115,h:100,name:"Window",look:"Neighbor's cat is staring in. Judging.",open:"'MOM!' from downstairs."},{id:"closet",x:307,y:95,w:52,h:135,name:"Closet",look:"Overflow situation. Two more piles fell out.",open:"An avalanche of shirts and regret."},{id:"flowers",x:248,y:190,w:22,h:22,name:"Flowers",look:"Self-care purchase.",take:"Smells nice."},{id:"bdoorL",x:0,y:270,w:14,h:200,name:"Attic",open:"goto:8"},{id:"forestdoor",x:346,y:270,w:14,h:200,name:"Forest's Den",open:"goto:21"}],
+[{id:"washer",x:10,y:205,w:100,h:120,name:"Washer",look:"Running. Always.",open:"One sock."},{id:"dryer",x:120,y:205,w:100,h:120,name:"Dryer",look:"Lavender and regret.",open:"Three socks. None match."},{id:"laundry",x:225,y:355,w:128,h:125,name:"Mt. Washmore",look:"Sentient laundry.",push:"Missing homework."},{id:"iron",x:275,y:335,w:45,h:18,name:"Iron",look:"Last used 2021.",use:"Too much commitment."},{id:"shelf",x:236,y:44,w:115,h:48,name:"Shelf",look:"Almost empty bottles.",take:"Grabs tide pen."},{id:"lstairsdown",x:8,y:470,w:80,h:65,name:"Stairs Down",look:"Stairs down to the basement. Smells like projects and regret.",open:"goto:11"},{id:"ldoorB",x:0,y:260,w:14,h:200,name:"Kitchen",open:"goto:1"},{id:"mazedoor",x:346,y:380,w:14,h:150,name:"Strange Door",look:"Goes... down?",open:"goto:14"}],
+[{id:"tree",x:28,y:80,w:45,h:200,name:"Oak Tree",look:"Treehouse 'in progress' 2 years.",talk:"Talks to the tree."},{id:"cat",x:225,y:400,w:45,h:38,name:"Neighbor's Cat",look:"Judging everyone from next door. Again.",talk:"*slow blink* This cat owns all it surveys.",use:"Cat stares. Unmoving. Untouched."},{id:"hole",x:136,y:445,w:42,h:18,name:"Hole",look:"Someone dug this. Mysterious.",push:"Dirt, a toy car, and something sparkly."},{id:"bbq",x:296,y:375,w:42,h:42,name:"BBQ",look:"The BBQ sits in a minefield. The whole yard is covered in... evidence. The neighbor's cat is NOT responsible.",open:"K'Dee opens the BBQ lid. The smell triggers a chain reaction. Poop everywhere. Time to navigate."},{id:"fence",x:0,y:222,w:360,h:48,name:"Fence",look:"Keeps the cat out. Theoretically. It doesn't."},{id:"bdoorB",x:0,y:310,w:14,h:200,name:"Garage",open:"goto:5"},{id:"shed",x:100,y:340,w:70,h:55,name:"Shed",open:"goto:17"},{id:"garden",x:270,y:490,w:80,h:50,name:"Garden",open:"goto:18"}],
+[{id:"xmas",x:15,y:315,w:60,h:45,name:"Xmas Box",look:"Tinsel entity.",open:"Tangled lights."},{id:"myst",x:80,y:305,w:55,h:55,name:"Mystery Box",look:"Nobody remembers this.",open:"Photo albums! VHS: DO NOT WATCH."},{id:"mirror2",x:130,y:155,w:60,h:80,name:"Old Mirror",look:"Spookier K'Dee.",talk:"Mirror-K'Dee winks."},{id:"trunk",x:255,y:335,w:85,h:30,name:"Trunk",look:"Locked. Treasure or taxes.",open:"Locked!",use:"Wrench opens it: old curtains."},{id:"crystal",x:310,y:300,w:35,h:35,name:"Crystal Ball",look:"Halloween 2022.",talk:"'Check the bedroom, dummy.'"},{id:"adoorR",x:346,y:370,w:14,h:150,name:"Bedroom",open:"goto:9"},{id:"gymdoor",x:200,y:365,w:50,h:30,name:"Gym",open:"goto:12"}],
+[{id:"bed",x:12,y:255,w:215,h:95,name:"Bed",look:"Made this morning. Clothes pile using it as a base camp.",push:"More clothes. Not what you need."},{id:"clothespile",x:38,y:465,w:105,h:60,name:"Clothes Mountain",look:"Mt. Washmore's bedroom cousin. Phone is definitely in here.",push:"K'Dee digs in. The pile FIGHTS BACK. Clothes are flying!",take:"K'Dee reaches in. An avalanche starts. Stack them or be buried!",quest:"phone"},{id:"nightstand",x:232,y:305,w:55,h:60,name:"Nightstand",look:"Book page 12 for 6 months.",open:"Charger #3, melatonin, and a KEY!",hasKey:true},{id:"vanity",x:238,y:205,w:115,h:65,name:"Vanity",look:"Lipstick, mascara, dry shampoo.",use:"Hair ties, bobby pins."},{id:"vmirror",x:258,y:130,w:75,h:65,name:"Mirror",look:"Survived another morning.",talk:"'Have fun, don't die.'"},{id:"window",x:95,y:30,w:115,h:100,name:"Window",look:"Neighbor's cat is staring in. Judging.",open:"'MOM!' from downstairs."},{id:"closet",x:307,y:95,w:52,h:135,name:"Closet",look:"Overflow situation. Two more piles fell out.",open:"An avalanche of shirts and regret."},{id:"flowers",x:248,y:190,w:22,h:22,name:"Flowers",look:"Self-care purchase.",take:"Smells nice."},{id:"bdoorL",x:0,y:270,w:14,h:200,name:"Attic",open:"goto:8"},{id:"forestdoor",x:346,y:270,w:14,h:200,name:"Forest's Den",open:"goto:21"},{id:"greysondoor",x:120,y:0,w:60,h:28,name:"Greyson's Room",open:"goto:19"},{id:"gwyndoor",x:220,y:0,w:60,h:28,name:"Gwyneth's Room",open:"goto:20"}],
 [{id:"jcross",x:40,y:45,w:60,h:80,name:"Cross",look:"Holy energy.",talk:"K'Dee prays. Warm light."},{id:"jbattle",x:10,y:35,w:105,h:125,name:"Space Jesus vs Devil",look:"A painting of Space Jesus locked in battle with the Devil. Among the stars. It's intense.",talk:"The figures in the painting seem to move. Space Jesus winks."},{id:"jpinup",x:245,y:35,w:105,h:125,name:"Rescued by Grace",look:"Jesus pulls a glamorous pinup girl out of the ocean. She looks delighted. Her red lipstick is perfect somehow.",talk:"The pinup girl waves from the painting. K'Dee waves back. This bathroom is a LOT."},{id:"jport",x:142,y:36,w:75,h:105,name:"Jesus Portrait",look:"Kind smile. Halo. He seems like he's about to step out.",talk:"'Seen my keys?' The smile widens."},{id:"jtub",x:10,y:285,w:178,h:80,name:"Golden Tub",look:"Pure gold. Holy water.",use:"Hand sparkles."},{id:"jbible",x:150,y:225,w:52,h:32,name:"Bible",look:"Proverbs 31.",take:"'Divine guidance.'",quest:"bible"},{id:"jtoilet",x:270,y:305,w:60,h:65,name:"Golden Toilet",look:"Jesus saves, bathroom SPENDS.",use:"Not that throne."},{id:"jcandles",x:315,y:205,w:35,h:38,name:"Candles",look:"Frankincense."},{id:"jdoorB",x:346,y:270,w:14,h:200,name:"Foyer",open:"goto:0"}],
-[{id:"penta",x:136,y:416,w:88,h:88,name:"Pentagram",look:"NOT home decor.",use:"Flames flare! Then nothing.",push:"Chalk smudges."},{id:"necro",x:45,y:435,w:42,h:26,name:"Necronomicon",look:"It whispers.",take:"'...return me.'",quest:"necronomicon",talk:"'Keys are not here, mortal.'"},{id:"skull",x:296,y:435,w:22,h:22,name:"Skull",look:"Real or prop?",talk:"'Alas, poor Yorick.'"},{id:"chains",x:10,y:85,w:30,h:120,name:"Chains",look:"Rusty. HISTORY.",use:"Echo: 10/10."},{id:"bstairsU",x:100,y:0,w:160,h:30,name:"Stairs Up",open:"goto:0"},{id:"hgdoor",x:346,y:270,w:14,h:200,name:"Girls' Room",open:"goto:20"}],
+[{id:"penta",x:136,y:416,w:88,h:88,name:"Pentagram",look:"NOT home decor.",use:"Flames flare! Then nothing.",push:"Chalk smudges."},{id:"necro",x:45,y:435,w:42,h:26,name:"Necronomicon",look:"It whispers.",take:"'...return me.'",quest:"necronomicon",talk:"'Keys are not here, mortal.'"},{id:"skull",x:296,y:435,w:22,h:22,name:"Skull",look:"Real or prop?",talk:"'Alas, poor Yorick.'"},{id:"chains",x:10,y:85,w:30,h:120,name:"Chains",look:"Rusty. HISTORY.",use:"Echo: 10/10."},{id:"bstairsU",x:0,y:150,w:72,h:180,name:"Stairs Up",open:"goto:6"}],
 [{id:"bench",x:25,y:272,w:120,h:65,name:"Bench Press",look:"Gains.",use:"Half a rep."},{id:"dumbbells",x:160,y:420,w:50,h:22,name:"Dumbbells",look:"Heavy.",take:"Almost lifts one."},{id:"gymmirror",x:85,y:125,w:185,h:115,name:"Mirror",look:"Looking STRONG.",talk:"'Find keys AND look great.'"},{id:"poster",x:278,y:105,w:72,h:55,name:"Poster",look:"NO PAIN NO GAIN."},{id:"pullup",x:262,y:98,w:85,h:55,name:"Pull-Up Bar",use:"3 seconds. Record."},{id:"mat",x:125,y:395,w:105,h:30,name:"Yoga Mat",use:"Namaste."},{id:"gymdoorB",x:0,y:370,w:14,h:150,name:"Attic",open:"goto:8"}],
 [{id:"shelves",x:8,y:15,w:344,h:350,name:"Shelves",look:"Expired 2022.",open:"Beans, mystery powder."},{id:"rice",x:276,y:325,w:65,h:45,name:"Rice Bag",look:"50 pounds.",push:"A map drawing!",take:"Too heavy."},{id:"pdoorB",x:0,y:270,w:14,h:200,name:"Kitchen",open:"goto:1"}],
 [{id:"breakers",x:136,y:50,w:85,h:80,name:"Breakers",look:"Half tripped.",use:"Lights flicker!"},{id:"washers",x:5,y:195,w:350,h:120,name:"Machines",look:"EIGHT. WHY.",open:"One sock."},{id:"maze1R",x:346,y:270,w:14,h:200,name:"Deeper",open:"goto:15"},{id:"maze1L",x:0,y:270,w:14,h:200,name:"Laundry",open:"goto:6"}],
@@ -1135,9 +1239,9 @@ function makeHS(){return[
 [{id:"exit",x:126,y:15,w:108,h:32,name:"EXIT",look:"Can you trust it?"},{id:"lint",x:255,y:265,w:70,h:70,name:"Lint Monster",look:"Dryer lint with EYES.",talk:"*rustles*",push:"Reforms. ALWAYS.",use:"Dryer sheet: it HISSES!"},{id:"escape",x:306,y:145,w:45,h:155,name:"Escape Door",open:"goto:6"},{id:"maze3L",x:0,y:270,w:14,h:200,name:"Back",open:"goto:15"}],
 [{id:"mower",x:25,y:305,w:80,h:55,name:"Mower",look:"Grass was waist-high.",use:"Pull cord. Nothing."},{id:"tools2",x:145,y:75,w:35,h:265,name:"Tools",look:"Rakes, shovels.",take:"Takes shovel.",quest:"shovel"},{id:"tarp",x:195,y:215,w:125,h:85,name:"Tarp",look:"Something BIG.",push:"Holiday decorations."},{id:"pots",x:255,y:395,w:40,h:35,name:"Pots",look:"Dead plants.",push:"Dirt and regret."},{id:"sheddoorB",x:0,y:370,w:14,h:150,name:"Backyard",open:"goto:7"}],
 [{id:"beds",x:10,y:205,w:350,h:82,name:"Garden Beds",look:"Tomatoes, herbs.",take:"Herbs for dinner."},{id:"sunflowers",x:236,y:222,w:118,h:85,name:"Sunflowers",look:"Majestic.",talk:"They lean toward her."},{id:"gnome",x:306,y:405,w:28,h:42,name:"Gnome",look:"Creepy smile. Watching.",talk:"'You know where the keys are.'",push:"Note: CHECK THE COUCH."},{id:"gardendoorB",x:0,y:200,w:14,h:300,name:"Backyard",open:"goto:7"}],
-[{id:"gpc",x:85,y:135,w:190,h:95,name:"Gaming PC",look:"Triple monitors. RGB.",use:"Game unpauses. Panic.",talk:"Discord tab closed."},{id:"gchair",x:125,y:285,w:110,h:55,name:"Chair",look:"Cost more than couch.",use:"Comfortable."},{id:"gposter1",x:10,y:90,w:60,h:42,name:"Cyberpunk",look:"Thinks he's a hacker."},{id:"gposter2",x:286,y:85,w:60,h:46,name:"Anime",look:"Nods approvingly."},{id:"drinks",x:258,y:385,w:40,h:25,name:"Energy Drinks",look:"Three empty. 3AM gaming.",take:"Confiscated."},{id:"board",x:296,y:425,w:48,h:12,name:"Skateboard",use:"Slides 3 feet. Regret."},{id:"groomdoorB",x:0,y:370,w:14,h:150,name:"Attic",open:"goto:8"}],
+[{id:"gscience",x:8,y:40,w:105,h:250,name:"Chemistry Corner",look:"Flasks bubbling. Something is clearly a hypothesis gone wrong.",use:"Accidentally turns solution green. It smells like ranch.",talk:"The telescope is pointed at Mars. Ambitious."},{id:"gmartian",x:125,y:38,w:108,h:115,name:"The Martian Poster",look:"A framed poster of a little green guy waving on a red planet. Greyson drew it himself.",talk:"The Martian appears to wink. This room is a lot."},{id:"gwanted",x:266,y:40,w:86,h:105,name:"Wanted Poster",look:"WANTED: DEAD OR ALIVE. $500 reward. Greyson drew this too. The resemblance to no one is uncanny.",push:"The poster flutters. A star badge falls out."},{id:"gsheriff",x:270,y:145,w:50,h:60,name:"Sheriff Badge",look:"A genuine gold star. Greyson takes his western phase very seriously.",take:"Takes the badge. Feels surprisingly official."},{id:"gboots",x:255,y:445,w:55,h:40,name:"Cowboy Boots",look:"Real spurs. Greyson is committed to the bit.",push:"They clink. Something is in one — a folded note: CHECK GARAGE."},{id:"gjournal",x:105,y:245,w:60,h:40,name:"Science Journal",look:"'HYPOTHESIS: Mars = Texas??' Several pages of evidence. Some of it is maps.",open:"The journal falls open to: 'If I can survive Mars I can survive Mom.'"},{id:"gcookies",x:105,y:390,w:55,h:35,name:"Cookie Stash",look:"A zip-lock bag of peanut butter cookies hidden behind the telescope. Classic.",take:"K'Dee confiscates a cookie. Science can't stop her.",quest:"cookie"},{id:"groomdoorB",x:0,y:370,w:14,h:150,name:"Bedroom",open:"goto:9"}],
 // Room 20: Gwyneth's stylish blue room
-[{id:"gwbed",x:18,y:265,w:165,h:82,name:"Gwyneth's Bed",look:"Books on both pillows. She fell asleep reading. Again.",open:"'Reading is my superpower.' A book falls out. It was open to the last page."},{id:"hgvanity",x:246,y:145,w:102,h:72,name:"Vanity",look:"Lip gloss, hair dye, blue accessories everywhere.",use:"Borrows some blue eyeliner. Shhh."},{id:"fairy",x:0,y:18,w:360,h:28,name:"Fairy Lights",look:"Blue and teal. Magical.",use:"Disco mode activated."},{id:"stuffed",x:150,y:410,w:28,h:26,name:"Blue Bear",look:"Gwyneth's companion since age 4. Judges no one.",talk:"Mr. Blue-Bear has seen some things. He's at peace."},{id:"art",x:33,y:47,w:64,h:53,name:"Fashion Art",look:"Fashion Week 2025. K'Dee nods approvingly.",talk:"Gwyneth wants to be a designer. Obviously."},{id:"books",x:188,y:375,w:150,h:55,name:"Book Pile",look:"At least 40 books. All read multiple times.",open:"Fantasy, fashion history, and one suspiciously thick manga."},{id:"sewing",x:268,y:395,w:62,h:38,name:"Sewing Machine",look:"Mid-project. Blue fabric everywhere.",use:"One needle stuck in the fabric. K'Dee leaves it alone."},{id:"hgroomdoorB",x:0,y:370,w:14,h:150,name:"Basement",open:"goto:11"}],
+[{id:"gwbed",x:18,y:265,w:165,h:82,name:"Gwyneth's Bed",look:"Books on both pillows. She fell asleep reading. Again.",open:"'Reading is my superpower.' A book falls out. It was open to the last page."},{id:"hgvanity",x:246,y:145,w:102,h:72,name:"Vanity",look:"Lip gloss, hair dye, blue accessories everywhere.",use:"Borrows some blue eyeliner. Shhh."},{id:"fairy",x:0,y:18,w:360,h:28,name:"Fairy Lights",look:"Blue and teal. Magical.",use:"Disco mode activated."},{id:"stuffed",x:150,y:410,w:28,h:26,name:"Blue Bear",look:"Gwyneth's companion since age 4. Judges no one.",talk:"Mr. Blue-Bear has seen some things. He's at peace."},{id:"art",x:33,y:47,w:64,h:53,name:"Fashion Art",look:"Fashion Week 2025. K'Dee nods approvingly.",talk:"Gwyneth wants to be a designer. Obviously."},{id:"books",x:188,y:375,w:150,h:55,name:"Book Pile",look:"At least 40 books. All read multiple times.",open:"Fantasy, fashion history, and one suspiciously thick manga."},{id:"sewing",x:268,y:395,w:62,h:38,name:"Sewing Machine",look:"Mid-project. Blue fabric everywhere.",use:"One needle stuck in the fabric. K'Dee leaves it alone."},{id:"hgroomdoorB",x:0,y:370,w:14,h:150,name:"Bedroom",open:"goto:9"}],
 // Room 21: Forest's gamer bubble den
 [{id:"bubble",x:110,y:285,w:150,h:100,name:"Gaming Bubble",look:"A sealed dome around his gaming setup. This is where he lives now.",talk:"*typing through glass* '...what.'"},{id:"snacks",x:82,y:360,w:72,h:42,name:"Snack Pile",look:"Six empty energy drink cans and 12 wrappers. He's been here a while.",take:"Confiscated snacks."},{id:"signs",x:12,y:78,w:52,h:70,name:"Door Signs",look:"QUARANTINE. GO AWAY. LOADING... DO NOT DISTURB — I MEAN IT. Biohazard symbol.",talk:"K'Dee knocks. A long pause. 'I SAID LOADING.'"},{id:"gpc2",x:100,y:100,w:220,h:215,name:"Gaming Setup",look:"Bigger than Greyson's. LED everywhere. He will NOT let you touch it.",use:"K'Dee accidentally moves a cable. Forest's reaction is INSTANT."},{id:"froomdoorB",x:0,y:270,w:14,h:200,name:"Bedroom",open:"goto:9"}]
 ];}

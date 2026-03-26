@@ -8,13 +8,17 @@ var invEmoji={banana:"\uD83C\uDF4C",duck:"\uD83E\uDD86",bible:"\uD83D\uDCD6",fla
 var verbLabels={use:"\u270B USE",take:"\uD83E\uDD1A TAKE",talk:"\uD83D\uDCAC TALK",open:"\uD83D\uDCE6 OPEN",push:"\uD83D\uDC4A PUSH"};
 
 /* K'Dee position & walking */
-var kdeeX=180,kdeeY=560,kdeeTargetX=180,kdeeTargetY=560,kdeeWalking=false,walkSpeed=4;
+var kdeeX=180,kdeeY=520,kdeeTargetX=180,kdeeTargetY=520,kdeeWalking=false,walkSpeed=4;
 var walkAnim=0,frameTick=0;
 
 /* Holly random encounter state */
 var hollyRunning=false,hollyX=-40,hollyY=520,hollyTimer=Math.floor(400+Math.random()*200);
 var hollyAnim=0,hollyMsg="",hollyMsgTimer=0,hollyCatchable=false;
+var hollyTrip=false,hollyTripTimer=0;
 
+/* Milo follow state — after Big Hug win he tags along for a few rooms */
+var miloFollowing=false,miloRoomsLeft=0,miloFollowX=180,miloFollowY=540,miloFollowAnim=0;
+var miloMsg="",miloMsgTimer=0;
 function drawKdee(c,x,y){
   var breathe=Math.sin(frameTick*0.04)*1;
   var bob=kdeeWalking?Math.sin(walkAnim*0.3)*3.5:breathe*0.7;
@@ -101,13 +105,25 @@ function updateHolly(){
   if(battleActive||paused||gameOver)return;
   if(hollyRunning){
     hollyAnim++;
-    hollyX+=7; // she runs fast
     if(hollyMsgTimer>0)hollyMsgTimer--;
-    if(hollyX>60&&hollyX<200&&hollyMsgTimer===0){
-      hollyMsg="HOLLY HAS ENTERED THE CHAT";hollyMsgTimer=80;
+    if(hollyTrip){
+      hollyTripTimer--;
+      // Phase 1 (frames 60-40): collapsed on ground, slide slowly
+      if(hollyTripTimer>40){hollyX+=0.5;}
+      // Phase 2 (frames 40-0): scramble up and flee fast
+      else{hollyX+=6;}
+      if(hollyTripTimer<=0){
+        hollyRunning=false;hollyTrip=false;hollyX=-40;hollyMsg="";hollyMsgTimer=0;hollyCatchable=false;
+        hollyTimer=Math.floor(500+Math.random()*300);
+      }
+      return;
     }
-    if(hollyX>230&&hollyMsg==="HOLLY HAS ENTERED THE CHAT"&&hollyMsgTimer<30){
-      hollyMsg="holly.exe detected by AI — fled";hollyMsgTimer=60;
+    hollyX+=3; // she moves slowly and quietly — that's what makes it unsettling
+    if(hollyX>60&&hollyX<200&&hollyMsgTimer===0){
+      hollyMsg="...hi.";hollyMsgTimer=80;
+    }
+    if(hollyX>230&&hollyMsg==="...hi."&&hollyMsgTimer<30){
+      hollyMsg="...bye.";hollyMsgTimer=60;
       // Deal 1 damage
       kdeeHP=Math.max(0,kdeeHP-1);updateHUD();
     }
@@ -120,7 +136,7 @@ function updateHolly(){
   if(HOLLY_SAFE_ROOMS.indexOf(curRoom)>=0)return;
   hollyTimer--;
   if(hollyTimer<=0&&Math.random()<0.05){
-    hollyRunning=true;hollyX=-40;hollyY=Math.floor(490+Math.random()*60);hollyAnim=0;
+    hollyRunning=true;hollyX=-40;hollyY=Math.floor(460+Math.random()*40);hollyAnim=0;
     hollyCatchable=true;hollyMsg="";hollyMsgTimer=40;
     hollyTimer=Math.floor(400+Math.random()*200);
   }
@@ -129,46 +145,155 @@ function updateHolly(){
 /* Draw running Holly during encounter */
 function drawHolly(c){
   if(!hollyRunning)return;
-  var bob=Math.sin(hollyAnim*0.5)*4;
-  var legSwing=Math.sin(hollyAnim*0.4)*8;
-  var sc=1.4;
+  var sc=1.8;
+
+  if(hollyTrip){
+    // Tripped — draw her collapsed/scrambling
+    var phase=hollyTripTimer; // 60→0
+    c.save();c.translate(hollyX,hollyY);c.scale(sc,sc);
+    if(phase>40){
+      // Collapsed flat on ground
+      c.save();c.rotate(Math.PI/2);// rotated 90° — lying down
+      // Body horizontal
+      c.fillStyle="#DDA0DD";c.fillRect(-12,-4,24,8);
+      // Head
+      c.fillStyle=P.skin;c.beginPath();c.arc(15,0,7,0,Math.PI*2);c.fill();
+      // Hair splayed
+      c.fillStyle="#654321";c.beginPath();c.arc(15,-4,7,Math.PI,2*Math.PI);c.fill();
+      D(c,12,-10,6,10,"#654321");D(c,17,-10,6,10,"#654321");
+      // Stars above head
+      c.fillStyle=P.gold;c.font="bold 8px monospace";c.textAlign="center";
+      c.fillText("*_*",15,-14+Math.sin(phase*0.3)*2);c.textAlign="left";
+      // Legs splayed
+      D(c,-16,-6,8,4,"#8B668B");D(c,-16,2,8,4,"#8B668B");
+      c.restore();
+    } else {
+      // Scrambling back up and fleeing — wobbly upright
+      var wobble=Math.sin(phase*0.8)*(phase/40)*6;
+      c.save();c.rotate(wobble*0.08);
+      D(c,-5,-8,4,12,"#8B668B");D(c,2,-8,4,12,"#8B668B");
+      c.fillStyle="#DDA0DD";c.beginPath();
+      c.moveTo(-7,-20);c.lineTo(-8,-8);c.lineTo(8,-8);c.lineTo(7,-20);c.closePath();c.fill();
+      D(c,-14,-20,4,14,"#DDA0DD");D(c,7,-20,4,14,"#DDA0DD");// arms flailing
+      c.fillStyle=P.skin;c.beginPath();c.arc(0,-28,8,0,Math.PI*2);c.fill();
+      c.fillStyle="#654321";c.beginPath();c.arc(0,-32,8,Math.PI,2*Math.PI);c.fill();
+      D(c,-8,-31,4,18,"#654321");D(c,4,-31,4,18,"#654321");
+      // Wide eyes — panicked
+      c.fillStyle="#fff";c.fillRect(-4,-30,3,4);c.fillRect(1,-30,3,4);
+      c.fillStyle="#333";c.fillRect(-3,-29,2,3);c.fillRect(2,-29,2,3);
+      c.restore();
+    }
+    c.restore();
+    return;
+  }
+
+  var bob=Math.sin(hollyAnim*0.15)*1.5;// very gentle sway — she moves quietly
+  var legSwing=Math.sin(hollyAnim*0.2)*4;// slow deliberate stride
   c.save();c.translate(hollyX,hollyY);c.scale(sc,sc);
-  // Shadow
-  c.save();c.globalAlpha=0.15;c.fillStyle="#000";
+  // Very faint shadow — she moves like a ghost
+  c.save();c.globalAlpha=0.08;c.fillStyle="#000";
   c.beginPath();c.ellipse(0,2,10,3,0,0,Math.PI*2);c.fill();c.restore();
-  // Legs (running spread)
-  D(c,-5+legSwing,-4+bob,4,8,"#8B668B");
-  D(c,2-legSwing,-4+bob,4,8,"#8B668B");
+  // Long legs (tall character)
+  D(c,-5+legSwing,-8+bob,4,12,"#8B668B");
+  D(c,2-legSwing,-8+bob,4,12,"#8B668B");
   D(c,-6+legSwing,3+bob,5,3,"#333");
   D(c,2-legSwing,3+bob,5,3,"#333");
-  // Body
+  // Long body
   c.fillStyle="#DDA0DD";c.beginPath();
-  c.moveTo(-7,-12+bob);c.lineTo(-8,-3+bob);c.lineTo(8,-3+bob);c.lineTo(7,-12+bob);
+  c.moveTo(-7,-20+bob);c.lineTo(-8,-8+bob);c.lineTo(8,-8+bob);c.lineTo(7,-20+bob);
   c.closePath();c.fill();
-  // Arms flailing
-  D(c,-11,-14+bob+legSwing*0.5,4,10,"#DDA0DD");
-  D(c,7,-14+bob-legSwing*0.5,4,10,"#DDA0DD");
-  // Head
-  c.fillStyle=P.skin;c.beginPath();c.arc(0,-20+bob,8,0,Math.PI*2);c.fill();
-  // Long hair flying back
-  c.fillStyle="#654321";c.beginPath();c.arc(0,-24+bob,8,Math.PI,2*Math.PI);c.fill();
-  D(c,-8,-23+bob,4,14,"#654321");D(c,4,-23+bob,4,14,"#654321");
-  // Eyes wide (surprised/excited)
-  c.fillStyle="#fff";c.fillRect(-4,-21+bob,3,3);c.fillRect(1,-21+bob,3,3);
-  c.fillStyle="#333";c.fillRect(-3,-20+bob,2,2);c.fillRect(2,-20+bob,2,2);
-  // Open mouth
-  c.fillStyle="#333";c.beginPath();c.arc(0,-15+bob,2,0,Math.PI);c.fill();
+  // Long arms hanging at sides (not flailing — calm)
+  D(c,-11,-20+bob,4,14,"#DDA0DD");
+  D(c,7,-20+bob,4,14,"#DDA0DD");
+  // Head (higher up — tall)
+  c.fillStyle=P.skin;c.beginPath();c.arc(0,-28+bob,8,0,Math.PI*2);c.fill();
+  // Long straight hair
+  c.fillStyle="#654321";c.beginPath();c.arc(0,-32+bob,8,Math.PI,2*Math.PI);c.fill();
+  D(c,-8,-31+bob,4,18,"#654321");D(c,4,-31+bob,4,18,"#654321");
+  // Eyes — half-lidded, calm, slightly unsettling
+  c.fillStyle="#fff";c.fillRect(-4,-29+bob,3,2);c.fillRect(1,-29+bob,3,2);
+  c.fillStyle="#333";c.fillRect(-3,-29+bob,2,2);c.fillRect(2,-29+bob,2,2);
+  // Slight smile — gentle, not alarmed
+  c.strokeStyle="#c0a0b0";c.lineWidth=0.8;
+  c.beginPath();c.arc(0,-23+bob,2.5,0.15*Math.PI,0.85*Math.PI);c.stroke();
   c.restore();
 
-  // Holly message overlay
+  // Holly message overlay — light bubble above her head, visible immediately
   if(hollyMsg){
-    var alpha=Math.min(1,hollyMsgTimer/20);
-    c.save();c.globalAlpha=alpha*0.9;
-    var tw=c.measureText(hollyMsg).width+16;
-    c.fillStyle="#DDA0DD";c.font="bold 10px monospace";
+    var alpha=Math.min(1,hollyMsgTimer/10);
+    c.save();c.globalAlpha=alpha;
+    c.font="bold 11px monospace";
+    var tw=c.measureText(hollyMsg).width+18;
     var tx=Math.min(Math.max(hollyX,tw/2+5),355-tw/2);
-    RR(c,tx-tw/2,hollyY-55,tw,18,4,"rgba(40,0,60,0.88)");
-    c.fillText(hollyMsg,tx-tw/2+8,hollyY-41);
+    // Light speech bubble — cream background, dark text, easy to read
+    RR(c,tx-tw/2,hollyY-70,tw,20,4,"rgba(255,248,220,0.96)");
+    c.strokeStyle="rgba(180,140,200,0.7)";c.lineWidth=1;
+    c.beginPath();
+    c.moveTo(tx-tw/2+4,hollyY-50);c.lineTo(tx-tw/2+4,hollyY-70);c.lineTo(tx+tw/2-4,hollyY-70);c.lineTo(tx+tw/2-4,hollyY-50);
+    c.stroke();
+    // Text — dark so it shows on the light background
+    c.fillStyle="#2a1a3e";c.textAlign="center";
+    c.fillText(hollyMsg,tx,hollyY-56);
+    c.textAlign="left";
+    c.restore();
+  }
+}
+
+  }
+}
+
+/* Milo follow: update position trailing K'Dee, random chatter */
+var MILO_QUIPS=["'Mom can I tell you something?'","'MOM. Mom. Mommy.'","'Did you know dinosaurs—'","'I made you a drawing!'","'Can we read later?'","'...mom?'","'The book said—'","'I love you!'"];
+function updateMilo(){
+  if(!miloFollowing)return;
+  miloFollowAnim++;
+  // Trail slightly behind K'Dee
+  miloFollowX+=(kdeeX-30-miloFollowX)*0.12;
+  miloFollowY+=(kdeeY-miloFollowY)*0.12;
+  if(miloMsgTimer>0)miloMsgTimer--;
+  // Random quips
+  if(miloMsgTimer===0&&Math.random()<0.004){
+    miloMsg=MILO_QUIPS[Math.floor(Math.random()*MILO_QUIPS.length)];miloMsgTimer=100;
+  }
+}
+function drawMilo(c){
+  if(!miloFollowing)return;
+  var bob=Math.sin(miloFollowAnim*0.2)*2;
+  var leg=Math.sin(miloFollowAnim*0.25)*5;
+  var sc=0.85;// small kid
+  c.save();c.translate(miloFollowX,miloFollowY);c.scale(sc,sc);
+  // Shadow
+  c.save();c.globalAlpha=0.1;c.fillStyle="#000";c.beginPath();c.ellipse(0,4,8,3,0,0,Math.PI*2);c.fill();c.restore();
+  // Legs
+  D(c,-4+leg,0,4,10,"#3498db");D(c,1-leg,0,4,10,"#3498db");
+  D(c,-5+leg,9,5,3,"#333");D(c,1-leg,9,5,3,"#333");
+  // Body
+  c.fillStyle="#87CEEB";c.beginPath();c.moveTo(-6,-12+bob);c.lineTo(-7,0+bob);c.lineTo(7,0+bob);c.lineTo(6,-12+bob);c.closePath();c.fill();
+  // Arms with book
+  D(c,-10,-12+bob,4,9,"#87CEEB");D(c,6,-12+bob,4,9,"#87CEEB");
+  // Book in hand
+  RR(c,6,-8+bob,8,10,2,"#e74c3c");c.fillStyle="#fff";c.font="bold 4px monospace";c.fillText("📖",6,-2+bob);
+  // Head
+  c.fillStyle=P.skin;c.beginPath();c.arc(0,-20+bob,8,0,Math.PI*2);c.fill();
+  // Hair
+  c.fillStyle="#654321";c.beginPath();c.arc(0,-24+bob,8,Math.PI,2*Math.PI);c.fill();
+  // Big happy eyes
+  c.fillStyle="#fff";c.fillRect(-4,-22+bob,4,3);c.fillRect(1,-22+bob,4,3);
+  c.fillStyle="#3498db";c.fillRect(-3,-22+bob,3,3);c.fillRect(2,-22+bob,3,3);
+  c.fillStyle="#000";c.fillRect(-2,-21+bob,1,2);c.fillRect(3,-21+bob,1,2);
+  // Big smile
+  c.strokeStyle="#c07060";c.lineWidth=1;c.beginPath();c.arc(0,-14+bob,4,0.1*Math.PI,0.9*Math.PI);c.stroke();
+  c.restore();
+  // Speech bubble
+  if(miloMsg&&miloMsgTimer>0){
+    var alpha=Math.min(1,miloMsgTimer/10);
+    c.save();c.globalAlpha=alpha;
+    c.font="bold 9px monospace";
+    var tw=c.measureText(miloMsg).width+14;
+    var bx=Math.min(Math.max(miloFollowX-tw/2,2),CW-tw-2);
+    RR(c,bx,miloFollowY-65,tw,18,4,"rgba(255,248,220,0.96)");
+    c.fillStyle="#2a1a3e";c.textAlign="center";
+    c.fillText(miloMsg,miloFollowX,miloFollowY-51);c.textAlign="left";
     c.restore();
   }
 }
@@ -188,30 +313,58 @@ function drawNavArrows(c){
     if(!h.open||h.open.indexOf("goto:")!==0)return;
     var cx=h.x+h.w/2,cy=h.y+h.h/2;
     var isLeft=h.x<20,isRight=h.x>320,isTop=h.y<40,isBottom=h.y>580;
-    c.save();c.globalAlpha=0.6+0.4*pulse;
+    c.save();c.globalAlpha=0.75+0.25*pulse;
+
+    c.font="bold 8px monospace";
+    var label=h.name;
+    var tw=c.measureText(label).width;
 
     if(isLeft){
-      // Left door indicator
-      c.fillStyle="rgba(255,215,0,"+0.12*pulse+")";c.fillRect(0,cy-25,18,50);
-      c.fillStyle=P.gold;c.beginPath();c.moveTo(12,cy-12);c.lineTo(2,cy);c.lineTo(12,cy+12);c.closePath();c.fill();
-      c.font="bold 7px monospace";c.textAlign="center";c.fillText(h.name.substring(0,8),9,cy+24);c.textAlign="left";
+      // Glow strip
+      c.fillStyle="rgba(255,215,0,"+0.1*pulse+")";c.fillRect(0,cy-28,22,56);
+      // Arrow pointing left
+      c.fillStyle=P.gold;c.beginPath();c.moveTo(14,cy-10);c.lineTo(4,cy);c.lineTo(14,cy+10);c.closePath();c.fill();
+      // Label pill — inside canvas, to the right of the arrow
+      var lx=20,ly=cy-9,lw=tw+10,lh=18;
+      RR(c,lx,ly,lw,lh,4,"rgba(0,0,0,0.72)");
+      c.fillStyle=P.gold;c.textAlign="left";c.fillText(label,lx+5,ly+13);
+
     } else if(isRight){
-      c.fillStyle="rgba(255,215,0,"+0.12*pulse+")";c.fillRect(342,cy-25,18,50);
-      c.fillStyle=P.gold;c.beginPath();c.moveTo(348,cy-12);c.lineTo(358,cy);c.lineTo(348,cy+12);c.closePath();c.fill();
-      c.font="bold 7px monospace";c.textAlign="center";c.fillText(h.name.substring(0,8),351,cy+24);c.textAlign="left";
+      c.fillStyle="rgba(255,215,0,"+0.1*pulse+")";c.fillRect(338,cy-28,22,56);
+      c.fillStyle=P.gold;c.beginPath();c.moveTo(346,cy-10);c.lineTo(356,cy);c.lineTo(346,cy+10);c.closePath();c.fill();
+      // Label pill — inside canvas, to the left of the arrow
+      var lw=tw+10,lx=336-lw,ly=cy-9,lh=18;
+      RR(c,lx,ly,lw,lh,4,"rgba(0,0,0,0.72)");
+      c.fillStyle=P.gold;c.textAlign="left";c.fillText(label,lx+5,ly+13);
+
     } else if(isTop){
-      c.fillStyle="rgba(255,215,0,"+0.12*pulse+")";c.fillRect(cx-25,0,50,16);
-      c.fillStyle=P.gold;c.beginPath();c.moveTo(cx-10,12);c.lineTo(cx,2);c.lineTo(cx+10,12);c.closePath();c.fill();
+      c.fillStyle="rgba(255,215,0,"+0.1*pulse+")";c.fillRect(cx-28,0,56,22);
+      c.fillStyle=P.gold;c.beginPath();c.moveTo(cx-10,14);c.lineTo(cx,4);c.lineTo(cx+10,14);c.closePath();c.fill();
+      // Label pill below arrow
+      var lw=tw+10,lx=Math.min(Math.max(cx-lw/2,2),CW-lw-2),ly=24,lh=16;
+      RR(c,lx,ly,lw,lh,4,"rgba(0,0,0,0.72)");
+      c.fillStyle=P.gold;c.textAlign="center";c.fillText(label,cx,ly+12);
+
     } else if(isBottom){
-      c.fillStyle="rgba(255,215,0,"+0.12*pulse+")";c.fillRect(cx-25,624,50,16);
-      c.fillStyle=P.gold;c.beginPath();c.moveTo(cx-10,628);c.lineTo(cx,638);c.lineTo(cx+10,628);c.closePath();c.fill();
+      c.fillStyle="rgba(255,215,0,"+0.1*pulse+")";c.fillRect(cx-28,618,56,22);
+      c.fillStyle=P.gold;c.beginPath();c.moveTo(cx-10,626);c.lineTo(cx,636);c.lineTo(cx+10,626);c.closePath();c.fill();
+      // Label pill above arrow
+      var lw=tw+10,lx=Math.min(Math.max(cx-lw/2,2),CW-lw-2),ly=600,lh=16;
+      RR(c,lx,ly,lw,lh,4,"rgba(0,0,0,0.72)");
+      c.fillStyle=P.gold;c.textAlign="center";c.fillText(label,cx,ly+12);
+
     } else {
-      // Interior door — archway label
-      c.fillStyle="rgba(255,215,0,"+0.25*pulse+")";
-      c.beginPath();c.arc(cx,h.y+h.h,h.w/2+4,Math.PI,2*Math.PI);c.rect(cx-h.w/2-4,h.y+h.h,h.w+8,6);c.fill();
-      c.fillStyle=P.gold;c.font="bold 8px monospace";c.textAlign="center";
-      c.fillText("\u25B6 "+h.name,cx,h.y+h.h+16);c.textAlign="left";
+      // Interior door — archway glow + label above the hotspot (always visible)
+      c.fillStyle="rgba(255,215,0,"+0.18*pulse+")";
+      c.beginPath();c.arc(cx,h.y+h.h,h.w/2+4,Math.PI,2*Math.PI);
+      c.rect(cx-h.w/2-4,h.y+h.h,h.w+8,6);c.fill();
+      // Label pill clamped above the door, never below canvas bottom
+      var lw=tw+10,lx=Math.min(Math.max(cx-lw/2,2),CW-lw-2);
+      var ly=Math.min(h.y+h.h+8,CH-20);
+      RR(c,lx,ly,lw,16,4,"rgba(0,0,0,0.72)");
+      c.fillStyle=P.gold;c.textAlign="center";c.fillText(label,cx,ly+12);
     }
+    c.textAlign="left";
     c.restore();
   });
 }
@@ -299,6 +452,14 @@ function fadeToRoom(roomIdx){
     spawnParticles(curRoom);
     updateHUD();setDesc("Entered "+ROOMS[curRoom].name);
     fadeDir=-1;
+    // Milo follows but gets bored after a few rooms
+    if(miloFollowing){
+      miloRoomsLeft--;miloFollowX=210;miloFollowY=560;
+      if(miloRoomsLeft<=0){
+        miloFollowing=false;miloMsg="";miloMsgTimer=0;
+        setDesc("Milo wandered off to read.");
+      }
+    }
     checkBattle(roomIdx);
   };
 }
@@ -311,6 +472,7 @@ function drawScene(){
   drawParticles(ctx);
   drawNavArrows(ctx);
   drawKdee(ctx,Math.round(kdeeX),Math.round(kdeeY));
+  drawMilo(ctx);
   drawHolly(ctx);
   drawHoverHighlights(ctx);
 
@@ -337,7 +499,7 @@ function drawScene(){
 }
 
 var animRunning=false;
-function gameLoop(){if(!animRunning)return;frameTick++;if(battleActive){updateBattle();drawBattle(ctx);}else if(miniActive){updateCatchGame();drawCatchGame(ctx);}else if(frogActive){updateFrogger();drawFrogger(ctx);}else if(racerActive){updateRacer();drawRacer(ctx);}else{updateWalk();updateHolly();drawScene();}requestAnimationFrame(gameLoop);}
+function gameLoop(){if(!animRunning)return;frameTick++;if(battleActive){updateBattle();drawBattle(ctx);}else if(miniActive){updateCatchGame();drawCatchGame(ctx);}else if(frogActive){updateFrogger();drawFrogger(ctx);}else if(racerActive){updateRacer();drawRacer(ctx);}else if(tetActive){updateTetris();drawTetris(ctx);}else{updateWalk();updateHolly();updateMilo();drawScene();}requestAnimationFrame(gameLoop);}
 function startLoop(){if(!animRunning){animRunning=true;gameLoop();}}
 
 function updateHUD(){
@@ -484,6 +646,13 @@ function performAction(h,v){
     return;
   }
 
+  // Mini-game trigger: clothes pile (starts Tetris)
+  if(h.id==="clothespile"&&(v==="push"||v==="take")&&!usedHS[uid]){
+    hideDlg();
+    startTetris();
+    return;
+  }
+
   // Regular action
   usedHS[uid]=true;
   // Update portrait reaction to match verb
@@ -555,7 +724,8 @@ function interactWith(h){
 
 /* --- FULL INVENTORY SYSTEM --- */
 var invDetails={
-  banana:{emoji:"\uD83C\uDF4C",name:"Banana",desc:"A perfectly ripe banana. For scale, obviously.",type:"Food",battle:"Super effective vs. Milo!"},
+  banana:{emoji:"\uD83C\uDF4C",name:"Banana",desc:"A perfectly ripe banana. Restores 3 HP when eaten.",type:"Food",battle:"Super effective vs. Milo!",heal:3},
+  cookie:{emoji:"\uD83C\uDF6A",name:"Snack Cookie",desc:"Confiscated from Greyson's stash. Peanut butter. Restores 5 HP.",type:"Food",battle:"General battle item",heal:5},
   duck:{emoji:"\uD83E\uDD86",name:"General Quackers",desc:"Leader of the rubber duck army. Seen things. Won't talk about it.",type:"Companion",battle:"Super effective vs. Milo!"},
   bible:{emoji:"\uD83D\uDCD6",name:"Bible",desc:"Proverbs 31. Divine guidance for finding lost keys. (Results may vary.)",type:"Sacred Text",battle:"Super effective vs. Greyson, Space Jesus & Baal'thazar!"},
   flashlight:{emoji:"\uD83D\uDD26",name:"Flashlight",desc:"Found at the workbench. Batteries at 12%. Classic.",type:"Tool",battle:"Useful in battle vs. Forest"},
@@ -577,7 +747,7 @@ var invDetails={
 };
 
 // Items that are super-effective somewhere
-var battleItems=["banana","duck","bible","necronomicon","wrench","towel","book","phone","flashlight","drinks","shovel"];
+var battleItems=["banana","duck","bible","necronomicon","wrench","towel","book","phone","flashlight","drinks","shovel","cookie"];
 
 function updateInv(){
   var bc=document.getElementById("bag-count");
@@ -620,6 +790,24 @@ function showInv(){
         else{battleEl.classList.remove("on");}
       }
       detail.classList.add("on");
+      // USE button for food items (only outside battle)
+      var existingUse=document.getElementById("inv-use-btn");
+      if(existingUse)existingUse.remove();
+      if(info.heal&&!battleActive){
+        var useBtn=document.createElement("button");
+        useBtn.id="inv-use-btn";useBtn.textContent="🍽 EAT (+"+info.heal+" HP)";
+        useBtn.style="font-family:monospace;font-size:0.75rem;color:#2ecc71;border:1px solid #2ecc71;background:transparent;padding:8px 20px;border-radius:16px;cursor:pointer;margin-top:8px;letter-spacing:1px;display:block;margin-left:auto;margin-right:auto";
+        useBtn.addEventListener("click",function(){
+          if(kdeeHP>=kdeeMaxHP){setDesc("K'Dee is already at full health!");return;}
+          var healed=Math.min(info.heal,kdeeMaxHP-kdeeHP);
+          kdeeHP=Math.min(kdeeMaxHP,kdeeHP+info.heal);
+          updateHUD();
+          inv.splice(inv.indexOf(it),1);
+          setDesc(info.name+" eaten! +" +healed+" HP!");
+          hideInv();
+        });
+        document.getElementById("inv-detail").appendChild(useBtn);
+      }
     });
     grid.appendChild(cell);
   });
@@ -1010,19 +1198,26 @@ canvas.addEventListener("click",function(e){
   }
   // Racer: click left/right half to lane change
   if(racerActive){
-    if(racerOver){racerFinish();return;}
     var p=getCanvasCoords(e);
     if(p.x<CW/2)racerLaneMoveBy(-1);else racerLaneMoveBy(1);
+    return;
+  }
+  // Tetris: click left half = move left, right half = move right
+  if(tetActive){
+    if(tetOver||tetWon){tetEndGame();return;}
+    var p=getCanvasCoords(e);
+    if(p.x<CW/2)tetMoveH(-1);else tetMoveH(1);
     return;
   }
   if(paused||gameOver)return;
   var p=getCanvasCoords(e);
   // Check if player clicked on running Holly
-  if(hollyRunning&&hollyCatchable){
+  if(hollyRunning&&hollyCatchable&&!hollyTrip){
     var hsc=1.4*30; // approximate catch radius
     if(Math.abs(p.x-hollyX)<hsc&&Math.abs(p.y-hollyY)<hsc){
-      hollyRunning=false;hollyCatchable=false;hollyMsg="";
-      startBattle("holly");return;
+      hollyTrip=true;hollyTripTimer=60;hollyCatchable=false;
+      hollyMsg="";hollyMsgTimer=0;
+      return;
     }
   }
   var h=findHS(p.x,p.y);
@@ -1065,6 +1260,14 @@ canvas.addEventListener("touchend",function(e){
     var h=findHS(p.x,p.y);
     // Tap flash
     tapFlash={x:p.x,y:p.y,t:8};
+    // Check Holly tap
+    if(hollyRunning&&hollyCatchable&&!hollyTrip){
+      var hsc=1.4*30;
+      if(Math.abs(p.x-hollyX)<hsc&&Math.abs(p.y-hollyY)<hsc){
+        hollyTrip=true;hollyTripTimer=60;hollyCatchable=false;hollyMsg="";hollyMsgTimer=0;
+        touchStart=null;return;
+      }
+    }
     if(h){interactWith(h);}else{walkTo(p.x,p.y);setDesc("Nothing interesting there.");}
   }
   touchStart=null;
@@ -1106,38 +1309,38 @@ var FIGHTERS={
     }
   },
   holly:{
-    name:"HOLLY",title:"THE HUMAN MISSILE",hp:10,maxHp:10,color:"#DDA0DD",
+    name:"HOLLY",title:"THE TALL SHADOW",hp:10,maxHp:10,color:"#DDA0DD",
     hair:"#654321",hairStyle:"long",skin:P.skin,shirt:"#DDA0DD",pants:"#8B668B",tall:true,
-    idleQuips:["*stretches arms wide*","'Incoming!'","*bounces excitedly*","'MOMMYYY!'"],
+    idleQuips:["*appears silently behind K'Dee*","*has been standing there for a while*","*blinks slowly*","'...hi.'"],
     attacks:[
-      {name:"FLYING HUG",dmg:3,quips:["Holly LAUNCHES herself. K'Dee is FLATTENED.","Running hug! K'Dee goes down like a domino!","Holly achieves LIFTOFF. Impact imminent!","INCOMING! Holly hits like a loving freight train."]},
-      {name:"TRIP & FALL",dmg:2,quips:["Holly trips and falls ON K'Dee. Again.","Gravity and Holly have an arrangement.","She trips on NOTHING and lands on K'Dee."]},
-      {name:"SQUEEZE",dmg:1,quips:["Holly hugs so tight K'Dee's ribs file a complaint.","'I love you!' *CRACK* 'Was that a rib?'","The hug-to-pain ratio is concerning."]},
-      {name:"TACKLE LOVE",dmg:2,quips:["Holly charges! Arms wide! No escape!","She runs at K'Dee like a linebacker with feelings.","TACKLE HUG! K'Dee sees her life flash by."]}
+      {name:"SILENT APPEAR",dmg:3,quips:["Holly was just... there. She didn't walk over. She was THERE.","K'Dee turns around and Holly is six inches away. How long has she been there?!","Holly materializes from the hallway shadow. Scary-quiet for someone so tall.","She steps out from behind a door she did not just come through. UNSETTLING."]},
+      {name:"LONG ARM REACH",dmg:2,quips:["Holly's arms are distractingly long. She reaches something K'Dee thought was safe.","The wingspan is REAL. K'Dee did not account for the wingspan.","Holly stretches and knocks something off a shelf three feet away. From here. Without moving."]},
+      {name:"HOVER",dmg:1,quips:["Holly hovers just behind K'Dee's shoulder without saying anything.","She is SO tall she just... looms. Politely. It's very unnerving.","'...do you need help.' It is not a question. It is a fact that Holly will help."]},
+      {name:"GENTLE GRIP",dmg:2,quips:["Holly holds K'Dee's wrist very gently. She is stronger than she looks.","The hug is soft. K'Dee is somehow immobilized anyway.","Holly wraps one arm around K'Dee's shoulders and just... doesn't let go. Very calm."]}
     ],
-    intro:["Holly spots K'Dee across the room.","Her eyes light up. She starts RUNNING.","'MOMMYYYY!'","Oh no. OH NO."],
-    defeat:["Holly finally lands a gentle hug.","'Love you mom!' She cartwheels away.","K'Dee checks for broken bones. All clear. Barely."],
+    intro:["K'Dee turns around.","Holly is already there.","She has been there for a while, apparently.","'...hi mom.'","She is very tall."],
+    defeat:["Holly gives one slow, solemn nod.","'...okay.'","She drifts silently back down the hall.","K'Dee checks to make sure she's gone. She is. Somehow."],
     itemEffects:{
-      towel:{dmg:5,msg:["K'Dee whips out the towel like a matador!","'OLE!' Holly hugs the towel instead!","She wraps herself in it. 'I'm a burrito!'"],super:true},
-      book:{dmg:4,msg:["K'Dee reads aloud from the parenting book.","Holly sits down cross-legged. 'Story time!'","Crisis. Averted."],super:true}
+      towel:{dmg:5,msg:["K'Dee throws the towel.","Holly catches it with one hand without blinking.","'...thank you.' She folds it neatly. Battle confusion reigns."],super:true},
+      book:{dmg:4,msg:["K'Dee reads aloud from the parenting book.","Holly sits cross-legged on the floor immediately.","She is TOO TALL for this to work. It works anyway."],super:true}
     }
   },
   greyson:{
-    name:"GREYSON",title:"THE CHILL KING",hp:12,maxHp:12,color:"#8a2be2",
-    hair:"#1a1a1a",hairStyle:"dark",moustache:true,skin:P.skin,shirt:"#111",pants:"#1a1a1a",
-    idleQuips:["*strokes moustache*","'Yeah, no worries.'","*leans back in gaming chair*","'Honestly? Pretty chill.'"],
+    name:"GREYSON",title:"THE FRONTIER SCIENTIST",hp:12,maxHp:12,color:"#e67e22",
+    hair:"#8B6914",hairStyle:"dark",moustache:true,skin:P.skin,shirt:"#c9a56c",pants:"#3d2b1f",
+    idleQuips:["*strokes moustache thoughtfully*","*adjusts imaginary sheriff badge*","*squints at you like a horizon*","'Yep.'"],
     attacks:[
-      {name:"VIBE CHECK",dmg:1,quips:["'Bro just relax.' K'Dee cannot relax.","'You're giving very chaotic energy right now.'","'Have you tried just... not stressing?' K'Dee has not tried that.","Greyson radiates such chill energy K'Dee forgets what she was doing."]},
-      {name:"WISDOM DROP",dmg:2,quips:["'Keys are just a thing, mom. You are bigger than the thing.'","'What if you just... didn't need keys?'","'In the grand scheme, does it really matter?' IT DOES GREYSON.","'Lower your expectations and raise your vibe.' K'Dee stares."]},
-      {name:"DEEP STARE",dmg:1,quips:["Greyson stares calmly at K'Dee. Somehow more unsettling than anger.","He nods slowly. He's fine. K'Dee is not fine.","The serene thousand-yard stare. He's at peace. She is not."]},
-      {name:"CHILL AURA",dmg:2,quips:["Greyson's chill aura is TOO powerful. K'Dee loses momentum.","'It's all good, mom.' Nothing is good. Everything is chaos.","He sighs peacefully. K'Dee experiences a productivity crash.","'No stress.' K'Dee's stress doubles from the irony."]}
+      {name:"SCIENCE FACT",dmg:1,quips:["'Did you know the average human spends 6 months looking for lost items?' K'Dee's eye twitches.","Greyson recites the chemical formula for stress. It does not help.","'According to my research—' K'Dee cannot take more research.","He holds up a flask. It bubbles ominously. 'It's fine.'"]},
+      {name:"MARSHAL STARE",dmg:2,quips:["Greyson gives the thousand-yard western squint. Unsettling.","'I'm gonna need you to calm down, partner.' K'Dee is not calm.","He tilts his hat brim with one finger. Maximum drama. Somehow it works.","The stare says: I have seen things on Mars you wouldn't believe."]},
+      {name:"MARTIAN LOGIC",dmg:2,quips:["'On Mars there are no keys because no one has pockets.' K'Dee stares.","'Have you considered relocating to a planet with fewer doors?'","He draws a diagram. It is a map of Mars with Texas borders on it.","'Mars colonists won't have this problem.' GREYSON."]},
+      {name:"LASSO THEORY",dmg:1,quips:["Greyson mimes throwing a lasso. Somehow K'Dee trips.","'In the old west, you lost your horse, you walked.' 'GREYSON.'","He narrates the encounter like a nature documentary. K'Dee loses the will to argue."]}
     ],
-    intro:["Greyson sits in his RGB gaming throne.","The monitors glow, a playlist plays softly.","'Oh hey mom. You good?'","'I need my keys, Greyson.'","'Yeah for sure. Just vibe for a sec.'"],
-    defeat:["Greyson gives a slow nod.","'Respect the hustle, mom.'","'I think I saw keys by the— actually try the garage.'","He returns to his game. Tranquil. Unbothered."],
+    intro:["Greyson is at his chemistry set, cowboy hat on.","\u2605 A wanted poster of an alien hangs on the wall.","'Oh hey mom.'","'Greyson I need my keys.'","'Yep. Reckon they're around here somewhere.'"],
+    defeat:["Greyson pushes back his hat and nods slowly.","'Respect the hustle, ma.'","'Saw somethin' key-shaped near the garage. Scientifically speaking.'","He turns back to his telescope. Aimed at Mars. Obviously."],
     itemEffects:{
-      necronomicon:{dmg:6,msg:["K'Dee holds up the Necronomicon.","Greyson's eyes go WIDE.","'FINALLY. Some CULTURE in this house.'","He grabs it and starts reading. Battle over."],super:true},
-      bible:{dmg:5,msg:["'Have you considered... faith?'","Greyson.exe has stopped working.","He sits in stunned silence. A first."],super:true},
-      drinks:{dmg:3,msg:["K'Dee holds up confiscated energy drinks.","'Give those BACK!' 'After you let me leave.'"]}
+      necronomicon:{dmg:6,msg:["K'Dee holds up the Necronomicon.","Greyson's eyes go wide as saucers.","'IS THAT EXTRATERRESTRIAL IN ORIGIN?!'","He grabs it, starts cross-referencing with his Mars notes. Battle over."],super:true},
+      bible:{dmg:5,msg:["'Have you considered... faith over science?'","Greyson.exe has encountered a paradox.","He sits in silence. First time in years."],super:true},
+      shovel:{dmg:3,msg:["K'Dee raises the shovel.","'That's regulation frontier equipment, ma.'","'Exactly.' K'Dee is done with this."]}
     }
   },
   gwyneth:{
@@ -1159,7 +1362,7 @@ var FIGHTERS={
   },
   forest:{
     name:"FOREST",title:"DO NOT DISTURB",hp:5,maxHp:5,color:"#556b2f",
-    hair:"#F0E68C",hairStyle:"shock",skin:P.skin,shirt:"#1a1a2e",pants:"#333",
+    hair:"#F0E68C",hairStyle:"shock",beard:"#c0392b",skin:P.skin,shirt:"#1a1a2e",pants:"#333",
     idleQuips:["*typing intensifies*","*does not look up*","*headphones stay on*","*snack wrapper crinkle*"],
     attacks:[
       {name:"IGNORE",dmg:1,quips:["Forest ignores K'Dee so hard it physically hurts.","*no response* K'Dee is invisible apparently.","He tabs back to his game mid-sentence. K'Dee is defeated.","Maximum ignore. Expert level. Years of practice."]},
@@ -1182,7 +1385,7 @@ var FIGHTERS={
     attacks:[
       {name:"ESCAPE!",dmg:0,quips:["Daed is already halfway out the door!","'Gotta check on the Corvette!' *ZOOM*","He moves faster than K'Dee has ever seen him move.","Daed activates dad-escape velocity."]}
     ],
-    intro:["Daed appears, covered in car oil.","His mullet flows majestically.","'Oh hey babe, I was just—'","'DAED. My keys.'","'Keys? What keys? Gotta go!'"],
+    intro:["Daed appears, covered in car oil.","His mullet flows majestically.","'Oh HIIIIII Mom, I was just—'","'DAED. My keys.'","'Keys? What keys? Gotta go!'"],
     defeat:["Daed vanishes in a cloud of motor oil.","'GOTTA GO! CORVETTE NEEDS ME!'","*door slams* *engine revs* *tires screech*","Classic. Daed."],
     itemEffects:{
       wrench:{dmg:2,msg:["K'Dee brandishes the wrench.","'IS. THIS. YOURS.'","Daed sweats through the oil. Impressive.","'I can explain—' *POOF* He's gone."],super:true}
@@ -1228,13 +1431,46 @@ var FIGHTERS={
   }
 };
 
-var battleRoomMap={3:"milo",5:"daed",10:"jesus",11:"demon",19:"greyson",20:"gwyneth",21:"forest"};
+var battleRoomMap={3:"milo",5:"daed",10:"jesus",11:"demon",20:"gwyneth",21:"forest"};
 var gwynBattle=false;
 
 function checkBattle(roomIdx){
   var fid=battleRoomMap[roomIdx];
   if(!fid||battleDone[fid])return;
+  if(roomIdx===19){setTimeout(function(){startGreysonDialog();},600);return;}
   setTimeout(function(){startBattle(fid);},600);
+}
+
+function startGreysonDialog(){
+  if(battleDone["greyson"])return;
+  setPortraitMode("default");
+  var d=document.getElementById("dlg");var inner=document.getElementById("dlg-inner");
+  d.classList.remove("on");inner.style.animation="none";void inner.offsetWidth;inner.style.animation="";d.classList.add("on");
+  document.getElementById("dlg-name").textContent="GREYSON";
+  document.getElementById("dlg-text").textContent="Greyson is deep in thought at his chemistry set. He tilts his hat without looking up.\n\n'Hey mom. You look... statistically stressed.'";
+  var choices=document.getElementById("dlg-choices");
+  choices.innerHTML=
+    '<div class="dlg-ch" id="gd-keys">🔑 Have you seen my keys?</div>'+
+    '<div class="dlg-ch" id="gd-science">🧪 What are you working on?</div>'+
+    '<div class="dlg-ch" id="gd-mars">🔴 Tell me about Mars.</div>'+
+    '<div class="dlg-ch" id="gd-leave">🚪 Never mind.</div>';
+  document.getElementById("dlg-continue").style.display="none";
+  document.getElementById("gd-keys").addEventListener("click",function(){
+    document.getElementById("dlg-text").textContent="'Keys...' He strokes his moustache. 'Based on historical data and my own field research — garage. Near the Corvette. Scientifically speaking.'\n\n'GREYSON.'\n\n'I said scientifically.'";
+    choices.innerHTML='<div class="dlg-ch" id="gd-thanks">Thanks, Greyson.</div>';
+    document.getElementById("gd-thanks").addEventListener("click",function(){hideDlg();battleDone["greyson"]=true;});
+  });
+  document.getElementById("gd-science").addEventListener("click",function(){
+    document.getElementById("dlg-text").textContent="His eyes light up. He gestures at three bubbling flasks.\n\n'A compound that theoretically accelerates sock-finding. Currently also turns things orange. Unrelated.'\n\nHe holds up his hand. It is orange.";
+    choices.innerHTML='<div class="dlg-ch" id="gd-back">...okay then.</div>';
+    document.getElementById("gd-back").addEventListener("click",function(){startGreysonDialog();});
+  });
+  document.getElementById("gd-mars").addEventListener("click",function(){
+    document.getElementById("dlg-text").textContent="He slowly swivels his chair to face you fully. He removes his hat.\n\n'...I thought you'd never ask.'\n\nFifteen minutes later. You know more about Mars than NASA. You feel changed.\n\n'Anyway. Garage. Keys. Go.'";
+    choices.innerHTML='<div class="dlg-ch" id="gd-done">I need a moment.</div>';
+    document.getElementById("gd-done").addEventListener("click",function(){hideDlg();battleDone["greyson"]=true;});
+  });
+  document.getElementById("gd-leave").addEventListener("click",function(){hideDlg();battleDone["greyson"]=true;});
 }
 
 function startBattle(fighterId){
@@ -1776,15 +2012,15 @@ function drawBattleEnemy(c,f,x,y,pose,timer,anim){
   c.moveTo(ax-7,-12+bob-h/2);c.lineTo(ax-8,-3+bob);c.lineTo(ax+8,-3+bob);c.lineTo(ax+7,-12+bob-h/2);
   c.closePath();c.fill();
 
-  // Oil stains for Daed
+  // Oil stains for Daed — on shirt/body only, not face
   if(f.oily){
-    c.fillStyle="rgba(40,30,10,0.5)";
-    [[ax-3,-9],[ax+3,-11],[ax+1,-5],[ax-5,-6],[ax+5,-8]].forEach(function(p){
-      c.beginPath();c.arc(p[0],p[1]+bob,1.5+Math.random(),0,Math.PI*2);c.fill();
+    c.fillStyle="rgba(40,30,10,0.45)";
+    [[ax-3,2],[ax+3,0],[ax+1,4],[ax-4,1],[ax+5,3]].forEach(function(p){
+      c.beginPath();c.arc(p[0],p[1]+bob,1.5,0,Math.PI*2);c.fill();
     });
-    // Oil drip animation
+    // Oil drip from shirt hem
     var drip=(anim*0.05)%1;
-    c.fillStyle="rgba(40,30,10,0.3)";c.beginPath();c.arc(ax+4,-3+bob+drip*6,1,0,Math.PI*2);c.fill();
+    c.fillStyle="rgba(40,30,10,0.25)";c.beginPath();c.arc(ax+4,4+bob+drip*6,1,0,Math.PI*2);c.fill();
   }
 
   // Arms
@@ -1816,6 +2052,15 @@ function drawBattleEnemy(c,f,x,y,pose,timer,anim){
     c.restore();
   }
 
+  // Mullet back drawn BEFORE head so it sits behind the face
+  if(f.hairStyle==="mullet"){
+    c.fillStyle=f.hair;
+    c.beginPath();c.moveTo(ax-5,-20+bob-h/2);
+    c.quadraticCurveTo(ax-14,-8+bob-h/2+Math.sin(anim*0.04)*2,ax-10,4+bob-h/2);
+    c.quadraticCurveTo(ax-4,-4+bob-h/2,ax+2,-20+bob-h/2);
+    c.fill();
+  }
+
   // Head
   c.fillStyle=f.skin;c.beginPath();c.arc(ax,-20+bob-h/2,9,0,Math.PI*2);c.fill();
 
@@ -1832,13 +2077,9 @@ function drawBattleEnemy(c,f,x,y,pose,timer,anim){
     c.beginPath();c.arc(ax,-24+bob-h/2,9,Math.PI,2*Math.PI);c.fill();
     D(c,ax-8,-24+bob-h/2,16,4,f.hair);
   }else if(f.hairStyle==="mullet"){
+    // Business in the front — top of head only (back already drawn above)
     c.beginPath();c.arc(ax,-24+bob-h/2,9,Math.PI,2*Math.PI);c.fill();
     D(c,ax-7,-24+bob-h/2,14,4,f.hair);
-    // Party in the back - flowing mullet
-    c.beginPath();c.moveTo(ax+5,-18+bob-h/2);
-    c.quadraticCurveTo(ax+10,-12+bob-h/2+Math.sin(anim*0.04)*2,ax+6,-6+bob-h/2);
-    c.quadraticCurveTo(ax+3,-10+bob-h/2,ax-5,-18+bob-h/2);
-    c.fill();
   }
 
   // Trucker hat
@@ -1893,13 +2134,13 @@ function drawBattle(c){
     c.save();
     c.beginPath();c.moveTo(0,0);c.lineTo(CW*p*2,0);c.lineTo(0,CH);c.closePath();c.clip();
     c.fillStyle="rgba(255,105,180,0.15)";c.fillRect(0,0,CW,CH);
-    drawBattleKdee(c,100,380,"idle",0);
+    drawBattleKdee(c,100,330,"idle",0);
     c.restore();
 
     c.save();
     c.beginPath();c.moveTo(CW,CH);c.lineTo(CW-CW*p*2,CH);c.lineTo(CW,0);c.closePath();c.clip();
     c.fillStyle="rgba("+((f.color||"#fff").indexOf("#8a")>=0?"138,43,226":"0,150,200")+",0.15)";c.fillRect(0,0,CW,CH);
-    drawBattleEnemy(c,f,260,350,"idle",0,bs.enemyAnim);
+    drawBattleEnemy(c,f,260,290,"idle",0,bs.enemyAnim);
     c.restore();
 
     // VS text
@@ -1941,18 +2182,18 @@ function drawBattle(c){
 
   // Ambient glow behind fighters
   var pulse=0.5+0.5*Math.sin(frameTick*0.04);
-  c.fillStyle="rgba(255,105,180,"+(0.03+0.02*pulse)+")";c.beginPath();c.arc(80,455,70,0,Math.PI*2);c.fill();
+  c.fillStyle="rgba(255,105,180,"+(0.03+0.02*pulse)+")";c.beginPath();c.arc(80,400,70,0,Math.PI*2);c.fill();
   c.fillStyle="rgba("+(f.color?parseInt(f.color.slice(1,3),16)+","+parseInt(f.color.slice(3,5),16)+","+parseInt(f.color.slice(5,7),16):"150,150,255")+","+(0.03+0.02*pulse)+")";
-  c.beginPath();c.arc(265,330,70,0,Math.PI*2);c.fill();
+  c.beginPath();c.arc(265,270,70,0,Math.PI*2);c.fill();
 
   // Enemy (top right, facing left)
-  drawBattleEnemy(c,f,265,340,bs.enemyPose,bs.enemyActionTimer,bs.enemyAnim);
-  // K'Dee (bottom left, facing right) — raised so full body is visible above message box
-  drawBattleKdee(c,80,490,bs.kdeePose,bs.kdeeActionTimer);
+  drawBattleEnemy(c,f,265,280,bs.enemyPose,bs.enemyActionTimer,bs.enemyAnim);
+  // K'Dee (bottom left, facing right) — raised so full body is visible above action buttons
+  drawBattleKdee(c,80,430,bs.kdeePose,bs.kdeeActionTimer);
 
   // HP Bars
   // Enemy HP bar
-  var ebx=170,eby=222;
+  var ebx=170,eby=170;
   c.fillStyle="#222";RR(c,ebx-2,eby-2,148,16,4,"#222");
   var ehpW=Math.max(0,bs.enemyHP/f.maxHp)*140;
   var ehCol=bs.enemyHP>f.maxHp*0.5?"#2ecc71":bs.enemyHP>f.maxHp*0.25?"#e8a820":"#e74c3c";
@@ -1961,7 +2202,7 @@ function drawBattle(c){
   c.fillStyle="#ccc";c.font="9px monospace";c.fillText(bs.enemyHP+"/"+f.maxHp,ebx+100,eby-4);
 
   // K'Dee HP bar
-  var kbx=20,kby=412;
+  var kbx=20,kby=350;
   RR(c,kbx-2,kby-2,148,16,4,"#222");
   var khpW=Math.max(0,kdeeHP/kdeeMaxHP)*140;
   var khCol=kdeeHP>10?"#2ecc71":kdeeHP>5?"#e8a820":"#e74c3c";
@@ -2019,11 +2260,15 @@ function drawBattle(c){
     ];
     actions.forEach(function(a){
       RR(c,a.x,btnY,a.w,btnH,6,a.color);
-      // Dark text + subtle shadow for readability on colored bg
       c.fillStyle="rgba(0,0,0,0.25)";c.font="bold 11px monospace";c.fillText(a.label,a.x+9,btnY+23);
       c.fillStyle="#1a0a2e";c.font="bold 11px monospace";c.fillText(a.label,a.x+8,btnY+22);
     });
-    if(inv.length>0){
+    // Big Hug for Milo, ITEM otherwise
+    if(bs.id==="milo"){
+      RR(c,258,btnY,92,btnH,6,"#FF69B4");
+      c.fillStyle="rgba(0,0,0,0.25)";c.font="bold 11px monospace";c.fillText("\uD83E\uDD17 HUG",267,btnY+23);
+      c.fillStyle="#1a0a2e";c.font="bold 11px monospace";c.fillText("\uD83E\uDD17 HUG",266,btnY+22);
+    } else if(inv.length>0){
       RR(c,258,btnY,92,btnH,6,"#00CED1");
       c.fillStyle="rgba(0,0,0,0.25)";c.font="bold 11px monospace";c.fillText("\uD83C\uDF81 ITEM",267,btnY+23);
       c.fillStyle="#1a0a2e";c.font="bold 11px monospace";c.fillText("\uD83C\uDF81 ITEM",266,btnY+22);
@@ -2110,8 +2355,15 @@ function battleClick(mx,my){
 
   // Victory
   if(bs.phase==="victory"){
+    var wasHug=bs.hugWin;var wasId=bs.id;
     battleActive=false;paused=false;battleDone[bs.id]=true;
-    battleState=null;updateHUD();return;
+    battleState=null;updateHUD();
+    if(wasHug&&wasId==="milo"){
+      miloFollowing=true;miloRoomsLeft=3;
+      miloFollowX=kdeeX+35;miloFollowY=kdeeY;
+      miloMsg="'I love you mom!'";miloMsgTimer=120;
+    }
+    return;
   }
 
   // Super effective cut-in
@@ -2154,8 +2406,18 @@ function battleClick(mx,my){
       var quips=["K'Dee swings her purse! It weighs 47 pounds!","PURSE STRIKE! Contains: everything. Weighs: too much.","The purse connects! It has bricks in it somehow!","*WHAM* That purse is a weapon of mass destruction."];
       doPlayerAttack("PURSE",4,rPick(quips),"purse");return;
     }
-    if(inv.length>0&&mx>=258&&mx<=350&&my>=btnY&&my<=btnY+btnH){
-      bs.phase="items";bs.msg="Choose an item to use...";return;
+    if(mx>=258&&mx<=350&&my>=btnY&&my<=btnY+btnH){
+      if(bs.id==="milo"){
+        // Big Hug — instant win, Milo follows after
+        bs.kdeePose="item";bs.kdeeActionTimer=1;
+        bs.enemyHP=0;
+        bs.msg="K'Dee scoops Milo up in a BIG HUG.\n\nHe immediately forgets everything.\n\n'...mom you smell like coffee.'\n'I know, baby.'\n\nMilo beams. Battle forgotten.";
+        bs.phase="victory";bs.hugWin=true;
+        bs.flashTimer=15;bs.flashColor="rgba(255,105,180,0.35)";
+        addDmgFloat(265,290,"💗","#FF69B4");
+        return;
+      }
+      if(inv.length>0){bs.phase="items";bs.msg="Choose an item to use...";return;}
     }
   }
 }
@@ -2277,24 +2539,278 @@ var racerLane=1,racerTargetX=180,racerScrollY=0,racerLives=3,racerOver=false;
 var racerMsg="",racerMsgTimer=0,racerSpawnTimer=0,racerTick=0;
 var RACER_ROAD_L=40,RACER_ROAD_R=320;// road edges
 
+/* --- TETRIS (CLOTHES MOUNTAIN) MINI-GAME --- */
+var tetActive=false,tetBoard=[],tetPiece=null,tetNext=null;
+var tetScore=0,tetLines=0,tetLevel=1,tetOver=false,tetWon=false;
+var tetTick=0,tetFallTimer=0,tetMsg="",tetMsgTimer=0;
+var TET_COLS=7,TET_ROWS=14,TET_BOARD_X=14,TET_BOARD_Y=80;
+var TET_CW=46,TET_CH=36,TET_TARGET_LINES=4;
+var TET_PIECES=[
+  {shape:[[1,1,1,1]],color:"#00CED1"},
+  {shape:[[1,1],[1,1]],color:"#4169E1"},
+  {shape:[[0,1,0],[1,1,1]],color:"#FF69B4"},
+  {shape:[[0,1,1],[1,1,0]],color:"#FF8C00"},
+  {shape:[[1,1,0],[0,1,1]],color:"#9b59b6"},
+  {shape:[[1,0,0],[1,1,1]],color:"#e74c3c"},
+  {shape:[[0,0,1],[1,1,1]],color:"#2ecc71"}
+];
+
+function startTetris(){
+  tetBoard=[];
+  for(var r=0;r<TET_ROWS;r++){tetBoard.push([]);for(var c=0;c<TET_COLS;c++)tetBoard[r].push(null);}
+  // Pre-fill bottom 2 rows with random garbage
+  for(var r=TET_ROWS-2;r<TET_ROWS;r++){
+    for(var c=0;c<TET_COLS;c++){
+      if(Math.random()>0.25)tetBoard[r][c]=TET_PIECES[Math.floor(Math.random()*TET_PIECES.length)].color;
+    }
+  }
+  tetScore=0;tetLines=0;tetLevel=1;tetOver=false;tetWon=false;
+  tetTick=0;tetFallTimer=0;tetMsg="STACK THE CLOTHES!";tetMsgTimer=100;
+  tetNext=TET_PIECES[Math.floor(Math.random()*TET_PIECES.length)];
+  spawnTetPiece();
+  tetActive=true;paused=true;
+}
+
+function spawnTetPiece(){
+  var def=tetNext||TET_PIECES[Math.floor(Math.random()*TET_PIECES.length)];
+  tetNext=TET_PIECES[Math.floor(Math.random()*TET_PIECES.length)];
+  var col=Math.floor((TET_COLS-def.shape[0].length)/2);
+  tetPiece={shape:def.shape,color:def.color,row:0,col:col};
+  // Check lose: spawns overlapping
+  if(tetCollide(tetPiece,0,0)){
+    tetOver=true;
+    tetMsg="BURIED!";tetMsgTimer=180;
+  }
+}
+
+function tetCollide(p,dr,dc){
+  for(var r=0;r<p.shape.length;r++){
+    for(var c=0;c<p.shape[r].length;c++){
+      if(!p.shape[r][c])continue;
+      var nr=p.row+r+dr,nc=p.col+c+dc;
+      if(nr<0||nr>=TET_ROWS||nc<0||nc>=TET_COLS)return true;
+      if(tetBoard[nr][nc])return true;
+    }
+  }
+  return false;
+}
+
+function tetRotate(){
+  if(!tetPiece||tetOver||tetWon)return;
+  var s=tetPiece.shape;
+  var rows=s.length,cols=s[0].length;
+  var rot=[];
+  for(var c=0;c<cols;c++){rot.push([]);for(var r=rows-1;r>=0;r--)rot[c].push(s[r][c]);}
+  var orig=tetPiece.shape;
+  tetPiece.shape=rot;
+  // Wall kick
+  if(tetCollide(tetPiece,0,0)){
+    if(!tetCollide(tetPiece,0,1))tetPiece.col+=1;
+    else if(!tetCollide(tetPiece,0,-1))tetPiece.col-=1;
+    else if(!tetCollide(tetPiece,0,2))tetPiece.col+=2;
+    else if(!tetCollide(tetPiece,0,-2))tetPiece.col-=2;
+    else tetPiece.shape=orig;// revert
+  }
+}
+
+function tetMoveH(dir){
+  if(!tetPiece||tetOver||tetWon)return;
+  if(!tetCollide(tetPiece,0,dir))tetPiece.col+=dir;
+}
+
+function tetDrop(){
+  if(!tetPiece||tetOver||tetWon)return;
+  if(!tetCollide(tetPiece,1,0)){tetPiece.row++;}
+  else{tetLock();}
+}
+
+function tetHardDrop(){
+  if(!tetPiece||tetOver||tetWon)return;
+  while(!tetCollide(tetPiece,1,0))tetPiece.row++;
+  tetLock();
+}
+
+function tetLock(){
+  for(var r=0;r<tetPiece.shape.length;r++){
+    for(var c=0;c<tetPiece.shape[r].length;c++){
+      if(!tetPiece.shape[r][c])continue;
+      var br=tetPiece.row+r,bc=tetPiece.col+c;
+      if(br>=0&&br<TET_ROWS&&bc>=0&&bc<TET_COLS)tetBoard[br][bc]=tetPiece.color;
+    }
+  }
+  tetClearLines();
+  spawnTetPiece();
+}
+
+function tetClearLines(){
+  var cleared=0;
+  for(var r=TET_ROWS-1;r>=0;r--){
+    var full=true;
+    for(var c=0;c<TET_COLS;c++){if(!tetBoard[r][c]){full=false;break;}}
+    if(full){
+      tetBoard.splice(r,1);
+      tetBoard.unshift([]);
+      for(var c=0;c<TET_COLS;c++)tetBoard[0].push(null);
+      cleared++;r++;// recheck same row index
+    }
+  }
+  if(cleared>0){
+    tetLines+=cleared;tetScore+=cleared*100*tetLevel;
+    tetLevel=Math.min(10,1+Math.floor(tetLines/4));
+    if(tetLines>=TET_TARGET_LINES&&!tetWon){
+      tetWon=true;
+      tetMsg="PHONE FOUND!";tetMsgTimer=200;
+    }
+  }
+}
+
+function tetGhostRow(){
+  if(!tetPiece)return tetPiece?tetPiece.row:0;
+  var gr=tetPiece.row;
+  while(!tetCollide({shape:tetPiece.shape,color:tetPiece.color,row:gr+1,col:tetPiece.col},0,0))gr++;
+  return gr;
+}
+
+function updateTetris(){
+  tetTick++;
+  if(tetMsgTimer>0)tetMsgTimer--;
+  if(tetOver||tetWon){
+    if(tetMsgTimer===0&&(tetOver||tetWon)){tetEndGame();}
+    return;
+  }
+  tetFallTimer++;
+  var fallInterval=Math.max(10,30-tetLevel*2);
+  if(tetFallTimer>=fallInterval){tetFallTimer=0;tetDrop();}
+}
+
+function drawTetris(c){
+  // Bedroom-tinted background
+  c.fillStyle="#e8d0e0";c.fillRect(0,0,CW,CH);
+  var bg=c.createLinearGradient(0,0,0,CH);
+  bg.addColorStop(0,"#e8d0e0");bg.addColorStop(1,"#d4b0c0");
+  c.fillStyle=bg;c.fillRect(0,0,CW,CH);
+
+  // HUD bar
+  c.fillStyle="rgba(0,0,0,0.75)";c.fillRect(0,0,CW,TET_BOARD_Y);
+  c.fillStyle="#FFD700";c.font="bold 11px monospace";c.textAlign="center";
+  c.fillText("CLOTHES MOUNTAIN",CW/2,16);c.textAlign="left";
+  c.fillStyle="#fff";c.font="9px monospace";c.textAlign="center";
+  c.fillText("LINES:"+tetLines+"/"+TET_TARGET_LINES+"  SCORE:"+tetScore+"  LVL:"+tetLevel,CW/2,35);c.textAlign="left";
+
+  // Next piece preview label
+  c.fillStyle="#ccc";c.font="7px monospace";c.fillText("NEXT:",TET_BOARD_X+TET_COLS*TET_CW+8,TET_BOARD_Y+14);
+  if(tetNext){
+    var nx=TET_BOARD_X+TET_COLS*TET_CW+8,ny=TET_BOARD_Y+18;
+    for(var r=0;r<tetNext.shape.length;r++){
+      for(var c2=0;c2<tetNext.shape[r].length;c2++){
+        if(!tetNext.shape[r][c2])continue;
+        RR(c,nx+c2*16,ny+r*14,14,12,2,tetNext.color);
+      }
+    }
+  }
+
+  // Board background
+  c.fillStyle="rgba(0,0,0,0.35)";
+  c.fillRect(TET_BOARD_X,TET_BOARD_Y,TET_COLS*TET_CW,TET_ROWS*TET_CH);
+
+  // Phone peeking at bottom (under pre-fill zone)
+  c.font="22px serif";c.textAlign="center";
+  c.fillText("\uD83D\uDCF1",TET_BOARD_X+TET_COLS*TET_CW/2,TET_BOARD_Y+TET_ROWS*TET_CH+22);
+  c.textAlign="left";c.font="7px monospace";c.fillStyle="rgba(255,255,255,0.5)";
+  c.textAlign="center";c.fillText("*bzz*",TET_BOARD_X+TET_COLS*TET_CW/2,TET_BOARD_Y+TET_ROWS*TET_CH+34);c.textAlign="left";
+
+  // Ghost piece
+  if(tetPiece&&!tetOver&&!tetWon){
+    var gr=tetGhostRow();
+    for(var r=0;r<tetPiece.shape.length;r++){
+      for(var c2=0;c2<tetPiece.shape[r].length;c2++){
+        if(!tetPiece.shape[r][c2])continue;
+        var bx=TET_BOARD_X+(tetPiece.col+c2)*TET_CW;
+        var by=TET_BOARD_Y+(gr+r)*TET_CH;
+        c.save();c.globalAlpha=0.25;
+        RR(c,bx+1,by+1,TET_CW-2,TET_CH-2,3,tetPiece.color);
+        c.restore();
+      }
+    }
+  }
+
+  // Locked cells
+  for(var r=0;r<TET_ROWS;r++){
+    for(var c2=0;c2<TET_COLS;c2++){
+      if(!tetBoard[r][c2])continue;
+      var bx=TET_BOARD_X+c2*TET_CW,by=TET_BOARD_Y+r*TET_CH;
+      RR(c,bx+1,by+1,TET_CW-2,TET_CH-2,3,tetBoard[r][c2]);
+      c.fillStyle="rgba(255,255,255,0.15)";
+      c.fillRect(bx+2,by+2,TET_CW-10,4);
+    }
+  }
+
+  // Active piece
+  if(tetPiece&&!tetOver){
+    for(var r=0;r<tetPiece.shape.length;r++){
+      for(var c2=0;c2<tetPiece.shape[r].length;c2++){
+        if(!tetPiece.shape[r][c2])continue;
+        var bx=TET_BOARD_X+(tetPiece.col+c2)*TET_CW;
+        var by=TET_BOARD_Y+(tetPiece.row+r)*TET_CH;
+        RR(c,bx+1,by+1,TET_CW-2,TET_CH-2,3,tetPiece.color);
+        c.fillStyle="rgba(255,255,255,0.25)";
+        c.fillRect(bx+2,by+2,TET_CW-10,4);
+      }
+    }
+  }
+
+  // Board grid lines
+  c.strokeStyle="rgba(255,255,255,0.06)";c.lineWidth=1;
+  for(var r=0;r<=TET_ROWS;r++){c.beginPath();c.moveTo(TET_BOARD_X,TET_BOARD_Y+r*TET_CH);c.lineTo(TET_BOARD_X+TET_COLS*TET_CW,TET_BOARD_Y+r*TET_CH);c.stroke();}
+  for(var c2=0;c2<=TET_COLS;c2++){c.beginPath();c.moveTo(TET_BOARD_X+c2*TET_CW,TET_BOARD_Y);c.lineTo(TET_BOARD_X+c2*TET_CW,TET_BOARD_Y+TET_ROWS*TET_CH);c.stroke();}
+
+  // Message overlay
+  if(tetMsgTimer>0&&tetMsg){
+    var alpha=Math.min(1,tetMsgTimer/20);
+    c.save();c.globalAlpha=alpha*0.95;
+    c.font="bold 16px monospace";
+    var tw=c.measureText(tetMsg).width+20;
+    RR(c,CW/2-tw/2,CH/2-22,tw,32,6,"rgba(0,0,0,0.88)");
+    c.fillStyle=tetWon?"#FFD700":"#e74c3c";
+    c.textAlign="center";c.fillText(tetMsg,CW/2,CH/2+4);c.textAlign="left";
+    c.restore();
+  }
+
+  // Controls hint
+  c.fillStyle="rgba(255,255,255,0.3)";c.font="6px monospace";c.textAlign="center";
+  c.fillText("\u2190\u2192 MOVE  \u2191 ROTATE  \u2193 DROP  SPACE=SLAM",CW/2,CH-6);c.textAlign="left";
+}
+
+function tetEndGame(){
+  tetActive=false;paused=false;
+  if(tetWon){
+    // Mark clothespile as done (both verbs) so it can't be re-triggered
+    usedHS[9+"_clothespile_push"]=true;
+    usedHS[9+"_clothespile_take"]=true;
+    inv.push("phone");questItems["phone"]=true;updateInv();
+    showSimpleDlg("PHONE FOUND!","K'Dee digs through the avalanche... and there it is! 214 missed photos. 8% battery. 'I attached a photo' (no photo). The phone is FOUND.","phone");
+  } else {
+    kdeeHP=Math.max(1,kdeeHP-1);updateHUD();
+    showSimpleDlg("BURIED!","The pile fought back. K'Dee emerges disheveled. -1 HP. The phone is still in there somewhere. Maybe try again?","hurt");
+  }
+}
+
 function startRacer(){
   racerActive=true;racerX=180;racerLane=1;racerTargetX=180;racerSpeed=2.5;
   racerScore=0;racerDist=0;racerObstacles=[];racerLives=3;racerOver=false;
-  racerMsg="DRIVE HOME!";racerMsgTimer=90;racerScrollY=0;racerTick=0;racerSpawnTimer=0;
-  // Don't pause — racer is its own loop mode
+  racerMsg="JUST DRIVE.";racerMsgTimer=90;racerScrollY=0;racerTick=0;racerSpawnTimer=0;
   paused=true;
 }
 
 function updateRacer(){
-  if(racerOver)return;
   racerTick++;
   racerScrollY=(racerScrollY+racerSpeed*4)%80;
   racerDist+=racerSpeed;
   racerScore=Math.floor(racerDist/10);
   if(racerMsgTimer>0)racerMsgTimer--;
 
-  // Gradually increase speed
-  if(racerTick%300===0&&racerSpeed<8)racerSpeed+=0.4;
+  // Speed creeps up forever — she can never outrun it
+  if(racerTick%300===0&&racerSpeed<14)racerSpeed+=0.3;
 
   // Smooth K'Dee car toward target lane
   racerX+=(racerTargetX-racerX)*0.18;
@@ -2307,7 +2823,6 @@ function updateRacer(){
     var type=Math.random()<0.3?"pothole":"car";
     racerObstacles.push({x:racerLanes[laneIdx],y:-30,speed:spd,type:type,lane:laneIdx,hit:false});
     racerSpawnTimer=Math.max(30,80-racerScore*0.5);
-    // Sometimes spawn two
     if(Math.random()<0.3&&racerScore>20){
       var l2=(laneIdx+1+Math.floor(Math.random()*2))%3;
       racerObstacles.push({x:racerLanes[l2],y:-60,speed:spd,type:"pothole",lane:l2,hit:false});
@@ -2315,54 +2830,81 @@ function updateRacer(){
   }
 
   // Move obstacles
-  racerObstacles.forEach(function(o){
-    o.y+=o.speed;
-  });
+  racerObstacles.forEach(function(o){o.y+=o.speed;});
   racerObstacles=racerObstacles.filter(function(o){return o.y<680&&!o.hit;});
 
-  // Collision check — K'Dee car hitbox y=540–610
+  // Collision — lose a life but NEVER end the game. She drives forever.
   racerObstacles.forEach(function(o){
     if(o.hit)return;
     if(o.y>510&&o.y<620&&Math.abs(o.x-racerX)<30){
-      o.hit=true;racerLives--;
-      racerMsg=racerLives>0?"WATCH OUT! "+racerLives+" \u2665":"CRASHED!";
-      racerMsgTimer=80;
-      if(racerLives<=0){
-        racerOver=true;
-        racerMsg="CRASHED! "+racerScore+" pts";racerMsgTimer=240;
+      o.hit=true;
+      if(racerLives>1){
+        racerLives--;
+        racerMsg="OOF! "+racerLives+" \u2665";racerMsgTimer=80;
+      } else {
+        // Bottom out at 1 life — she keeps going regardless
+        racerMsg="SHE KEEPS GOING.";racerMsgTimer=90;
       }
     }
   });
 }
 
 function drawRacer(c){
-  // Sky
-  c.fillStyle="#87CEEB";c.fillRect(0,0,CW,200);
-  // Distant scenery
-  c.fillStyle="#4a8a30";c.fillRect(0,200,CW,100);
-  // Road
-  var roadGrad=c.createLinearGradient(0,300,0,CH);
-  roadGrad.addColorStop(0,"#555");roadGrad.addColorStop(1,"#777");
-  c.fillStyle=roadGrad;c.fillRect(RACER_ROAD_L,300,RACER_ROAD_R-RACER_ROAD_L,CH-300);
-  // Grass verges
-  c.fillStyle="#4a8a30";c.fillRect(0,300,RACER_ROAD_L,CH-300);
-  c.fillStyle="#4a8a30";c.fillRect(RACER_ROAD_R,300,CW-RACER_ROAD_R,CH-300);
-  // Road markings (scrolling dashes)
-  c.strokeStyle="rgba(255,255,255,0.6)";c.lineWidth=3;c.setLineDash([30,20]);
-  c.lineDashOffset=-racerScrollY*3;
-  c.beginPath();c.moveTo(135,300);c.lineTo(135,CH);c.stroke();
-  c.beginPath();c.moveTo(225,300);c.lineTo(225,CH);c.stroke();
+  // Full-canvas road with perspective vanishing point at center-top
+  var vx=CW/2,vy=60;// vanishing point
+  var rl=RACER_ROAD_L,rr=RACER_ROAD_R;
+
+  // Sky — just a thin strip above the vanishing point
+  c.fillStyle="#87CEEB";c.fillRect(0,0,CW,vy);
+
+  // Grass either side, full height below vanishing point
+  c.fillStyle="#4a8a30";c.fillRect(0,vy,CW,CH-vy);
+
+  // Road trapezoid — narrow at horizon, full width at bottom
+  c.fillStyle="#666";
+  c.beginPath();
+  c.moveTo(vx-2,vy);c.lineTo(vx+2,vy);// vanishing point (tiny)
+  c.lineTo(rr,CH);c.lineTo(rl,CH);
+  c.closePath();c.fill();
+
+  // Road gradient overlay for depth
+  var roadGrad=c.createLinearGradient(0,vy,0,CH);
+  roadGrad.addColorStop(0,"rgba(80,80,80,0.6)");roadGrad.addColorStop(1,"rgba(0,0,0,0)");
+  c.fillStyle=roadGrad;
+  c.beginPath();
+  c.moveTo(vx-2,vy);c.lineTo(vx+2,vy);
+  c.lineTo(rr,CH);c.lineTo(rl,CH);
+  c.closePath();c.fill();
+
+  // Road edge lines (perspective)
+  c.strokeStyle="rgba(255,255,255,0.85)";c.lineWidth=2;c.setLineDash([]);
+  c.beginPath();c.moveTo(vx,vy);c.lineTo(rl,CH);c.stroke();
+  c.beginPath();c.moveTo(vx,vy);c.lineTo(rr,CH);c.stroke();
+
+  // Lane dashes — perspective-correct, scrolling
+  // Two lane dividers, lerped from vanishing point to road bottom
+  [0.38,0.62].forEach(function(t){
+    var lx1=vx,ly1=vy;
+    var lx2=rl+(rr-rl)*t,ly2=CH;
+    c.strokeStyle="rgba(255,255,255,0.55)";c.lineWidth=2;
+    c.setLineDash([28,18]);c.lineDashOffset=-racerScrollY*2.5;
+    c.beginPath();c.moveTo(lx1,ly1);c.lineTo(lx2,ly2);c.stroke();
+  });
   c.setLineDash([]);
 
-  // Road edges
-  c.strokeStyle="rgba(255,255,255,0.9)";c.lineWidth=2;
-  c.beginPath();c.moveTo(RACER_ROAD_L,300);c.lineTo(RACER_ROAD_L,CH);c.stroke();
-  c.beginPath();c.moveTo(RACER_ROAD_R,300);c.lineTo(RACER_ROAD_R,CH);c.stroke();
-
-  // Perspective vanishing point lines
-  c.strokeStyle="rgba(255,255,255,0.08)";c.lineWidth=1;
-  c.beginPath();c.moveTo(RACER_ROAD_L,300);c.lineTo(CW/2,300);c.stroke();
-  c.beginPath();c.moveTo(RACER_ROAD_R,300);c.lineTo(CW/2,300);c.stroke();
+  // Scrolling tree silhouettes on horizon for movement sense
+  var treeSpacing=60;
+  for(var ti=0;ti<7;ti++){
+    var tx=((ti*treeSpacing - racerScrollY*1.2)%420+420)%420 - 10;
+    // Left trees
+    c.fillStyle="#2d6a1a";
+    c.beginPath();c.moveTo(tx,vy+30);c.lineTo(tx+10,vy+10);c.lineTo(tx+20,vy+30);c.closePath();c.fill();
+    c.fillRect(tx+7,vy+30,6,20);
+    // Right trees (mirror)
+    var tx2=CW-tx-20;
+    c.beginPath();c.moveTo(tx2,vy+30);c.lineTo(tx2+10,vy+10);c.lineTo(tx2+20,vy+30);c.closePath();c.fill();
+    c.fillRect(tx2+7,vy+30,6,20);
+  }
 
   // Obstacles
   racerObstacles.forEach(function(o){
@@ -2372,7 +2914,6 @@ function drawRacer(c){
       c.fillStyle="#222";c.beginPath();c.ellipse(o.x,o.y,12,6,0,0,Math.PI*2);c.fill();
       c.restore();
     } else {
-      // Oncoming car (simple block)
       drawRacerCar(c,o.x,o.y,"#3333cc",false);
     }
   });
@@ -2381,19 +2922,19 @@ function drawRacer(c){
   drawRacerCar(c,racerX,560,"#e74c3c",true);
 
   // HUD bar
-  c.fillStyle="rgba(0,0,0,0.7)";c.fillRect(0,0,CW,56);
+  c.fillStyle="rgba(0,0,0,0.7)";c.fillRect(0,0,CW,48);
   c.fillStyle="#FFD700";c.font="bold 11px monospace";c.textAlign="center";
-  c.fillText("DRIVE HOME!",CW/2,18);c.textAlign="left";
+  c.fillText("JUST DRIVE.",CW/2,16);c.textAlign="left";
   c.fillStyle="#fff";c.font="10px monospace";c.textAlign="center";
-  c.fillText("DIST: "+racerScore+"m   \u2665"+racerLives+"   SPD: "+racerSpeed.toFixed(1)+"x",CW/2,38);c.textAlign="left";
+  c.fillText(racerScore+"m escaped   \u2665"+racerLives+"   SPD: "+racerSpeed.toFixed(1)+"x",CW/2,34);c.textAlign="left";
 
   // Speed lines at high speed
   if(racerSpeed>5){
     var sl=Math.floor((racerSpeed-5)*4);
     c.save();c.globalAlpha=0.1;c.strokeStyle="#fff";c.lineWidth=1;
     for(var i=0;i<sl;i++){
-      var sx=RACER_ROAD_L+Math.random()*(RACER_ROAD_R-RACER_ROAD_L);
-      c.beginPath();c.moveTo(sx,300);c.lineTo(sx-20,CH);c.stroke();
+      var sx=rl+Math.random()*(rr-rl);
+      c.beginPath();c.moveTo(sx,vy);c.lineTo(sx-20,CH);c.stroke();
     }
     c.restore();
   }
@@ -2408,13 +2949,6 @@ function drawRacer(c){
     c.fillStyle="#FFD700";c.textAlign="center";
     c.fillText(racerMsg,CW/2,CH/2-6);c.textAlign="left";
     c.restore();
-  }
-
-  // Done overlay
-  if(racerOver&&racerMsgTimer<180){
-    c.fillStyle="rgba(0,0,0,0.65)";c.fillRect(0,CH-60,CW,60);
-    c.fillStyle="#FFD700";c.font="bold 11px monospace";c.textAlign="center";
-    c.fillText("[ TAP TO FINISH ]",CW/2,CH-25);c.textAlign="left";
   }
 }
 
@@ -2458,7 +2992,6 @@ canvas.addEventListener("touchstart",function(e){
 canvas.addEventListener("touchend",function(e){
   if(!racerActive)return;
   e.preventDefault();
-  if(racerOver){racerFinish();return;}
   if(!racerSwipeStart)return;
   var p=getCanvasCoords(e);
   var dx=p.x-racerSwipeStart.x;
@@ -2474,7 +3007,35 @@ document.addEventListener("keydown",function(e){
   if(!racerActive)return;
   if(e.key==="ArrowLeft"||e.key==="a")racerLaneMoveBy(-1);
   else if(e.key==="ArrowRight"||e.key==="d")racerLaneMoveBy(1);
-  else if((e.key===" "||e.key==="Enter")&&racerOver)racerFinish();
+});
+
+// Tetris touch input
+var tetSwipeStart=null;
+canvas.addEventListener("touchstart",function(e){
+  if(!tetActive)return;
+  var p=getCanvasCoords(e);tetSwipeStart={x:p.x,y:p.y};
+},{passive:false});
+canvas.addEventListener("touchend",function(e){
+  if(!tetActive)return;
+  e.preventDefault();
+  if(tetOver||tetWon){tetEndGame();return;}
+  if(!tetSwipeStart)return;
+  var p=getCanvasCoords(e);
+  var dx=p.x-tetSwipeStart.x,dy=p.y-tetSwipeStart.y;
+  tetSwipeStart=null;
+  if(Math.abs(dx)<12&&Math.abs(dy)<12){tetRotate();return;}
+  if(Math.abs(dy)>Math.abs(dx)&&dy>20){tetHardDrop();return;}
+  if(Math.abs(dx)>15){if(dx<0)tetMoveH(-1);else tetMoveH(1);}
+},{passive:false});
+
+document.addEventListener("keydown",function(e){
+  if(!tetActive)return;
+  if(e.key==="ArrowLeft")tetMoveH(-1);
+  else if(e.key==="ArrowRight")tetMoveH(1);
+  else if(e.key==="ArrowDown")tetDrop();
+  else if(e.key==="ArrowUp"||e.key==="z"||e.key==="Z")tetRotate();
+  else if(e.key===" ")tetHardDrop();
+  else if(e.key==="Enter"&&(tetOver||tetWon))tetEndGame();
 });
 
 function racerLaneMoveBy(dir){
@@ -2511,9 +3072,9 @@ function winGame(){
   setPortraitMode("excited");
   document.getElementById("dlg-name").textContent="YOU WIN!";
   var m=Math.floor((780-timer)/60),s=(780-timer)%60;
-  typeText(document.getElementById("dlg-text"),"K'Dee found all 3 keys in "+m+"m "+s+"s! She grabs her purse, kisses the kids, and runs out the door. The red Audi TT is waiting. Time to DRIVE HOME!");
+  typeText(document.getElementById("dlg-text"),"K'Dee found all 3 keys in "+m+"m "+s+"s! She grabs her purse, does NOT kiss the kids, and sprints for the red Audi TT. She's earned this. She drives. And drives. And drives.");
   document.getElementById("dlg-choices").innerHTML=
-    '<div class="dlg-ch" id="drive-home-btn" style="border-color:#e74c3c;color:#e74c3c">\uD83D\uDE97 DRIVE HOME!</div>'+
+    '<div class="dlg-ch" id="drive-home-btn" style="border-color:#e74c3c;color:#e74c3c">\uD83D\uDE97 JUST DRIVE.</div>'+
     '<div class="dlg-ch" id="play-again" style="border-color:#FFD700;color:#FFD700">\uD83C\uDF89 PLAY AGAIN</div>';
   document.getElementById("drive-home-btn").addEventListener("click",function(){
     document.getElementById("dlg").classList.remove("on");
@@ -2543,7 +3104,7 @@ function startTimer(){timerInterval=setInterval(function(){if(paused||gameOver)r
 document.getElementById("startbtn").addEventListener("click",function(){
   document.getElementById("title").style.display="none";
   document.getElementById("game").classList.add("on");
-  kdeeX=180;kdeeY=560;
+  kdeeX=180;kdeeY=520;// start center of foyer above welcome mat
   spawnParticles(curRoom);
   drawScene();updateHUD();
   initPortrait();
