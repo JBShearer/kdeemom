@@ -360,13 +360,15 @@ function showInteraction(h){
   activeHS=h;
   var d=document.getElementById("dlg");
   var inner=document.getElementById("dlg-inner");
-  // Force animation replay
-  d.classList.remove("on");inner.style.animation="none";
-  void d.offsetHeight; // reflow
-  inner.style.animation="";d.classList.add("on");
+  // Fix: reflow on inner (not d) to properly reset animation
+  d.classList.remove("on");
+  inner.style.animation="none";
+  void inner.offsetWidth;  // reflow on inner — this is the critical fix
+  inner.style.animation="";
+  d.classList.add("on");
 
-  document.getElementById("dlg-portrait").textContent="\uD83D\uDC69";
-  document.getElementById("dlg-portrait").style.borderColor="#FF69B4";
+  // Set portrait based on hotspot category (default: look)
+  setPortraitMode(getPortraitMode(h.id,"look"));
   document.getElementById("dlg-name").textContent=h.name;
 
   // Always show LOOK description first
@@ -434,8 +436,7 @@ function performAction(h,v){
   // Key discovery
   if(h.hasKey&&v===keyVerb){
     keys++;usedHS[uid]=true;
-    document.getElementById("dlg-portrait").textContent="\uD83D\uDD11";
-    document.getElementById("dlg-portrait").style.borderColor="#FFD700";
+    setPortraitMode("key");
     typeText(document.getElementById("dlg-text"),txt+"\n\n\uD83D\uDD11 KEY FOUND! ("+keys+"/3)");
     buildVerbButtons(h);
     updateHUD();
@@ -447,8 +448,7 @@ function performAction(h,v){
   if(h.quest&&v==="take"){
     inv.push(h.quest);usedHS[uid]=true;
     questItems[h.quest]=true;
-    document.getElementById("dlg-portrait").textContent=invEmoji[h.quest]||"\uD83C\uDF81";
-    document.getElementById("dlg-portrait").style.borderColor="#00CED1";
+    setPortraitMode("excited");
     typeText(document.getElementById("dlg-text"),txt||("Picked up "+h.quest+"!"));
     buildVerbButtons(h);
     updateInv();
@@ -461,8 +461,7 @@ function performAction(h,v){
     var itemName=h.id;
     inv.push(itemName);
     invEmoji[itemName]=invEmoji[itemName]||"\uD83D\uDCE6";
-    document.getElementById("dlg-portrait").textContent=invEmoji[itemName];
-    document.getElementById("dlg-portrait").style.borderColor="#FFD700";
+    setPortraitMode("take");
     typeText(document.getElementById("dlg-text"),txt);
     buildVerbButtons(h);
     updateInv();
@@ -479,6 +478,9 @@ function performAction(h,v){
 
   // Regular action
   usedHS[uid]=true;
+  // Update portrait reaction to match verb
+  var verbMode=getPortraitMode(h.id,v);
+  setPortraitMode(verbMode);
   typeText(document.getElementById("dlg-text"),txt);
   buildVerbButtons(h);
 }
@@ -502,14 +504,14 @@ function typeText(el,text){
   el.addEventListener("click",el._skipHandler);
 }
 
-function showSimpleDlg(name,text,emoji){
+function showSimpleDlg(name,text,mode){
   var d=document.getElementById("dlg");
   var inner=document.getElementById("dlg-inner");
   d.classList.remove("on");inner.style.animation="none";
-  void d.offsetHeight;inner.style.animation="";d.classList.add("on");
-  document.getElementById("dlg-portrait").textContent=emoji||"\uD83D\uDC69";
+  void inner.offsetWidth;inner.style.animation="";d.classList.add("on");
+  setPortraitMode(mode||"look");
   document.getElementById("dlg-name").textContent=name;
-  document.getElementById("dlg-text").textContent=text;
+  typeText(document.getElementById("dlg-text"),text);
   document.getElementById("dlg-choices").innerHTML="";
   paused=true;
 }
@@ -519,7 +521,6 @@ function hideDlg(){
   if(typeTimer){clearInterval(typeTimer);typeTimer=null;}
   document.getElementById("dlg").classList.remove("on");
   document.getElementById("dlg-continue").style.display="";
-  document.getElementById("dlg-portrait").style.borderColor="#FFD700";
   activeHS=null;paused=false;
 }
 
@@ -742,7 +743,7 @@ function updateCatchGame(){
     if(miniScore>=10)msg="K'Dee caught "+miniScore+" containers! Legendary reflexes! Found a hidden sippy cup too!";
     else if(miniScore>=5)msg="K'Dee caught "+miniScore+" containers! Not bad for 8 AM!";
     else msg="K'Dee caught "+miniScore+" containers. The floor got the rest. Classic Tuesday.";
-    showSimpleDlg("AVALANCHE!",msg,"\uD83E\uDD63");
+    showSimpleDlg("AVALANCHE!",msg,"excited");
   }
 }
 
@@ -1020,7 +1021,221 @@ function startBattle(fighterId){
 
 function rPick(arr){return arr[Math.floor(Math.random()*arr.length)];}
 
-/* ===== BIG CHARACTER SPRITES FOR BATTLE ===== */
+/* ===== PORTRAIT ANIMATION SYSTEM =====
+   Draws animated K'Dee in the dialog portrait canvas with reaction-specific expressions.
+   Reactions: look, use, take, talk, open, push, key, spooky, food, sacred, hurt, excited
+*/
+var portraitCanvas=null,portraitCtx=null,portraitAnim=null,portraitMode="look",portraitTick=0;
+
+// Per-hotspot category → reaction mode
+var HOTSPOT_REACTIONS={
+  // Food / tasty items
+  banana:"food",fridge:"food",sink:"curious",stove:"use",
+  // Spooky / forbidden
+  necronomicon:"spooky",penta:"spooky",skull:"spooky",crystal:"spooky",
+  // Sacred
+  jcross:"sacred",jport:"sacred",jbible:"sacred",jbattle:"sacred",jpinup:"sacred",jtub:"sacred",
+  // Keys
+  plant:"excited",couch:"excited",car:"excited",nightstand:"excited",
+  // Picking up things
+  duck:"excited",bible:"excited",
+  // Phones & tech
+  phone:"phone",tv:"use",gpc:"use",gpc2:"use",
+  // People / talk
+  dino:"talk",gnome:"spooky",cat:"talk",dog:"talk",
+  // Heavy lifting / pushing
+  clothespile:"push",laundry:"push",rice:"push",myst:"push",
+  // Mirror = vain
+  mirror:"mirror",vmirror:"mirror",mirror2:"mirror",gymmirror:"mirror",
+  // Stairs
+  stairs:"excited",ustairsF:"excited",bstairs:"excited",bstairsU:"excited",
+  // Default look/open/use handled by verb
+};
+
+function initPortrait(){
+  portraitCanvas=document.getElementById("dlg-portrait-canvas");
+  if(!portraitCanvas)return;
+  portraitCtx=portraitCanvas.getContext("2d");
+  startPortraitLoop();
+}
+
+function startPortraitLoop(){
+  if(portraitAnim)cancelAnimationFrame(portraitAnim);
+  function loop(){
+    portraitTick++;
+    if(portraitCanvas&&document.getElementById("dlg").classList.contains("on")){
+      drawPortrait(portraitCtx,portraitMode,portraitTick);
+    }
+    portraitAnim=requestAnimationFrame(loop);
+  }
+  portraitAnim=requestAnimationFrame(loop);
+}
+
+function setPortraitMode(mode){
+  portraitMode=mode;portraitTick=0;
+  var portrait=document.getElementById("dlg-portrait");
+  if(!portrait)return;
+  // Border color by mode
+  var colors={
+    look:"#FFD700",use:"#00CED1",take:"#FFD700",talk:"#FF69B4",open:"#FF8C00",
+    push:"#CD5C5C",key:"#FFD700",spooky:"#9B59B6",food:"#2ecc71",sacred:"#FFD700",
+    phone:"#00CED1",mirror:"#FF69B4",excited:"#FFD700",curious:"#00CED1",hurt:"#e74c3c"
+  };
+  portrait.style.borderColor=colors[mode]||"#FFD700";
+  // Glow by mode
+  var glows={spooky:"rgba(155,89,182,0.4)",sacred:"rgba(255,215,0,0.5)",key:"rgba(255,215,0,0.6)",excited:"rgba(255,215,0,0.5)",hurt:"rgba(231,76,60,0.4)"};
+  portrait.style.boxShadow="0 0 16px "+(glows[mode]||"rgba(255,215,0,0.15)");
+}
+
+function drawPortrait(c,mode,t){
+  if(!c)return;
+  c.clearRect(0,0,60,60);
+
+  // Background gradient by mode
+  var bgColors={
+    look:"#1a0a2e",use:"#0a2a3e",take:"#1a1a0e",talk:"#2e0a1e",open:"#1a0a0a",
+    push:"#2e1a0a",key:"#2a2000",spooky:"#1a0a2e",food:"#0a1a0a",sacred:"#2a1a00",
+    phone:"#0a1a2e",mirror:"#1a0a1e",excited:"#1a1400",curious:"#0a1a2e",hurt:"#2e0a0a"
+  };
+  c.fillStyle=bgColors[mode]||"#1a0a2e";c.fillRect(0,0,60,60);
+
+  // Soft radial bg glow
+  var glowC={spooky:"rgba(155,89,182,0.2)",sacred:"rgba(255,215,0,0.15)",key:"rgba(255,215,0,0.2)",food:"rgba(46,204,113,0.15)",hurt:"rgba(231,76,60,0.2)"};
+  if(glowC[mode]){var g=c.createRadialGradient(30,35,2,30,35,28);g.addColorStop(0,glowC[mode]);g.addColorStop(1,"rgba(0,0,0,0)");c.fillStyle=g;c.fillRect(0,0,60,60);}
+
+  // Draw K'Dee portrait at center
+  var bob=Math.sin(t*0.08)*1.2;
+  var tilt=0,eyeW=3,eyeH=3,mouthType="smile",blush=false,sweat=false,sparkle=false,wide=false,headTilt=0,armUp=false,armOut=false,brows="normal";
+
+  if(mode==="look"){tilt=Math.sin(t*0.06)*3;brows="curious";}
+  else if(mode==="use"){armUp=true;brows="determined";}
+  else if(mode==="take"){mouthType="grin";sparkle=true;brows="happy";}
+  else if(mode==="talk"){mouthType=Math.floor(t/6)%2===0?"open":"smile";brows="curious";}
+  else if(mode==="open"){wide=true;mouthType="o";brows="surprised";}
+  else if(mode==="push"){bob+=Math.sin(t*0.3)*2;brows="strain";sweat=true;mouthType="strain";}
+  else if(mode==="key"){sparkle=true;mouthType="grin";bob=Math.sin(t*0.15)*3;brows="happy";}
+  else if(mode==="spooky"){wide=true;mouthType="o";bob+=Math.sin(t*0.1)*0.5;brows="scared";}
+  else if(mode==="food"){mouthType=Math.floor(t/8)%3===0?"open":"smile";blush=true;brows="happy";}
+  else if(mode==="sacred"){bob=Math.sin(t*0.04)*0.8;brows="amazed";sparkle=true;mouthType="o";}
+  else if(mode==="phone"){armUp=true;mouthType=Math.floor(t/10)%2===0?"open":"smile";brows="curious";}
+  else if(mode==="mirror"){blush=true;mouthType="smile";brows="pleased";tilt=Math.sin(t*0.05)*2;}
+  else if(mode==="excited"){bob=Math.sin(t*0.15)*3;sparkle=true;mouthType="grin";brows="happy";blush=true;}
+  else if(mode==="curious"){tilt=Math.sin(t*0.07)*4;brows="curious";mouthType="hmm";}
+  else if(mode==="hurt"){bob+=Math.sin(t*0.3)*2;brows="pain";mouthType="pain";wide=true;}
+
+  // === DRAW K'DEE PORTRAIT ===
+  c.save();c.translate(30,42+bob);c.rotate(tilt*Math.PI/180);
+
+  // Body
+  var bodyColor="#FF69B4";
+  if(mode==="push")bodyColor="#FF85C8";
+  c.fillStyle=bodyColor;c.beginPath();
+  c.moveTo(-8,-12);c.lineTo(-9,-2);c.lineTo(9,-2);c.lineTo(8,-12);c.closePath();c.fill();
+  D(c,-1,-11,2,8,"#FF85C8");// shirt detail
+
+  // Arms
+  if(armUp){
+    D(c,-12,-16,4,8,"#FDBCB4");c.fillStyle="#FDBCB4";c.beginPath();c.arc(-10,-8,3,0,Math.PI*2);c.fill();
+    D(c,8,-20,4,12,"#FDBCB4");c.fillStyle="#FDBCB4";c.beginPath();c.arc(10,-8,3,0,Math.PI*2);c.fill();
+  } else if(mode==="push"||mode==="take"){
+    var aoff=Math.min(t*0.3,6);
+    D(c,-12,-14+aoff,4,10,"#FDBCB4");c.fillStyle="#FDBCB4";c.beginPath();c.arc(-10,-4,3,0,Math.PI*2);c.fill();
+    D(c,8,-14-aoff,4,10,"#FDBCB4");c.fillStyle="#FDBCB4";c.beginPath();c.arc(10,-4,3,0,Math.PI*2);c.fill();
+  } else {
+    D(c,-12,-14,4,10,"#FDBCB4");c.fillStyle="#FDBCB4";c.beginPath();c.arc(-10,-4,3,0,Math.PI*2);c.fill();
+    D(c,8,-14,4,10,"#FDBCB4");c.fillStyle="#FDBCB4";c.beginPath();c.arc(10,-4,3,0,Math.PI*2);c.fill();
+  }
+
+  // Head
+  c.fillStyle="#FDBCB4";c.beginPath();c.arc(0,-22,10,0,Math.PI*2);c.fill();
+
+  // Hair
+  c.fillStyle="#F0E68C";c.beginPath();c.arc(0,-27,10,Math.PI,2*Math.PI);c.fill();
+  D(c,-10,-26,5,10,"#F0E68C");D(c,5,-26,5,10,"#F0E68C");
+  // Hair shine
+  c.fillStyle="rgba(255,255,200,0.3)";c.beginPath();c.arc(3,-29,4,0,Math.PI*2);c.fill();
+
+  // Eyebrows
+  c.strokeStyle="#8B6914";c.lineWidth=1.5;
+  if(brows==="normal"||brows==="pleased"){c.beginPath();c.moveTo(-7,-24);c.lineTo(-3,-24);c.stroke();c.beginPath();c.moveTo(3,-24);c.lineTo(7,-24);c.stroke();}
+  else if(brows==="curious"){c.beginPath();c.moveTo(-7,-25);c.quadraticCurveTo(-5,-23,-3,-24);c.stroke();c.beginPath();c.moveTo(3,-24);c.lineTo(7,-24);c.stroke();}
+  else if(brows==="happy"){c.beginPath();c.moveTo(-7,-25);c.quadraticCurveTo(-5,-26,-3,-25);c.stroke();c.beginPath();c.moveTo(3,-25);c.quadraticCurveTo(5,-26,7,-25);c.stroke();}
+  else if(brows==="determined"){c.beginPath();c.moveTo(-7,-25);c.lineTo(-3,-26);c.stroke();c.beginPath();c.moveTo(3,-26);c.lineTo(7,-25);c.stroke();}
+  else if(brows==="surprised"||brows==="amazed"||brows==="scared"){c.beginPath();c.moveTo(-7,-26);c.quadraticCurveTo(-5,-28,-3,-27);c.stroke();c.beginPath();c.moveTo(3,-27);c.quadraticCurveTo(5,-28,7,-26);c.stroke();}
+  else if(brows==="strain"){c.beginPath();c.moveTo(-7,-24);c.lineTo(-3,-26);c.stroke();c.beginPath();c.moveTo(3,-26);c.lineTo(7,-24);c.stroke();}
+  else if(brows==="pain"){c.beginPath();c.moveTo(-7,-24);c.lineTo(-3,-26);c.stroke();c.beginPath();c.moveTo(3,-26);c.lineTo(7,-24);c.stroke();}
+
+  // Eyes
+  var ew=wide?4:3,eh=wide?4:3;
+  if(mode==="spooky"||mode==="hurt")eh=4;
+  c.fillStyle="#fff";c.fillRect(-6,-23,ew+1,eh+1);c.fillRect(2,-23,ew+1,eh+1);
+  var eyeCol=(mode==="spooky"||mode==="hurt")?"#e74c3c":"#00AA44";
+  c.fillStyle=eyeCol;c.fillRect(-5,-22,ew-1,eh-1);c.fillRect(3,-22,ew-1,eh-1);
+  c.fillStyle="#fff";c.fillRect(-5,-23,1,1);c.fillRect(3,-23,1,1);
+
+  // Mouth
+  c.strokeStyle="#e75480";c.lineWidth=1.2;
+  if(mouthType==="smile"){c.beginPath();c.arc(0,-17,4,0.1*Math.PI,0.9*Math.PI);c.stroke();}
+  else if(mouthType==="grin"){c.beginPath();c.arc(0,-16,5,0.05*Math.PI,0.95*Math.PI);c.stroke();c.fillStyle="#e75480";c.fill();}
+  else if(mouthType==="open"||mouthType==="o"){c.fillStyle="#c0392b";c.beginPath();c.arc(0,-17,3,0,Math.PI*2);c.fill();}
+  else if(mouthType==="hmm"){c.beginPath();c.moveTo(-3,-16);c.lineTo(3,-16);c.stroke();}
+  else if(mouthType==="strain"){c.beginPath();c.moveTo(-4,-16);c.quadraticCurveTo(0,-14,4,-16);c.stroke();}
+  else if(mouthType==="pain"){c.beginPath();c.moveTo(-4,-15);c.quadraticCurveTo(0,-17,4,-15);c.stroke();}
+
+  // Blush
+  if(blush){c.save();c.globalAlpha=0.25;c.fillStyle="#FF69B4";c.beginPath();c.ellipse(-7,-19,4,2,0,0,Math.PI*2);c.fill();c.beginPath();c.ellipse(7,-19,4,2,0,0,Math.PI*2);c.fill();c.restore();}
+
+  // Sweat drop
+  if(sweat&&Math.floor(t/20)%2===0){c.fillStyle="#87CEEB";c.beginPath();c.moveTo(12,-28);c.quadraticCurveTo(14,-26,12,-24);c.closePath();c.fill();}
+
+  c.restore();
+
+  // Sparkles around portrait
+  if(sparkle){
+    var sparkPositions=[[10,8],[50,10],[8,50],[52,52],[30,5],[5,30]];
+    sparkPositions.forEach(function(sp,si){
+      var phase=t*0.15+si*1.1;
+      var alpha=0.4+0.4*Math.sin(phase);
+      var sz=1+Math.sin(phase*1.3)*0.8;
+      c.save();c.globalAlpha=alpha;c.fillStyle="#FFD700";
+      c.beginPath();c.arc(sp[0],sp[1],sz,0,Math.PI*2);c.fill();
+      c.restore();
+    });
+  }
+
+  // Special overlays
+  if(mode==="spooky"){
+    c.save();c.globalAlpha=0.08+0.06*Math.sin(t*0.1);c.fillStyle="#9B59B6";c.fillRect(0,0,60,60);c.restore();
+  }
+  if(mode==="sacred"){
+    c.save();c.globalAlpha=0.06+0.04*Math.sin(t*0.08);c.fillStyle="#FFD700";c.fillRect(0,0,60,60);c.restore();
+    // Halo
+    c.save();c.globalAlpha=0.4+0.2*Math.sin(t*0.1);
+    c.strokeStyle="#FFD700";c.lineWidth=1.5;c.beginPath();c.arc(30,16,8,0,Math.PI*2);c.stroke();
+    c.restore();
+  }
+  if(mode==="key"){
+    // Key sparkle trail
+    c.save();c.globalAlpha=0.6+0.3*Math.sin(t*0.2);
+    c.fillStyle="#FFD700";c.font="bold 12px serif";c.textAlign="center";
+    c.fillText("\uD83D\uDD11",30,56);
+    c.restore();
+  }
+  if(mode==="phone"){
+    c.save();c.fillStyle="#222";c.fillRect(22,8,16,24);c.fillStyle="#1a3a5a";c.fillRect(23,9,14,20);
+    c.fillStyle="rgba(0,200,255,0.5)";c.font="5px monospace";c.textAlign="center";c.fillText("bzz",30,20);
+    c.restore();
+  }
+}
+
+// Determine portrait mode from hotspot id and verb
+function getPortraitMode(hid,verb){
+  // Special per-hotspot overrides
+  if(HOTSPOT_REACTIONS[hid])return HOTSPOT_REACTIONS[hid];
+  // Fallback by verb
+  var verbModes={look:"look",use:"use",take:"take",talk:"talk",open:"open",push:"push"};
+  return verbModes[verb]||"look";
+}
 function drawBattleKdee(c,x,y,pose,timer){
   var t=timer||0;
   var bob=Math.sin(frameTick*0.05)*1.5;
@@ -1825,9 +2040,8 @@ function winGame(){
   var d=document.getElementById("dlg");
   var inner=document.getElementById("dlg-inner");
   d.classList.remove("on");inner.style.animation="none";
-  void d.offsetHeight;inner.style.animation="";d.classList.add("on");
-  document.getElementById("dlg-portrait").textContent="\uD83C\uDF89";
-  document.getElementById("dlg-portrait").style.borderColor="#FFD700";
+  void inner.offsetWidth;inner.style.animation="";d.classList.add("on");
+  setPortraitMode("excited");
   document.getElementById("dlg-name").textContent="YOU WIN!";
   var m=Math.floor((780-timer)/60),s=(780-timer)%60;
   typeText(document.getElementById("dlg-text"),"K'Dee found all 3 keys in "+m+"m "+s+"s! She grabs her purse, kisses the kids, and heads out the door. Have fun, don't die!");
@@ -1841,9 +2055,8 @@ function loseGame(){
   var d=document.getElementById("dlg");
   var inner=document.getElementById("dlg-inner");
   d.classList.remove("on");inner.style.animation="none";
-  void d.offsetHeight;inner.style.animation="";d.classList.add("on");
-  document.getElementById("dlg-portrait").textContent="\u23F0";
-  document.getElementById("dlg-portrait").style.borderColor="#CD5C5C";
+  void inner.offsetWidth;inner.style.animation="";d.classList.add("on");
+  setPortraitMode("hurt");
   document.getElementById("dlg-name").textContent="TIME'S UP!";
   typeText(document.getElementById("dlg-text"),"K'Dee is officially late. The kids are feral. The neighbor's cat is judging everyone through the window. "+keys+"/3 keys found. Try again?");
   document.getElementById("dlg-choices").innerHTML='<div class="dlg-ch" id="play-again2" style="border-color:#CD5C5C;color:#CD5C5C">\u23F0 TRY AGAIN</div>';
@@ -1859,6 +2072,7 @@ document.getElementById("startbtn").addEventListener("click",function(){
   kdeeX=180;kdeeY=560;
   spawnParticles(curRoom);
   drawScene();updateHUD();
+  initPortrait();
   startLoop();startTimer();
 });
 
