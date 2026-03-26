@@ -13,67 +13,72 @@ var walkAnim=0,frameTick=0;
 
 function drawKdee(c,x,y){
   var breathe=Math.sin(frameTick*0.04)*1;
-  var bob=kdeeWalking?Math.sin(walkAnim*0.3)*2.5:breathe*0.5;
-  var legOff=kdeeWalking?Math.sin(walkAnim*0.4)*4:0;
-  var armOff=kdeeWalking?Math.sin(walkAnim*0.4)*3:0;
+  var bob=kdeeWalking?Math.sin(walkAnim*0.3)*3.5:breathe*0.7;
+  var legOff=kdeeWalking?Math.sin(walkAnim*0.4)*6:0;
+  var armOff=kdeeWalking?Math.sin(walkAnim*0.4)*4:0;
+  var sc=1.6;// world scale — bigger characters
+
+  c.save();c.translate(x,y);c.scale(sc,sc);
 
   // Shadow
   c.save();c.globalAlpha=0.18;c.fillStyle="#000";
-  c.beginPath();c.ellipse(x,y+2,12,4,0,0,Math.PI*2);c.fill();c.restore();
+  c.beginPath();c.ellipse(0,2,12,4,0,0,Math.PI*2);c.fill();c.restore();
 
   // Legs
-  D(c,x-5+legOff,y-4+bob,5,6,"#4169E1");  // left leg
-  D(c,x+1-legOff,y-4+bob,5,6,"#4169E1");  // right leg
+  D(c,-5+legOff,-4+bob,5,7,"#4169E1");
+  D(c,1-legOff,-4+bob,5,7,"#4169E1");
   // Shoes
-  D(c,x-6+legOff,y+1+bob,6,3,"#333");
-  D(c,x+1-legOff,y+1+bob,6,3,"#333");
+  D(c,-6+legOff,2+bob,7,4,"#333");
+  D(c,1-legOff,2+bob,7,4,"#333");
 
   // Body / shirt
   c.fillStyle=P.pink;
   c.beginPath();
-  c.moveTo(x-8,y-14+bob);
-  c.lineTo(x-9,y-4+bob);
-  c.lineTo(x+9,y-4+bob);
-  c.lineTo(x+8,y-14+bob);
+  c.moveTo(-8,-15+bob);
+  c.lineTo(-9,-4+bob);
+  c.lineTo(9,-4+bob);
+  c.lineTo(8,-15+bob);
   c.closePath();c.fill();
   // Shirt detail
-  D(c,x-1,y-12+bob,2,8,"#FF85C8");
+  D(c,-1,-13+bob,2,9,"#FF85C8");
 
   // Skirt / jeans
-  D(c,x-8,y-6+bob,16,5,"#4169E1");
+  D(c,-8,-6+bob,16,6,"#4169E1");
 
   // Arms
-  D(c,x-11,y-14+bob-armOff,4,10,P.pink);  // left arm
-  D(c,x+7,y-14+bob+armOff,4,10,P.pink);   // right arm
+  D(c,-12,-15+bob-armOff,4,11,P.pink);
+  D(c,8,-15+bob+armOff,4,11,P.pink);
   // Hands
   c.fillStyle=P.skin;
-  c.beginPath();c.arc(x-9,y-4+bob-armOff,2.5,0,Math.PI*2);c.fill();
-  c.beginPath();c.arc(x+9,y-4+bob+armOff,2.5,0,Math.PI*2);c.fill();
+  c.beginPath();c.arc(-10,-4+bob-armOff,3,0,Math.PI*2);c.fill();
+  c.beginPath();c.arc(10,-4+bob+armOff,3,0,Math.PI*2);c.fill();
 
   // Head
   c.fillStyle=P.skin;
-  c.beginPath();c.arc(x,y-22+bob,10,0,Math.PI*2);c.fill();
+  c.beginPath();c.arc(0,-24+bob,12,0,Math.PI*2);c.fill();
 
   // Hair
   c.fillStyle=P.hair;
-  c.beginPath();c.arc(x,y-27+bob,10,Math.PI,2*Math.PI);c.fill();
-  D(c,x-10,y-26+bob,5,10,P.hair); // left hair
-  D(c,x+5,y-26+bob,5,10,P.hair);  // right hair
+  c.beginPath();c.arc(0,-29+bob,12,Math.PI,2*Math.PI);c.fill();
+  D(c,-12,-28+bob,6,12,P.hair);
+  D(c,6,-28+bob,6,12,P.hair);
   // Hair highlight
   c.fillStyle="rgba(255,255,200,0.25)";
-  c.beginPath();c.arc(x+3,y-28+bob,4,0,Math.PI*2);c.fill();
+  c.beginPath();c.arc(4,-31+bob,5,0,Math.PI*2);c.fill();
 
   // Eyes
   c.fillStyle="#fff";
-  c.fillRect(x-5,y-23+bob,4,3);c.fillRect(x+1,y-23+bob,4,3);
+  c.fillRect(-6,-25+bob,5,4);c.fillRect(1,-25+bob,5,4);
   c.fillStyle=P.eye;
-  c.fillRect(x-4,y-22+bob,2,2);c.fillRect(x+2,y-22+bob,2,2);
+  c.fillRect(-5,-24+bob,3,3);c.fillRect(2,-24+bob,3,3);
   // Eye sparkle
-  c.fillStyle="#fff";c.fillRect(x-4,y-23+bob,1,1);c.fillRect(x+2,y-23+bob,1,1);
+  c.fillStyle="#fff";c.fillRect(-5,-25+bob,1,1);c.fillRect(2,-25+bob,1,1);
 
   // Mouth (smile)
-  c.strokeStyle=P.pink;c.lineWidth=1;
-  c.beginPath();c.arc(x,y-17+bob,3,0.1*Math.PI,0.9*Math.PI);c.stroke();
+  c.strokeStyle=P.pink;c.lineWidth=1.2;
+  c.beginPath();c.arc(0,-19+bob,4,0.1*Math.PI,0.9*Math.PI);c.stroke();
+
+  c.restore();
 }
 
 function updateWalk(){
@@ -460,10 +465,10 @@ function interactWith(h){
 var invDetails={
   banana:{emoji:"\uD83C\uDF4C",name:"Banana",desc:"A perfectly ripe banana. For scale, obviously.",type:"Food",battle:"Super effective vs. Milo!"},
   duck:{emoji:"\uD83E\uDD86",name:"General Quackers",desc:"Leader of the rubber duck army. Seen things. Won't talk about it.",type:"Companion",battle:"Super effective vs. Milo!"},
-  bible:{emoji:"\uD83D\uDCD6",name:"Bible",desc:"Proverbs 31. Divine guidance for finding lost keys. (Results may vary.)",type:"Sacred Text",battle:"Super effective vs. Greyson!"},
+  bible:{emoji:"\uD83D\uDCD6",name:"Bible",desc:"Proverbs 31. Divine guidance for finding lost keys. (Results may vary.)",type:"Sacred Text",battle:"Super effective vs. Greyson, Space Jesus & Baal'thazar!"},
   flashlight:{emoji:"\uD83D\uDD26",name:"Flashlight",desc:"Found at the workbench. Batteries at 12%. Classic.",type:"Tool",battle:"Useful in battle vs. Forest"},
-  necronomicon:{emoji:"\uD83D\uDCDA",name:"Necronomicon",desc:"It whispers. Mostly complaints. Do NOT read aloud at bedtime.",type:"Forbidden Text",battle:"Super effective vs. Greyson!"},
-  shovel:{emoji:"\u26CF\uFE0F",name:"Shovel",desc:"From the shed. The dog is VERY interested in this.",type:"Tool",battle:"General battle item"},
+  necronomicon:{emoji:"\uD83D\uDCDA",name:"Necronomicon",desc:"It whispers. Mostly complaints. Do NOT read aloud at bedtime.",type:"Forbidden Text",battle:"Super effective vs. Greyson, Space Jesus & Baal'thazar!"},
+  shovel:{emoji:"\u26CF\uFE0F",name:"Shovel",desc:"From the shed. The dog is VERY interested in this.",type:"Tool",battle:"Super effective vs. Baal'thazar!"},
   wrench:{emoji:"\uD83D\uDD27",name:"Wrench",desc:"A sturdy wrench. Opens things that shouldn't be opened.",type:"Tool",battle:"Super effective vs. Daed!"},
   towel:{emoji:"\uD83E\uDDF4",name:"Towel",desc:"Seen better days. Mostly decorative at this point.",type:"Textile",battle:"Super effective vs. Holly & Forest!"},
   book:{emoji:"\uD83D\uDCDA",name:"Parenting Book",desc:"'Parenting Without Losing Your Mind.' Chapter 1: Too late.",type:"Literature",battle:"Super effective vs. Holly!"},
@@ -480,7 +485,7 @@ var invDetails={
 };
 
 // Items that are super-effective somewhere
-var battleItems=["banana","duck","bible","necronomicon","wrench","towel","book","phone","flashlight","drinks"];
+var battleItems=["banana","duck","bible","necronomicon","wrench","towel","book","phone","flashlight","drinks","shovel"];
 
 function updateInv(){
   var bc=document.getElementById("bag-count");
@@ -851,10 +856,48 @@ var FIGHTERS={
     itemEffects:{
       wrench:{dmg:2,msg:["K'Dee brandishes the wrench.","'IS. THIS. YOURS.'","Daed sweats through the oil. Impressive.","'I can explain—' *POOF* He's gone."],super:true}
     }
+  },
+  demon:{
+    name:"BAAL'THAZAR",title:"DEMON OF MILD INCONVENIENCE",hp:16,maxHp:16,color:"#8B0000",
+    hair:"#1a0000",hairStyle:"horns",skin:"#c0392b",shirt:"#1a0000",pants:"#0a0000",demon:true,
+    idleQuips:["*tail flicks menacingly*","'I have PAPERWORK for you.'","*brimstone smell intensifies*","'Your warranty is expired.'"],
+    attacks:[
+      {name:"INFERNAL SHRIEK",dmg:2,quips:["BAAL'THAZAR unleashes a bone-rattling shriek! K'Dee's ears ring!","A demonic wail shakes the basement walls! Critical earworm damage!","The shriek contains a catchy jingle. K'Dee can't get it out of her head.","SHRIEK! The pentagram glows. K'Dee is momentarily deaf AND annoyed."]},
+      {name:"SOUL CONTRACT",dmg:1,quips:["'Sign HERE.' K'Dee doesn't have her reading glasses. Trap?","A contract materializes. Fine print: infinite. K'Dee is legally confused.","'It's just a standard soul waiver.' It is not standard.","He produces a clipboard. FROM WHERE. K'Dee is disturbed."]},
+      {name:"BRIMSTONE BREATH",dmg:3,quips:["BRIMSTONE BREATH! It smells like sulfur AND burnt coffee!","A scorching blast of brimstone! K'Dee's hair frizzes!","'My breath is NOT that bad—' IT IS THAT BAD. K'Dee takes full damage.","The breath hits like a wall. K'Dee considers a breath mint arsenal."]},
+      {name:"MILD CURSE",dmg:1,quips:["Baal'thazar curses K'Dee with slightly sticky keys forever.","'May your socks always be slightly damp.' K'Dee is horrified.","A mild hex. K'Dee will stub her toe later. Guaranteed.","Cursed! K'Dee's next grocery run will have one broken cart wheel."]},
+      {name:"SUMMON PAPERWORK",dmg:2,quips:["Mountains of bureaucratic hellfire paperwork bury K'Dee!","'Have you filed Form 666-B?' K'Dee has NOT.","An avalanche of infernal paperwork! In TRIPLICATE!","The IRS has NOTHING on this. K'Dee takes critical paperwork damage."]}
+    ],
+    intro:["K'Dee descends into the basement.","The pentagram glows an angry red.","Candles flare. A shape rises from the shadows.","He's... shorter than expected.","'AT LAST! A MORTAL STANDS BEFORE—'","'Are you the one who keeps moving my Tupperware?'","A long pause.","'...I AM BAAL'THAZAR, DEMON OF MILD—'","'BAAL'THAZAR! MY TUPPERWARE.'","'IT IS AN OFFERING. TECHNICALLY.'"],
+    defeat:["Baal'thazar staggers.","'Impossible. My HR rating is EXCELLENT.'","The pentagram flickers and goes dark.","'Fine. Your Tupperware is in the upstairs cabinet.'","'You KNEW where it was this WHOLE TIME?!'","'...goodbye, K'Dee.' He dissolves into sulfur smoke.","The basement smells like burnt toast for a week."],
+    itemEffects:{
+      necronomicon:{dmg:7,msg:["K'Dee opens the Necronomicon.","Baal'thazar FREEZES.","'Where did you GET that?!'","'The basement.' 'THAT'S MY PROPERTY!'","He's contractually bound to flee. Maximum chaos."],super:true},
+      bible:{dmg:6,msg:["K'Dee produces the Bible.","Baal'thazar recoils with theatrical flair.","'NOT THE BOOK! NOT THE BOOOOK!'","He retreats dramatically into the pentagram.","Holy damage: CRITICAL."],super:true},
+      shovel:{dmg:4,msg:["K'Dee raises the shovel.","'YOU DUG THE HOLE IN THE BACKYARD!'","Baal'thazar sweats. 'That was... the DOG.'","'THE DOG DOESN'T HAVE OPPOSABLE THUMBS, BAAL'THAZAR.'"],super:true},
+      flashlight:{dmg:3,msg:["K'Dee shines the flashlight directly at Baal'thazar.","'AH! MY EYES! SO BRIGHT!'","Demons hate flashlights. Apparently.","He shields his glowing eyes. K'Dee has the advantage."]}
+    }
+  },
+  jesus:{
+    name:"SPACE JESUS",title:"LORD OF THE BATHROOM",hp:14,maxHp:14,color:"#FFD700",
+    hair:"#8B6914",hairStyle:"long",skin:"#FDBCB4",shirt:"#f0f0f0",pants:"#ddd",halo:true,
+    idleQuips:["*radiates warm golden light*","'Bless this mess.'","*looks knowingly at pinup painting*","'Peace be with you, K'Dee.'"],
+    attacks:[
+      {name:"HOLY LIGHT",dmg:2,quips:["BLINDING RADIANCE! K'Dee can't look directly at him!","Warm holy light floods the bathroom. K'Dee is momentarily stunned.","A golden beam hits K'Dee square in the soul.","Space Jesus glows intensely. K'Dee squints. Critical soul damage!"]},
+      {name:"BLESS THE CHAOS",dmg:1,quips:["'This too shall pass, K'Dee.' She somehow feels worse.","Space Jesus blesses the entire house. The chaos doubles.","A divine benediction. The LEGO hurts even more now.","'Have you tried praying about the keys?' It does not help."]},
+      {name:"WALK ON WATER",dmg:2,quips:["Space Jesus walks across the golden tub. K'Dee is humbled.","He walks on the holy water. K'Dee slips watching. Ouch.","'Watch this.' He walks on water. K'Dee watches, forgets to dodge."]},
+      {name:"DEVIL REMATCH",dmg:3,quips:["Space Jesus flexes, remembering his battle with the devil. POWER SURGES!","He gestures at the Space Jesus vs Devil painting above. Intimidation +100.","'I beat the devil. You're next, K'Dee.' The bathroom trembles.","Space Jesus channels his devil-fighting energy! Maximum holy damage!"]}
+    ],
+    intro:["K'Dee enters the Jesus Bathroom.","The golden toilet gleams. Candles flicker.","Space Jesus steps out of the painting on the wall.","His halo crackles. The pinup girl waves from her frame.","'K'Dee. You dare disturb my sacred bathroom?'","'I just need my keys, Jesus.'","'...PROVE YOUR WORTH.'"],
+    defeat:["Space Jesus nods slowly.","'Your mom energy... it is strong.'","The pinup girl claps from her painting.","'The keys are wherever you left them, obviously.'","'...thanks, Jesus.'","He winks. Returns to the painting.","The bathroom smells like frankincense."],
+    itemEffects:{
+      bible:{dmg:6,msg:["K'Dee holds up the Bible.","Space Jesus GASPS.","'You... actually READ it?!'","His halo short-circuits.","'Fair enough. You win this round.'"],super:true},
+      necronomicon:{dmg:5,msg:["K'Dee opens the Necronomicon.","Space Jesus recoils! 'NOT THE DARK TEXTS!'","'Put that AWAY!' He covers his halo.","Maximum divine discomfort!"],super:true},
+      duck:{dmg:3,msg:["K'Dee holds up General Quackers.","'I MADE DUCKS, you know.'","Space Jesus pauses, smiling fondly.","'...OK, that one's cute.'"]}
+    }
   }
 };
 
-var battleRoomMap={3:"milo",5:"daed",19:"greyson",20:"holly",21:"forest"};
+var battleRoomMap={3:"milo",5:"daed",10:"jesus",11:"demon",19:"greyson",20:"holly",21:"forest"};
 var gwynBattle=false;
 
 function checkBattle(roomIdx){
@@ -1059,6 +1102,125 @@ function drawBattleEnemy(c,f,x,y,pose,timer,anim){
     return;
   }
 
+  // --- SPECIAL: Demon (Baal'thazar) ---
+  if(f.demon){
+    var atk=(pose==="attack"&&t>0);
+    var ax=atk?-Math.min(t*1.5,8):0;
+    var rage=atk?Math.sin(t*0.5)*3:0;
+
+    // Brimstone glow behind demon
+    c.save();c.globalAlpha=0.12+0.08*Math.sin(anim*0.05);c.fillStyle="#8B0000";
+    c.beginPath();c.arc(ax,0,28,0,Math.PI*2);c.fill();c.restore();
+
+    // Shadow (red-tinted)
+    c.save();c.globalAlpha=0.2;c.fillStyle="#4a0000";
+    c.beginPath();c.ellipse(ax,3,12,4,0,0,Math.PI*2);c.fill();c.restore();
+
+    // Tail (animated)
+    var tailSwing=Math.sin(anim*0.07)*8;
+    c.strokeStyle="#6B0000";c.lineWidth=2;
+    c.beginPath();
+    c.moveTo(ax+4,-2+bob);
+    c.quadraticCurveTo(ax+18,-8+bob+tailSwing,ax+22,-18+bob+tailSwing);
+    c.stroke();
+    // Tail tip (arrow)
+    c.fillStyle="#6B0000";
+    c.beginPath();c.arc(ax+22,-18+bob+tailSwing,3,0,Math.PI*2);c.fill();
+
+    // Legs
+    D(c,ax-4,-3+bob,4,8,"#0a0000");D(c,ax+1,-3+bob,4,8,"#0a0000");
+    // Hooves
+    c.fillStyle="#1a0000";c.beginPath();c.ellipse(ax-2,4+bob,4,2.5,0,0,Math.PI*2);c.fill();
+    c.beginPath();c.ellipse(ax+3,4+bob,4,2.5,0,0,Math.PI*2);c.fill();
+
+    // Body (dark robe-like)
+    c.fillStyle="#1a0000";c.beginPath();
+    c.moveTo(ax-8,-12+bob);c.lineTo(ax-9,-2+bob);c.lineTo(ax+9,-2+bob);c.lineTo(ax+8,-12+bob);
+    c.closePath();c.fill();
+    // Robe highlights (dark red)
+    c.fillStyle="rgba(139,0,0,0.4)";c.fillRect(ax-2,-11+bob,2,9);
+
+    // Wings (folded behind, tips visible)
+    c.fillStyle="rgba(80,0,0,0.7)";
+    c.beginPath();c.moveTo(ax-8,-12+bob);c.quadraticCurveTo(ax-22,-22+bob+rage,ax-18,-4+bob);c.lineTo(ax-8,-5+bob);c.closePath();c.fill();
+    c.beginPath();c.moveTo(ax+8,-12+bob);c.quadraticCurveTo(ax+22,-22+bob-rage,ax+18,-4+bob);c.lineTo(ax+8,-5+bob);c.closePath();c.fill();
+    // Wing membrane lines
+    c.strokeStyle="rgba(139,0,0,0.4)";c.lineWidth=0.8;
+    c.beginPath();c.moveTo(ax-8,-10+bob);c.lineTo(ax-18,-8+bob);c.stroke();
+    c.beginPath();c.moveTo(ax-8,-7+bob);c.lineTo(ax-16,-3+bob);c.stroke();
+    c.beginPath();c.moveTo(ax+8,-10+bob);c.lineTo(ax+18,-8+bob);c.stroke();
+    c.beginPath();c.moveTo(ax+8,-7+bob);c.lineTo(ax+16,-3+bob);c.stroke();
+
+    // Arms
+    if(atk){
+      c.save();c.translate(ax-8,-12+bob);c.rotate(0.5-t*0.08);
+      D(c,0,0,4,12,"#c0392b");c.fillStyle="#8B0000";c.beginPath();c.arc(2,13,3,0,Math.PI*2);c.fill();
+      // Claw fingers
+      c.strokeStyle="#6B0000";c.lineWidth=1;
+      for(var cl=0;cl<3;cl++){c.beginPath();c.moveTo(0+cl*2,12);c.lineTo(-1+cl*2,18);c.stroke();}
+      c.restore();
+    }else{
+      D(c,ax-10,-12+bob,4,11,"#c0392b");
+      D(c,ax+6,-12+bob,4,11,"#c0392b");
+    }
+    // Clawed hands at rest
+    c.strokeStyle="#6B0000";c.lineWidth=1;
+    if(!atk){
+      for(var cl=0;cl<3;cl++){c.beginPath();c.moveTo(ax-9+cl,-1+bob);c.lineTo(ax-10+cl,4+bob);c.stroke();}
+      for(var cl=0;cl<3;cl++){c.beginPath();c.moveTo(ax+6+cl,-1+bob);c.lineTo(ax+5+cl,4+bob);c.stroke();}
+    }
+
+    // Head (red, angular)
+    c.fillStyle=f.skin;c.beginPath();c.arc(ax,-20+bob,9,0,Math.PI*2);c.fill();
+
+    // HORNS (big, curving)
+    c.fillStyle="#1a0000";
+    c.beginPath();c.moveTo(ax-6,-26+bob);c.quadraticCurveTo(ax-14,-38+bob,ax-9,-44+bob);c.quadraticCurveTo(ax-7,-40+bob,ax-4,-28+bob);c.closePath();c.fill();
+    c.beginPath();c.moveTo(ax+6,-26+bob);c.quadraticCurveTo(ax+14,-38+bob,ax+9,-44+bob);c.quadraticCurveTo(ax+7,-40+bob,ax+4,-28+bob);c.closePath();c.fill();
+    // Horn shine
+    c.fillStyle="rgba(139,0,0,0.3)";
+    c.beginPath();c.moveTo(ax-6,-27+bob);c.quadraticCurveTo(ax-10,-34+bob,ax-8,-40+bob);c.quadraticCurveTo(ax-6,-36+bob,ax-5,-28+bob);c.closePath();c.fill();
+
+    // Glowing eyes (always lit)
+    var eyeGlow=0.7+0.3*Math.sin(anim*0.08);
+    c.save();c.globalAlpha=eyeGlow;c.fillStyle="#FF4500";
+    c.beginPath();c.ellipse(ax-3,-21+bob,3,2,0,0,Math.PI*2);c.fill();
+    c.beginPath();c.ellipse(ax+3,-21+bob,3,2,0,0,Math.PI*2);c.fill();
+    c.restore();
+    // Bright centers
+    c.fillStyle="#FFD700";
+    c.beginPath();c.arc(ax-3,-21+bob,1.2,0,Math.PI*2);c.fill();
+    c.beginPath();c.arc(ax+3,-21+bob,1.2,0,Math.PI*2);c.fill();
+
+    // Menacing mouth / fangs
+    if(atk){
+      c.fillStyle="#0a0000";c.beginPath();c.arc(ax,-14+bob,4,0,Math.PI);c.fill();
+      // Fangs
+      c.fillStyle="#fff";
+      c.beginPath();c.moveTo(ax-3,-14+bob);c.lineTo(ax-2,-18+bob);c.lineTo(ax-1,-14+bob);c.closePath();c.fill();
+      c.beginPath();c.moveTo(ax+1,-14+bob);c.lineTo(ax+2,-18+bob);c.lineTo(ax+3,-14+bob);c.closePath();c.fill();
+    }else{
+      c.strokeStyle="#6B0000";c.lineWidth=1;
+      c.beginPath();c.arc(ax,-14+bob,3,0.1*Math.PI,0.9*Math.PI);c.stroke();
+      // Subtle fangs at rest
+      c.fillStyle="#ddd";
+      c.beginPath();c.moveTo(ax-2,-14+bob);c.lineTo(ax-1.5,-17+bob);c.lineTo(ax-1,-14+bob);c.closePath();c.fill();
+      c.beginPath();c.moveTo(ax+1,-14+bob);c.lineTo(ax+1.5,-17+bob);c.lineTo(ax+2,-14+bob);c.closePath();c.fill();
+    }
+
+    // Floating ember particles around demon
+    for(var em=0;em<4;em++){
+      var ea=em*Math.PI/2+anim*0.04;
+      var er=12+Math.sin(anim*0.05+em)*4;
+      c.save();c.globalAlpha=0.3+0.2*Math.sin(anim*0.06+em);
+      c.fillStyle="#FF4500";c.beginPath();c.arc(ax+Math.cos(ea)*er,-10+bob+Math.sin(ea)*er,1.5,0,Math.PI*2);c.fill();
+      c.restore();
+    }
+
+    c.restore();
+    return;
+  }
+
   // --- REGULAR CHARACTER ---
   var atk=(pose==="attack"&&t>0);
   var ax=atk?-Math.min(t*1.5,8):0;
@@ -1101,6 +1263,17 @@ function drawBattleEnemy(c,f,x,y,pose,timer,anim){
     c.fillStyle="rgba(40,30,10,0.35)";
     c.beginPath();c.arc(ax-8,-1+bob,3,0,Math.PI*2);c.fill();
     c.beginPath();c.arc(ax+8,-1+bob,3,0,Math.PI*2);c.fill();
+  }
+
+  // Halo for Space Jesus
+  if(f.halo){
+    var hpulse=0.6+0.4*Math.sin(anim*0.06);
+    c.save();c.globalAlpha=hpulse*0.9;
+    c.strokeStyle=P.gold;c.lineWidth=2.5;
+    c.beginPath();c.arc(ax,-30+bob-h/2,12,0,Math.PI*2);c.stroke();
+    c.globalAlpha=hpulse*0.15;c.fillStyle=P.gold;
+    c.beginPath();c.arc(ax,-30+bob-h/2,16,0,Math.PI*2);c.fill();
+    c.restore();
   }
 
   // Head
@@ -1228,14 +1401,14 @@ function drawBattle(c){
 
   // Ambient glow behind fighters
   var pulse=0.5+0.5*Math.sin(frameTick*0.04);
-  c.fillStyle="rgba(255,105,180,"+(0.03+0.02*pulse)+")";c.beginPath();c.arc(90,470,70,0,Math.PI*2);c.fill();
+  c.fillStyle="rgba(255,105,180,"+(0.03+0.02*pulse)+")";c.beginPath();c.arc(80,480,70,0,Math.PI*2);c.fill();
   c.fillStyle="rgba("+(f.color?parseInt(f.color.slice(1,3),16)+","+parseInt(f.color.slice(3,5),16)+","+parseInt(f.color.slice(5,7),16):"150,150,255")+","+(0.03+0.02*pulse)+")";
   c.beginPath();c.arc(265,330,70,0,Math.PI*2);c.fill();
 
   // Enemy (top right, facing left)
   drawBattleEnemy(c,f,265,340,bs.enemyPose,bs.enemyActionTimer,bs.enemyAnim);
-  // K'Dee (bottom left, facing right)
-  drawBattleKdee(c,90,500,bs.kdeePose,bs.kdeeActionTimer);
+  // K'Dee (bottom left, facing right) — pushed lower so buttons don't cover face
+  drawBattleKdee(c,80,518,bs.kdeePose,bs.kdeeActionTimer);
 
   // HP Bars
   // Enemy HP bar
@@ -1244,21 +1417,21 @@ function drawBattle(c){
   var ehpW=Math.max(0,bs.enemyHP/f.maxHp)*140;
   var ehCol=bs.enemyHP>f.maxHp*0.5?"#2ecc71":bs.enemyHP>f.maxHp*0.25?"#e8a820":"#e74c3c";
   if(ehpW>0)RR(c,ebx+2,eby+2,ehpW,8,3,ehCol);
-  c.fillStyle="#fff";c.font="bold 9px monospace";c.fillText(f.name,ebx+2,eby-4);
-  c.fillStyle="#ccc";c.font="8px monospace";c.fillText(bs.enemyHP+"/"+f.maxHp,ebx+100,eby-4);
+  c.fillStyle="#fff";c.font="bold 11px monospace";c.fillText(f.name,ebx+2,eby-4);
+  c.fillStyle="#ccc";c.font="9px monospace";c.fillText(bs.enemyHP+"/"+f.maxHp,ebx+100,eby-4);
 
   // K'Dee HP bar
-  var kbx=20,kby=400;
+  var kbx=20,kby=412;
   RR(c,kbx-2,kby-2,148,16,4,"#222");
   var khpW=Math.max(0,kdeeHP/kdeeMaxHP)*140;
   var khCol=kdeeHP>10?"#2ecc71":kdeeHP>5?"#e8a820":"#e74c3c";
   if(kdeeHP<=0)khCol="#8B0000";
   if(khpW>0)RR(c,kbx+2,kby+2,Math.max(0,khpW),8,3,khCol);
-  c.fillStyle="#fff";c.font="bold 9px monospace";c.fillText("K'DEE",kbx+2,kby-4);
-  c.fillStyle="#ccc";c.font="8px monospace";c.fillText(kdeeHP+"/"+kdeeMaxHP,kbx+100,kby-4);
+  c.fillStyle="#fff";c.font="bold 11px monospace";c.fillText("K'DEE",kbx+2,kby-4);
+  c.fillStyle="#ccc";c.font="9px monospace";c.fillText(kdeeHP+"/"+kdeeMaxHP,kbx+100,kby-4);
   // Exhaustion indicator
-  if(kdeeHP<=5&&kdeeHP>0){c.fillStyle="rgba(255,0,0,0.4)";c.font="bold 7px monospace";c.fillText("EXHAUSTED",kbx+2,kby+24);}
-  if(kdeeHP<=0){c.fillStyle="rgba(139,0,0,0.6)";c.font="bold 7px monospace";c.fillText("RUNNING ON FUMES",kbx+2,kby+24);}
+  if(kdeeHP<=5&&kdeeHP>0){c.fillStyle="rgba(255,0,0,0.4)";c.font="bold 9px monospace";c.fillText("EXHAUSTED",kbx+2,kby+26);}
+  if(kdeeHP<=0){c.fillStyle="rgba(139,0,0,0.6)";c.font="bold 9px monospace";c.fillText("RUNNING ON FUMES",kbx+2,kby+26);}
 
   // Screen flash
   if(bs.flashTimer>0){c.save();c.globalAlpha=bs.flashTimer/12*0.4;c.fillStyle=bs.flashColor;c.fillRect(0,0,CW,CH);c.restore();}
@@ -1267,38 +1440,38 @@ function drawBattle(c){
   dmgFloats.forEach(function(df){
     if(df.life<=0)return;
     c.save();c.globalAlpha=Math.min(1,df.life/15);
-    c.fillStyle=df.color;c.font="bold "+(14+Math.max(0,20-df.life)*0.5)+"px monospace";
+    c.fillStyle=df.color;c.font="bold "+(16+Math.max(0,20-df.life)*0.6)+"px monospace";
     c.textAlign="center";c.fillText(df.txt,df.x,df.y);c.textAlign="left";
     c.restore();
     df.y-=1.2;df.life--;
   });
 
-  // Message box
-  RR(c,10,525,CW-20,105,8,"rgba(0,0,0,0.88)");
-  c.strokeStyle="rgba(255,215,0,0.2)";c.lineWidth=1;
+  // Message box — taller to fit larger text
+  RR(c,10,508,CW-20,122,8,"rgba(0,0,0,0.92)");
+  c.strokeStyle="rgba(255,215,0,0.3)";c.lineWidth=1.5;
   c.beginPath();
-  var mbr=8,mbx=12,mby=527,mbw=CW-24,mbh=101;
+  var mbr=8,mbx=12,mby=510,mbw=CW-24,mbh=118;
   c.moveTo(mbx+mbr,mby);c.lineTo(mbx+mbw-mbr,mby);c.quadraticCurveTo(mbx+mbw,mby,mbx+mbw,mby+mbr);
   c.lineTo(mbx+mbw,mby+mbh-mbr);c.quadraticCurveTo(mbx+mbw,mby+mbh,mbx+mbw-mbr,mby+mbh);
   c.lineTo(mbx+mbr,mby+mbh);c.quadraticCurveTo(mbx,mby+mbh,mbx,mby+mbh-mbr);
   c.lineTo(mbx,mby+mbr);c.quadraticCurveTo(mbx,mby,mbx+mbr,mby);c.stroke();
 
-  // Message text (word wrap with \n support)
-  c.fillStyle="#eee";c.font="10px monospace";
+  // Message text (word wrap with \n support) — larger font
+  c.fillStyle="#eee";c.font="bold 12px monospace";
   var rawLines=(bs.msg||"").split("\n"),allLines=[];
   for(var ml=0;ml<rawLines.length;ml++){
     var words=rawLines[ml].split(" "),line="";
     for(var w=0;w<words.length;w++){
       var test=line+(line?" ":"")+words[w];
-      if(c.measureText(test).width>CW-50){allLines.push(line);line=words[w];}else{line=test;}
+      if(c.measureText(test).width>CW-52){allLines.push(line);line=words[w];}else{line=test;}
     }
     if(line)allLines.push(line);else allLines.push("");
   }
-  for(var l=0;l<Math.min(allLines.length,7);l++){c.fillText(allLines[l],24,544+l*13);}
+  for(var l=0;l<Math.min(allLines.length,7);l++){c.fillText(allLines[l],22,530+l*15);}
 
-  // Action buttons
+  // Action buttons — above the message box
   if(bs.phase==="player"){
-    var btnY=440;var btnH=28;
+    var btnY=462;var btnH=34;
     var actions=[
       {label:"\u270B SLAP",color:"#e74c3c",x:12,w:76},
       {label:"\uD83D\uDCAC NAG",color:"#FF69B4",x:94,w:72},
@@ -1306,11 +1479,11 @@ function drawBattle(c){
     ];
     actions.forEach(function(a){
       RR(c,a.x,btnY,a.w,btnH,6,a.color);
-      c.fillStyle="#fff";c.font="bold 9px monospace";c.fillText(a.label,a.x+8,btnY+18);
+      c.fillStyle="#fff";c.font="bold 11px monospace";c.fillText(a.label,a.x+8,btnY+22);
     });
     if(inv.length>0){
       RR(c,258,btnY,92,btnH,6,"#00CED1");
-      c.fillStyle="#fff";c.font="bold 9px monospace";c.fillText("\uD83C\uDF81 USE ITEM",264,btnY+18);
+      c.fillStyle="#fff";c.font="bold 11px monospace";c.fillText("\uD83C\uDF81 ITEM",266,btnY+22);
     }
   }
 
@@ -1344,8 +1517,8 @@ function drawBattle(c){
   // Continue prompt (pulsing)
   if(bs.phase==="intro"||bs.phase==="enemyAct"||bs.phase==="victory"||bs.phase==="superCut"){
     var pp=0.3+0.3*Math.sin(frameTick*0.1);
-    c.fillStyle="rgba(255,255,255,"+pp+")";c.font="9px monospace";c.textAlign="center";
-    c.fillText("[ TAP TO CONTINUE ]",CW/2,628);c.textAlign="left";
+    c.fillStyle="rgba(255,255,255,"+pp+")";c.font="bold 10px monospace";c.textAlign="center";
+    c.fillText("[ TAP TO CONTINUE ]",CW/2,632);c.textAlign="left";
   }
 
   // === SUPER EFFECTIVE CUT-IN ===
@@ -1423,7 +1596,7 @@ function battleClick(mx,my){
 
   // Player turn
   if(bs.phase==="player"){
-    var btnY=440,btnH=28;
+    var btnY=462,btnH=34;
     if(mx>=12&&mx<=88&&my>=btnY&&my<=btnY+btnH){
       var dmg=3+Math.floor(Math.random()*2);
       var quips=["K'Dee slaps "+bs.fighter.name+"! MOM POWER!","*SLAP* The mom hand is MIGHTY.","K'Dee's slap echoes through the house!","SLAP! "+bs.fighter.name+" didn't see that coming!"];
@@ -1519,7 +1692,7 @@ function enemyTurn(){
   if(dmg>0){
     bs.kdeePose="hurt";bs.kdeeActionTimer=1;
     bs.flashTimer=8;bs.flashColor="rgba(255,0,0,0.2)";
-    addDmgFloat(90,440,"-"+dmg,"#e74c3c");
+    addDmgFloat(150,410,"-"+dmg,"#e74c3c");
   }
   // Show attack name + quip
   bs.msg="[ "+atk.name+" ]\n"+quip;

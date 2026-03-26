@@ -36,10 +36,10 @@ function paintFoyer(c){
   [[265,435,"#e74c3c"],[282,437,"#3498db"],[298,439,"#2ecc71"],[270,450,"#9b59b6"]].forEach(function(s){RR(c,s[0],s[1],14,9,3,s[2]);});
   // Coat rack
   D(c,85,160,5,170,P.dbrown);D(c,73,155,30,6,P.dbrown);RR(c,70,141,14,20,3,"#e74c3c");RR(c,88,138,14,22,3,"#3498db");
-  // Mirror with reflection
-  RR(c,255,100,55,65,6,"#c0c0c0");RR(c,258,103,49,59,4,P.sky);
-  c.fillStyle="rgba(255,255,255,0.12)";c.fillRect(258,103,15,59);
-  D(c,272,118,22,28,P.skin);
+  // Mirror with reflection — moved away from right door
+  RR(c,190,105,55,65,6,"#c0c0c0");RR(c,193,108,49,59,4,P.sky);
+  c.fillStyle="rgba(255,255,255,0.12)";c.fillRect(193,108,15,59);
+  D(c,207,123,22,28,P.skin);
   // Plant
   D(c,300,380,35,45,P.brown);SH(c,295,427,45);
   c.fillStyle=P.green;c.beginPath();c.arc(317,355,22,0,Math.PI*2);c.fill();
@@ -336,12 +336,105 @@ function paintJesusBathroom(c){
   D(c,65,50,10,60,P.gold);D(c,45,75,50,10,P.gold);
   c.fillStyle="rgba(255,215,0,0.1)";c.beginPath();c.arc(70,85,42,0,Math.PI*2);c.fill();
   c.fillStyle="rgba(255,215,0,0.06)";c.beginPath();c.arc(70,85,60,0,Math.PI*2);c.fill();
-  // Jesus portrait with halo
-  RR(c,185,40,70,90,5,"#8B6914");RR(c,189,44,62,82,4,"#f5e6c8");
-  D(c,205,58,30,30,P.skin);D(c,200,50,40,12,"#654321");
-  c.fillStyle=P.gold;c.beginPath();c.arc(220,46,22,Math.PI,2*Math.PI);c.fill();
-  c.fillStyle="rgba(255,215,0,0.15)";c.beginPath();c.arc(220,55,35,0,Math.PI*2);c.fill();
-  c.fillStyle="#fff";c.font="bold 6px monospace";c.fillText("JESUS SAVES",192,138);
+
+  // === PAINTING 1: Space Jesus vs The Devil (left wall) ===
+  // Frame
+  RR(c,10,38,100,118,4,"#8B6914");RR(c,14,42,92,110,3,"#1a0a2e");
+  // Night sky bg in painting
+  var spg=c.createLinearGradient(14,42,14,152);spg.addColorStop(0,"#050525");spg.addColorStop(1,"#0a0a3a");c.fillStyle=spg;c.fillRect(14,42,92,110);
+  // Stars in painting
+  c.fillStyle="rgba(255,255,255,0.5)";
+  [[20,48],[30,55],[80,44],[95,52],[50,46],[70,50],[40,58]].forEach(function(s){c.beginPath();c.arc(s[0],s[1],0.8,0,Math.PI*2);c.fill();});
+  // Space Jesus — left side of painting, golden glow
+  c.fillStyle="rgba(255,215,0,0.12)";c.beginPath();c.arc(32,90,20,0,Math.PI*2);c.fill();
+  // Jesus halo
+  c.strokeStyle=P.gold;c.lineWidth=1.5;c.beginPath();c.arc(32,74,8,0,Math.PI*2);c.stroke();
+  // Jesus body (white robe)
+  c.fillStyle="#f0f0f0";c.beginPath();c.moveTo(26,82);c.lineTo(24,110);c.lineTo(40,110);c.lineTo(38,82);c.closePath();c.fill();
+  // Jesus head
+  c.fillStyle=P.skin;c.beginPath();c.arc(32,74,7,0,Math.PI*2);c.fill();
+  c.fillStyle="#8B6914";c.beginPath();c.arc(32,70,7,Math.PI,2*Math.PI);c.fill();
+  D(c,28,72,8,4,"#8B6914");// beard
+  // Jesus raising hand (power pose)
+  D(c,38,80,4,16,"#f0f0f0");// arm up
+  c.fillStyle=P.gold;c.beginPath();c.arc(43,78,3,0,Math.PI*2);c.fill();// holy fist glow
+  // The Devil — right side, red and menacing
+  c.fillStyle="rgba(180,0,0,0.2)";c.beginPath();c.arc(80,90,18,0,Math.PI*2);c.fill();
+  // Devil body (dark red)
+  c.fillStyle="#8B0000";c.beginPath();c.moveTo(72,88);c.lineTo(70,112);c.lineTo(90,112);c.lineTo(88,88);c.closePath();c.fill();
+  // Devil head
+  c.fillStyle="#c0392b";c.beginPath();c.arc(80,80,8,0,Math.PI*2);c.fill();
+  // Devil horns
+  c.fillStyle="#8B0000";c.beginPath();c.moveTo(75,73);c.lineTo(72,64);c.lineTo(78,72);c.closePath();c.fill();
+  c.beginPath();c.moveTo(85,73);c.lineTo(88,64);c.lineTo(82,72);c.closePath();c.fill();
+  // Devil eyes glow
+  c.fillStyle="#FF4500";c.beginPath();c.arc(77,80,1.5,0,Math.PI*2);c.fill();
+  c.beginPath();c.arc(83,80,1.5,0,Math.PI*2);c.fill();
+  // Battle energy bolt between them
+  c.strokeStyle=P.gold;c.lineWidth=1.5;
+  c.beginPath();c.moveTo(43,90);c.lineTo(52,85);c.lineTo(58,92);c.lineTo(65,87);c.lineTo(70,90);c.stroke();
+  // Painting label
+  c.fillStyle="rgba(255,215,0,0.6)";c.font="bold 4px monospace";c.textAlign="center";c.fillText("SPACE JESUS vs THE DEVIL",60,155);c.textAlign="left";
+
+  // === PAINTING 2: Jesus helping pinup girl out of the water (right wall) ===
+  // Frame (ornate gold)
+  RR(c,248,38,100,118,4,"#8B6914");
+  c.strokeStyle=P.gold;c.lineWidth=1;c.strokeRect(250,40,96,114);
+  RR(c,252,42,92,110,3,"#2a3a5a");
+  // Ocean/water background
+  var wg=c.createLinearGradient(252,42,252,152);wg.addColorStop(0,"#5ba3d9");wg.addColorStop(0.5,"#2a6a9a");wg.addColorStop(1,"#1a4a6a");c.fillStyle=wg;c.fillRect(252,42,92,110);
+  // Water waves
+  c.strokeStyle="rgba(135,206,235,0.4)";c.lineWidth=1;
+  c.beginPath();c.moveTo(252,115);c.quadraticCurveTo(270,110,288,115);c.quadraticCurveTo(306,120,325,115);c.stroke();
+  c.beginPath();c.moveTo(252,122);c.quadraticCurveTo(268,118,285,122);c.quadraticCurveTo(303,126,325,122);c.stroke();
+  // Jesus (left side, standing on water, robe flowing)
+  c.fillStyle="rgba(255,215,0,0.1)";c.beginPath();c.arc(272,82,16,0,Math.PI*2);c.fill();
+  // Halo
+  c.strokeStyle=P.gold;c.lineWidth=1.5;c.beginPath();c.arc(272,66,7,0,Math.PI*2);c.stroke();
+  // White robe
+  c.fillStyle="#f0f0f0";c.beginPath();c.moveTo(266,74);c.lineTo(263,118);c.lineTo(281,118);c.lineTo(278,74);c.closePath();c.fill();
+  // Head
+  c.fillStyle=P.skin;c.beginPath();c.arc(272,66,7,0,Math.PI*2);c.fill();
+  c.fillStyle="#8B6914";c.beginPath();c.arc(272,62,7,Math.PI,2*Math.PI);c.fill();
+  D(c,268,64,8,4,"#8B6914");
+  // Outstretched arm to right
+  D(c,278,72,16,4,"#f0f0f0");
+  c.fillStyle=P.skin;c.beginPath();c.arc(295,74,3,0,Math.PI*2);c.fill();
+  // Pinup girl — right side, being pulled from water
+  // She's glamorous even in the water — red lips, curves, old-Hollywood style
+  // Water splashing around her waist
+  c.fillStyle="rgba(135,206,235,0.5)";c.beginPath();c.ellipse(310,118,14,6,0,0,Math.PI*2);c.fill();
+  // Her lower body in water
+  c.fillStyle="#e74c3c";c.beginPath();c.moveTo(302,108);c.lineTo(300,122);c.lineTo(320,122);c.lineTo(318,108);c.closePath();c.fill();// red swimsuit bottom
+  // Torso (glamorous pose)
+  c.fillStyle="#FF69B4";c.beginPath();c.moveTo(302,88);c.lineTo(301,108);c.lineTo(319,108);c.lineTo(318,88);c.closePath();c.fill();// pink swimsuit top
+  // Her head
+  c.fillStyle=P.skin;c.beginPath();c.arc(310,80,8,0,Math.PI*2);c.fill();
+  // Glamorous curly red hair
+  c.fillStyle="#c0392b";c.beginPath();c.arc(310,74,8,Math.PI,2*Math.PI);c.fill();
+  D(c,305,72,5,10,"#c0392b");// left hair wave
+  D(c,310,74,5,8,"#c0392b");// right hair
+  // Bright red lips (signature)
+  c.fillStyle="#c0392b";c.beginPath();c.arc(310,85,2.5,0.1*Math.PI,0.9*Math.PI);c.fill();
+  // Reaching hand up toward Jesus
+  D(c,301,86,4,16,"#FDBCB4");c.fillStyle=P.skin;c.beginPath();c.arc(300,84,3,0,Math.PI*2);c.fill();
+  // Eyelashes/glamour
+  c.fillStyle="#333";c.fillRect(307,78,2,2);c.fillRect(312,78,2,2);
+  // Sparkle/shine on water around her
+  c.fillStyle="rgba(255,255,255,0.4)";c.beginPath();c.arc(298,116,1.5,0,Math.PI*2);c.fill();
+  c.beginPath();c.arc(322,114,1.5,0,Math.PI*2);c.fill();
+  // Their hands almost touching (iconic Sistine style gap)
+  c.strokeStyle="rgba(255,215,0,0.5)";c.lineWidth=0.8;
+  c.beginPath();c.moveTo(295,74);c.lineTo(300,82);c.stroke();
+  // Painting label
+  c.fillStyle="rgba(255,215,0,0.6)";c.font="bold 4px monospace";c.textAlign="center";c.fillText("RESCUED BY GRACE",300,155);c.textAlign="left";
+
+  // Jesus portrait with halo (original, center)
+  RR(c,145,40,70,90,5,"#8B6914");RR(c,149,44,62,82,4,"#f5e6c8");
+  D(c,165,58,30,30,P.skin);D(c,160,50,40,12,"#654321");
+  c.fillStyle=P.gold;c.beginPath();c.arc(180,46,22,Math.PI,2*Math.PI);c.fill();
+  c.fillStyle="rgba(255,215,0,0.15)";c.beginPath();c.arc(180,55,35,0,Math.PI*2);c.fill();
+  c.fillStyle="#fff";c.font="bold 6px monospace";c.fillText("JESUS SAVES",152,138);
   // Golden toilet
   RR(c,275,310,55,60,6,P.gold);RR(c,271,300,63,14,4,"#FFEC8B");
   // Bible
@@ -905,7 +998,7 @@ var ROOMS=[
 ];
 
 function makeHS(){return[
-[{id:"fdoor",x:120,y:60,w:120,h:280,name:"Front Door",look:"Locked. You need keys.",open:"LOCKED."},{id:"shoes",x:260,y:435,w:60,h:35,name:"Shoe Pile",look:"Chaotic. None match.",push:"Cheerio rolls out."},{id:"coat",x:68,y:140,w:35,h:70,name:"Coat Rack",look:"Two coats, something alive.",use:"Gum wrapper and lint."},{id:"mirror",x:255,y:100,w:55,h:65,name:"Mirror",look:"Needs coffee. And keys.",talk:"'Have fun, don't die.'"},{id:"plant",x:295,y:340,w:45,h:60,name:"Suspicious Plant",look:"Thrives on chaos.",push:"A KEY falls out!",hasKey:true},{id:"fmat",x:140,y:475,w:80,h:25,name:"Welcome Mat",look:"WELCOME. Ironic.",push:"Dead bug and disappointment."},{id:"doorL",x:0,y:120,w:75,h:240,name:"Kitchen",open:"goto:1"},{id:"doorR",x:287,y:120,w:73,h:240,name:"Living Room",open:"goto:2"},{id:"jbdoor",x:0,y:430,w:30,h:90,name:"Jesus Bathroom",open:"goto:10"},{id:"bstairs",x:140,y:510,w:80,h:45,name:"Stairs Down",look:"Dark stairs.",open:"goto:11"}],
+[{id:"fdoor",x:120,y:60,w:120,h:280,name:"Front Door",look:"Locked. You need keys.",open:"LOCKED."},{id:"shoes",x:260,y:435,w:60,h:35,name:"Shoe Pile",look:"Chaotic. None match.",push:"Cheerio rolls out."},{id:"coat",x:68,y:140,w:35,h:70,name:"Coat Rack",look:"Two coats, something alive.",use:"Gum wrapper and lint."},{id:"mirror",x:190,y:100,w:55,h:70,name:"Mirror",look:"Needs coffee. And keys.",talk:"'Have fun, don't die.'"},{id:"plant",x:295,y:340,w:45,h:60,name:"Suspicious Plant",look:"Thrives on chaos.",push:"A KEY falls out!",hasKey:true},{id:"fmat",x:140,y:475,w:80,h:25,name:"Welcome Mat",look:"WELCOME. Ironic.",push:"Dead bug and disappointment."},{id:"doorL",x:0,y:120,w:75,h:240,name:"Kitchen",open:"goto:1"},{id:"doorR",x:287,y:120,w:73,h:240,name:"Living Room",open:"goto:2"},{id:"jbdoor",x:0,y:430,w:30,h:90,name:"Jesus Bathroom",open:"goto:10"},{id:"bstairs",x:140,y:510,w:80,h:45,name:"Stairs Down",look:"Dark stairs.",open:"goto:11"}],
 [{id:"stove",x:110,y:155,w:115,h:65,name:"Stove",look:"All burners on. Nothing cooking.",use:"Turns off burners. Safety first."},{id:"fridge",x:275,y:78,w:78,h:195,name:"Fridge",look:"Kids' drawings. Expired coupons.",open:"Mystery leftovers. One sad yogurt."},{id:"sink",x:10,y:245,w:80,h:55,name:"Sink",look:"Full of dishes. Always.",use:"Rubber duck floats up."},{id:"banana",x:235,y:258,w:25,h:12,name:"Banana",look:"Groundbreaking.",take:"Takes it. For scale.",quest:"banana"},{id:"cab",x:8,y:15,w:345,h:80,name:"Cabinets",look:"Mismatched Tupperware.",open:"Avalanche of containers!"},{id:"kdoorL",x:0,y:300,w:14,h:200,name:"Foyer",open:"goto:0"},{id:"kdoorR",x:346,y:300,w:14,h:200,name:"Laundry",open:"goto:6"},{id:"pantry",x:160,y:320,w:50,h:40,name:"Pantry",open:"goto:13"}],
 [{id:"tv",x:100,y:55,w:165,h:125,name:"TV",look:"Nobody watching. Remote MIA.",use:"Volume to 100. Dog howls."},{id:"couch",x:16,y:355,w:232,h:70,name:"Couch",look:"More pillow than couch.",push:"ALL pillows moved. Remote AND a KEY!",hasKey:true},{id:"bookshelf",x:268,y:95,w:85,h:230,name:"Bookshelf",look:"Unread since 2018.",take:"'Parenting Without Losing Your Mind.'"},{id:"lamp",x:245,y:280,w:35,h:70,name:"Lamp",look:"Only approved light.",push:"LEGO rolls out."},{id:"rug",x:60,y:435,w:200,h:50,name:"Rug",look:"Hides crumbs.",push:"Cheerios, crayon, Monopoly house."},{id:"ldoorL",x:0,y:260,w:14,h:200,name:"Foyer",open:"goto:0"},{id:"ldoorR",x:346,y:260,w:14,h:200,name:"Kids' Room",open:"goto:3"}],
 [{id:"bunk",x:8,y:135,w:115,h:230,name:"Bunk Bed",look:"Top: fort. Bottom: stuffed animals.",open:"Half-eaten granola bar."},{id:"toybox",x:135,y:410,w:75,h:55,name:"Toy Box",look:"90% random objects.",open:"Avalanche of action figures."},{id:"lego",x:170,y:465,w:180,h:45,name:"LEGO Minefield",look:"Colorful landmines.",push:"OW. OWWW."},{id:"dino",x:298,y:395,w:35,h:45,name:"Mr. Rex",look:"Kids say he's real.",talk:"'Keys are in the garage.'"},{id:"poster",x:178,y:55,w:68,h:60,name:"Poster",look:"GAME OVER. Ominous."},{id:"desk",x:218,y:215,w:135,h:110,name:"Desk",look:"Crayon drawings.",open:"'Mom But Cool.'"},{id:"kdoorL",x:0,y:260,w:14,h:200,name:"Living Room",open:"goto:2"},{id:"kdoorR",x:346,y:260,w:14,h:200,name:"Bathroom",open:"goto:4"}],
@@ -915,7 +1008,7 @@ function makeHS(){return[
 [{id:"tree",x:28,y:80,w:45,h:200,name:"Oak Tree",look:"Treehouse 'in progress' 2 years.",talk:"Talks to the tree."},{id:"dog",x:225,y:400,w:42,h:42,name:"Dog",look:"Suspiciously calm.",talk:"*tail wag*",use:"Dog runs to the hole!"},{id:"hole",x:136,y:445,w:42,h:18,name:"Hole",look:"Dog looks guilty.",push:"Dirt, bone, toy car."},{id:"bbq",x:296,y:375,w:42,h:42,name:"BBQ",look:"Sacred grill.",open:"Old coals."},{id:"fence",x:0,y:222,w:360,h:48,name:"Fence",look:"Keeps dog in. Theoretically."},{id:"bdoorB",x:0,y:310,w:14,h:200,name:"Garage",open:"goto:5"},{id:"bdoorA",x:346,y:100,w:14,h:120,name:"Attic",open:"goto:8"},{id:"shed",x:100,y:340,w:70,h:55,name:"Shed",open:"goto:17"},{id:"garden",x:270,y:490,w:80,h:50,name:"Garden",open:"goto:18"}],
 [{id:"xmas",x:15,y:315,w:60,h:45,name:"Xmas Box",look:"Tinsel entity.",open:"Tangled lights."},{id:"myst",x:80,y:305,w:55,h:55,name:"Mystery Box",look:"Nobody remembers this.",open:"Photo albums! VHS: DO NOT WATCH."},{id:"mirror2",x:130,y:155,w:60,h:80,name:"Old Mirror",look:"Spookier K'Dee.",talk:"Mirror-K'Dee winks."},{id:"trunk",x:255,y:335,w:85,h:30,name:"Trunk",look:"Locked. Treasure or taxes.",open:"Locked!",use:"Wrench opens it: old curtains."},{id:"crystal",x:310,y:300,w:35,h:35,name:"Crystal Ball",look:"Halloween 2022.",talk:"'Check the bedroom, dummy.'"},{id:"adoorB",x:0,y:370,w:14,h:150,name:"Backyard",open:"goto:7"},{id:"adoorR",x:346,y:370,w:14,h:150,name:"Bedroom",open:"goto:9"},{id:"gymdoor",x:200,y:365,w:50,h:30,name:"Gym",open:"goto:12"},{id:"gdoor",x:100,y:365,w:60,h:30,name:"Greyson's",open:"goto:19"}],
 [{id:"bed",x:12,y:255,w:215,h:95,name:"Bed",look:"Made this morning. Rare.",push:"Charger, lip balm, kid's sock... and her PHONE! Under the pillow!",take:"Grabs the phone from under the pillow.",quest:"phone"},{id:"nightstand",x:232,y:305,w:55,h:60,name:"Nightstand",look:"Book page 12 for 6 months.",open:"Charger #3, melatonin, and a KEY!",hasKey:true},{id:"vanity",x:238,y:205,w:115,h:65,name:"Vanity",look:"Lipstick, mascara, dry shampoo.",use:"Hair ties, bobby pins."},{id:"vmirror",x:258,y:130,w:75,h:65,name:"Mirror",look:"Survived another morning.",talk:"'Have fun, don't die.'"},{id:"window",x:95,y:30,w:115,h:100,name:"Window",look:"Dog is digging again.",open:"'MOM!' from downstairs."},{id:"flowers",x:248,y:190,w:22,h:22,name:"Flowers",look:"Self-care purchase.",take:"Smells nice."},{id:"bdoorL",x:0,y:270,w:14,h:200,name:"Attic",open:"goto:8"},{id:"forestdoor",x:346,y:270,w:14,h:200,name:"Forest's Room",open:"goto:21"}],
-[{id:"jcross",x:40,y:45,w:60,h:80,name:"Cross",look:"Holy energy.",talk:"K'Dee prays. Warm light."},{id:"jport",x:182,y:38,w:75,h:95,name:"Jesus Portrait",look:"Kind smile. Halo.",talk:"'Seen my keys?' Smile widens."},{id:"jtub",x:10,y:285,w:178,h:80,name:"Golden Tub",look:"Pure gold. Holy water.",use:"Hand sparkles."},{id:"jbible",x:150,y:225,w:52,h:32,name:"Bible",look:"Proverbs 31.",take:"'Divine guidance.'",quest:"bible"},{id:"jtoilet",x:270,y:305,w:60,h:65,name:"Golden Toilet",look:"Jesus saves, bathroom SPENDS.",use:"Not that throne."},{id:"jcandles",x:315,y:205,w:35,h:38,name:"Candles",look:"Frankincense."},{id:"jdoorB",x:346,y:270,w:14,h:200,name:"Foyer",open:"goto:0"}],
+[{id:"jcross",x:40,y:45,w:60,h:80,name:"Cross",look:"Holy energy.",talk:"K'Dee prays. Warm light."},{id:"jbattle",x:10,y:35,w:105,h:125,name:"Space Jesus vs Devil",look:"A painting of Space Jesus locked in battle with the Devil. Among the stars. It's intense.",talk:"The figures in the painting seem to move. Space Jesus winks."},{id:"jpinup",x:245,y:35,w:105,h:125,name:"Rescued by Grace",look:"Jesus pulls a glamorous pinup girl out of the ocean. She looks delighted. Her red lipstick is perfect somehow.",talk:"The pinup girl waves from the painting. K'Dee waves back. This bathroom is a LOT."},{id:"jport",x:142,y:36,w:75,h:105,name:"Jesus Portrait",look:"Kind smile. Halo. He seems like he's about to step out.",talk:"'Seen my keys?' The smile widens."},{id:"jtub",x:10,y:285,w:178,h:80,name:"Golden Tub",look:"Pure gold. Holy water.",use:"Hand sparkles."},{id:"jbible",x:150,y:225,w:52,h:32,name:"Bible",look:"Proverbs 31.",take:"'Divine guidance.'",quest:"bible"},{id:"jtoilet",x:270,y:305,w:60,h:65,name:"Golden Toilet",look:"Jesus saves, bathroom SPENDS.",use:"Not that throne."},{id:"jcandles",x:315,y:205,w:35,h:38,name:"Candles",look:"Frankincense."},{id:"jdoorB",x:346,y:270,w:14,h:200,name:"Foyer",open:"goto:0"}],
 [{id:"penta",x:136,y:416,w:88,h:88,name:"Pentagram",look:"NOT home decor.",use:"Flames flare! Then nothing.",push:"Chalk smudges."},{id:"necro",x:45,y:435,w:42,h:26,name:"Necronomicon",look:"It whispers.",take:"'...return me.'",quest:"necronomicon",talk:"'Keys are not here, mortal.'"},{id:"skull",x:296,y:435,w:22,h:22,name:"Skull",look:"Real or prop?",talk:"'Alas, poor Yorick.'"},{id:"chains",x:10,y:85,w:30,h:120,name:"Chains",look:"Rusty. HISTORY.",use:"Echo: 10/10."},{id:"bstairsU",x:100,y:0,w:160,h:30,name:"Stairs Up",open:"goto:0"},{id:"hgdoor",x:346,y:270,w:14,h:200,name:"Girls' Room",open:"goto:20"}],
 [{id:"bench",x:25,y:272,w:120,h:65,name:"Bench Press",look:"Gains.",use:"Half a rep."},{id:"dumbbells",x:160,y:420,w:50,h:22,name:"Dumbbells",look:"Heavy.",take:"Almost lifts one."},{id:"gymmirror",x:85,y:125,w:185,h:115,name:"Mirror",look:"Looking STRONG.",talk:"'Find keys AND look great.'"},{id:"poster",x:278,y:105,w:72,h:55,name:"Poster",look:"NO PAIN NO GAIN."},{id:"pullup",x:262,y:98,w:85,h:55,name:"Pull-Up Bar",use:"3 seconds. Record."},{id:"mat",x:125,y:395,w:105,h:30,name:"Yoga Mat",use:"Namaste."},{id:"gymdoorB",x:0,y:370,w:14,h:150,name:"Attic",open:"goto:8"}],
 [{id:"shelves",x:8,y:15,w:344,h:350,name:"Shelves",look:"Expired 2022.",open:"Beans, mystery powder."},{id:"rice",x:276,y:325,w:65,h:45,name:"Rice Bag",look:"50 pounds.",push:"A map drawing!",take:"Too heavy."},{id:"pdoorB",x:0,y:270,w:14,h:200,name:"Kitchen",open:"goto:1"}],
