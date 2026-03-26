@@ -796,6 +796,30 @@ function paintAtticGym(c){
   RR(c,248,410,12,22,3,"#3498db");D(c,250,406,8,6,"#ddd");
   // Sweat towel
   RR(c,55,400,45,15,3,P.white);c.fillStyle="rgba(0,0,0,0.05)";c.fillRect(58,403,20,9);
+  // Kettlebell — flat-bottomed sphere with handle
+  c.fillStyle="#444";c.beginPath();c.arc(44,342,14,0,Math.PI*2);c.fill();
+  c.fillStyle="#333";c.beginPath();c.arc(44,342,14,Math.PI*0.1,Math.PI*0.9);c.fill();// dark bottom half
+  c.strokeStyle="#555";c.lineWidth=3;
+  c.beginPath();c.arc(44,330,10,Math.PI*1.1,Math.PI*1.9);c.stroke();// handle arc
+  c.fillStyle="#666";c.font="bold 5px monospace";c.textAlign="center";c.fillText("16kg",44,345);c.textAlign="left";
+  SH(c,32,355,24);
+  // Wall clock above mirror
+  c.fillStyle="#222";c.beginPath();c.arc(52,162,16,0,Math.PI*2);c.fill();
+  c.fillStyle="#eee";c.beginPath();c.arc(52,162,13,0,Math.PI*2);c.fill();
+  c.fillStyle="#222";
+  // Clock hands (8:47 — it's 8:47AM in the story)
+  c.save();c.translate(52,162);
+  c.strokeStyle="#222";c.lineWidth=1.5;
+  c.beginPath();c.moveTo(0,0);c.lineTo(-4,-8);c.stroke();// hour hand ~8
+  c.beginPath();c.moveTo(0,0);c.lineTo(5,-10);c.stroke();// minute hand ~47
+  c.fillStyle="#e74c3c";c.beginPath();c.arc(0,0,1.5,0,Math.PI*2);c.fill();// pivot
+  c.restore();
+  c.fillStyle="#555";c.font="bold 5px monospace";c.textAlign="center";c.fillText("8:47",52,178);c.textAlign="left";
+  // Quote on mirror ("LOOK HOW FAR YOU'VE COME")
+  c.fillStyle="rgba(255,255,255,0.55)";c.font="bold 6px monospace";c.textAlign="center";
+  c.fillText("LOOK HOW FAR",180,195);
+  c.fillText("YOU'VE COME",180,204);
+  c.textAlign="left";
 }
 function paintPantry(c){
   D(c,0,370,360,270,"#5c4a3a");
@@ -833,6 +857,31 @@ function paintPantry(c){
   c.fillStyle="#333";c.font="bold 7px monospace";c.fillText("RICE",296,355);
   c.fillStyle="#888";c.font="5px monospace";c.fillText("50 LBS",296,363);
   SH(c,278,372,62);
+  // Mystery can — expired 2009 label
+  RR(c,12,328,22,42,3,"#777");
+  c.fillStyle="rgba(255,255,255,0.15)";c.fillRect(14,328,5,42);
+  RR(c,13,342,20,14,2,"rgba(255,255,255,0.7)");
+  c.fillStyle="#555";c.font="bold 4px monospace";c.textAlign="center";
+  c.fillText("BEST BY",23,349);c.fillText("2009",23,355);c.textAlign="left";
+  // Cobweb — upper left corner
+  c.save();c.globalAlpha=0.35;c.strokeStyle="#aaa";c.lineWidth=0.5;
+  for(var cw=0;cw<6;cw++){c.beginPath();c.moveTo(0,0);c.lineTo(cw*8,42);c.stroke();}
+  for(var cr=1;cr<=4;cr++){
+    c.beginPath();c.moveTo(0,cr*8);
+    for(var cs=1;cs<=5;cs++){c.quadraticCurveTo(cs*4-2,cr*8-3,cs*8,cr*8);}
+    c.stroke();
+  }
+  c.restore();
+  // Mouse in corner — tiny grey shape, right side near floor
+  c.save();c.translate(338,612);
+  c.fillStyle="#888";
+  c.beginPath();c.ellipse(0,0,7,4,0,0,Math.PI*2);c.fill();// body
+  c.beginPath();c.arc(-5,-1,3,0,Math.PI*2);c.fill();// head
+  c.strokeStyle="#888";c.lineWidth=0.8;
+  c.beginPath();c.moveTo(6,0);c.bezierCurveTo(12,0,14,-4,12,-6);c.stroke();// tail
+  c.fillStyle="#f88";c.beginPath();c.arc(-7,-3,1.2,0,Math.PI*2);c.fill();// ear
+  c.fillStyle="#222";c.beginPath();c.arc(-6,-2,0.8,0,Math.PI*2);c.fill();// eye
+  c.restore();
 }
 function paintLM1(c){
   D(c,0,370,360,270,"#909090");
@@ -1237,12 +1286,26 @@ function paintGwynRoom(c){
     c.beginPath();c.moveTo(p[0]+4,p[1]+12);c.lineTo(p[0]+14,p[1]+12);c.stroke();
     c.beginPath();c.moveTo(p[0]+4,p[1]+18);c.lineTo(p[0]+16,p[1]+18);c.stroke();
   });
-  // Books EVERYWHERE (stylish chaos)
+  // Books EVERYWHERE (stylish chaos) — with tiny spine titles
   var bookCols=["#e74c3c","#3498db","#2ecc71","#9b59b6","#FF8C00","#4169E1","#FFD700"];
+  var bookTitles=["VOGUE","STYLE","SEWING","DREAMS","SLEEP","STITCH","FABRIC"];
   var bkPiles=[[200,380],[220,385],[240,375],[260,390],[280,382],[300,378],[185,400],[310,395]];
-  bkPiles.forEach(function(bp,bi){RR(c,bp[0],bp[1],14+rI(6),8+rI(4),1,bookCols[bi%7]);});
-  // Tall book stack
-  for(var bk=0;bk<5;bk++){RR(c,80+bk*2,360+bk*2,16,24-bk*3,2,bookCols[bk]);}
+  bkPiles.forEach(function(bp,bi){
+    var bw=14+rI(6),bh=8+rI(4);
+    RR(c,bp[0],bp[1],bw,bh,1,bookCols[bi%7]);
+    // Tiny spine title
+    c.save();c.globalAlpha=0.6;c.fillStyle="#fff";c.font="bold 4px monospace";c.textAlign="center";
+    c.fillText(bookTitles[bi%7],bp[0]+bw/2,bp[1]+bh-1);c.textAlign="left";c.restore();
+  });
+  // Tall book stack — with readable spines
+  var stackTitles=["ZZZ","NAPS","REST","COZY","BED"];
+  for(var bk=0;bk<5;bk++){
+    var bh2=24-bk*3;
+    RR(c,80+bk*2,360+bk*2,16,bh2,2,bookCols[bk]);
+    c.save();c.translate(80+bk*2+8,360+bk*2+bh2/2);c.rotate(-Math.PI/2);
+    c.fillStyle="rgba(255,255,255,0.6)";c.font="bold 4px monospace";c.textAlign="center";
+    c.fillText(stackTitles[bk],0,1);c.textAlign="left";c.restore();
+  }
   // Vanity with mirror and accessories
   RR(c,248,148,100,68,5,"#b0c8e0");
   // Vanity mirror (round, blue frame)
@@ -1251,8 +1314,30 @@ function paintGwynRoom(c){
   c.fillStyle="rgba(255,255,255,0.1)";c.beginPath();c.arc(311,124,10,0,Math.PI*2);c.fill();
   // Blue hair accessories
   D(c,255,158,4,10,"#4169E1");D(c,263,160,4,8,"#00CED1");D(c,271,159,4,9,"#9b59b6");
+  // Hair tie — scrunchie loop on vanity
+  c.strokeStyle="#4169E1";c.lineWidth=2.5;
+  c.beginPath();c.ellipse(259,172,5,3,Math.PI*0.2,0,Math.PI*2);c.stroke();
+  c.strokeStyle="#6a89e1";c.lineWidth=1;
+  c.beginPath();c.ellipse(259,172,3,2,Math.PI*0.2,0,Math.PI*2);c.stroke();
   // Hair brush
   RR(c,280,162,24,6,2,"#4169E1");
+  // Open journal on floor — near bed, open pages + writing
+  c.save();c.translate(118,388);c.rotate(-0.12);
+  RR(c,0,0,44,32,2,"#fff");// right page
+  RR(c,-44,0,44,32,2,"#f5f0e8");// left page (open)
+  // Spine crease
+  c.strokeStyle="#ccc";c.lineWidth=1.5;c.beginPath();c.moveTo(0,0);c.lineTo(0,32);c.stroke();
+  // Cover curl hint
+  c.fillStyle="#9b59b6";c.fillRect(-44,0,44,3);// journal cover colour strip
+  c.fillStyle="#333";c.font="bold 4px monospace";c.textAlign="center";
+  c.fillText("DIARY",-22,10);// left page title
+  // Handwriting lines on right page
+  c.strokeStyle="rgba(100,100,100,0.35)";c.lineWidth=0.7;
+  for(var jl=0;jl<4;jl++){c.beginPath();c.moveTo(4,8+jl*6);c.lineTo(40,8+jl*6);c.stroke();}
+  // "zzz" in the margins — she fell asleep mid-entry
+  c.fillStyle="#9b59b6";c.font="bold 5px monospace";c.textAlign="left";
+  c.fillText("zzz...",4,30);
+  c.restore();
   // Sewing machine corner
   RR(c,270,398,58,34,4,"#444");RR(c,274,393,36,8,3,"#333");
   D(c,282,404,22,2,"#888");// needle/arm

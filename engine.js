@@ -36,7 +36,16 @@ function drawKdee(c,x,y){
   var bob=kdeeWalking?Math.sin(walkAnim*0.3)*3.5:breathe*0.7;
   var legOff=kdeeWalking?Math.sin(walkAnim*0.4)*6:0;
   var armOff=kdeeWalking?Math.sin(walkAnim*0.4)*4:0;
-  var sc=1.6;// world scale — bigger characters
+  var sc=1.6;
+
+  // Blink: flat eyes for 3 frames every ~220 frames
+  var blinkPhase=frameTick%220;
+  var blinking=blinkPhase<3;
+
+  // HP expression tiers (quarters: 16=full, 8=half, 4=low, 0=fumes)
+  var hpTired=kdeeHP<=8&&kdeeHP>4;
+  var hpGrimace=kdeeHP<=4&&kdeeHP>0;
+  var hpFumes=kdeeHP<=0;
 
   c.save();c.translate(x,y);c.scale(sc,sc);
 
@@ -47,23 +56,36 @@ function drawKdee(c,x,y){
   // Legs
   D(c,-5+legOff,-4+bob,5,7,"#4169E1");
   D(c,1-legOff,-4+bob,5,7,"#4169E1");
-  // Shoes
+  // Shoes with toe cap detail
   D(c,-6+legOff,2+bob,7,4,"#333");
   D(c,1-legOff,2+bob,7,4,"#333");
+  c.fillStyle="rgba(255,255,255,0.08)";
+  c.fillRect(-6+legOff,2+bob,3,2);c.fillRect(1-legOff,2+bob,3,2);
 
-  // Body / shirt
-  c.fillStyle=P.pink;
+  // Body / shirt — gradient for depth
+  var bodyGrad=c.createLinearGradient(0,-15+bob,0,0+bob);
+  bodyGrad.addColorStop(0,"#FF85C8");bodyGrad.addColorStop(1,"#d94f96");
+  c.fillStyle=bodyGrad;
   c.beginPath();
-  c.moveTo(-8,-15+bob);
-  c.lineTo(-9,-4+bob);
-  c.lineTo(9,-4+bob);
-  c.lineTo(8,-15+bob);
+  c.moveTo(-8,-15+bob);c.lineTo(-9,-4+bob);c.lineTo(9,-4+bob);c.lineTo(8,-15+bob);
   c.closePath();c.fill();
-  // Shirt detail
-  D(c,-1,-13+bob,2,9,"#FF85C8");
+  // Shirt centre stripe
+  D(c,-1,-13+bob,2,9,"#FF9ED4");
+  // Collar line
+  c.strokeStyle="rgba(255,255,255,0.25)";c.lineWidth=0.8;
+  c.beginPath();c.moveTo(-4,-15+bob);c.lineTo(0,-13+bob);c.lineTo(4,-15+bob);c.stroke();
+  // Sleeve cuff hints
+  c.strokeStyle="rgba(200,60,120,0.5)";c.lineWidth=0.7;
+  c.beginPath();c.moveTo(-12,-5+bob-armOff);c.lineTo(-8,-5+bob-armOff);c.stroke();
+  c.beginPath();c.moveTo(8,-5+bob+armOff);c.lineTo(12,-5+bob+armOff);c.stroke();
 
-  // Skirt / jeans
-  D(c,-8,-6+bob,16,6,"#4169E1");
+  // Skirt / jeans — slight gradient
+  var skirtGrad=c.createLinearGradient(0,-6+bob,0,0+bob);
+  skirtGrad.addColorStop(0,"#5070d0");skirtGrad.addColorStop(1,"#3050a0");
+  c.fillStyle=skirtGrad;c.fillRect(-8,-6+bob,16,6);
+  // Hem line
+  c.strokeStyle="rgba(255,255,255,0.15)";c.lineWidth=0.6;
+  c.beginPath();c.moveTo(-8,-6+bob);c.lineTo(8,-6+bob);c.stroke();
 
   // Arms
   D(c,-12,-15+bob-armOff,4,11,P.pink);
@@ -73,30 +95,81 @@ function drawKdee(c,x,y){
   c.beginPath();c.arc(-10,-4+bob-armOff,3,0,Math.PI*2);c.fill();
   c.beginPath();c.arc(10,-4+bob+armOff,3,0,Math.PI*2);c.fill();
 
-  // Head
-  c.fillStyle=P.skin;
+  // Head — radial gradient for roundness
+  var headGrad=c.createRadialGradient(-3,-26+bob,2,0,-24+bob,12);
+  headGrad.addColorStop(0,"#FFD0C0");headGrad.addColorStop(1,"#e8a090");
+  c.fillStyle=headGrad;
   c.beginPath();c.arc(0,-24+bob,12,0,Math.PI*2);c.fill();
 
-  // Hair
-  c.fillStyle=P.hair;
+  // Hair — bezier curves for flowing strands
+  c.fillStyle="#F0E68C";
+  // Top cap
   c.beginPath();c.arc(0,-29+bob,12,Math.PI,2*Math.PI);c.fill();
-  D(c,-12,-28+bob,6,12,P.hair);
-  D(c,6,-28+bob,6,12,P.hair);
+  // Left side strand — curves inward slightly
+  c.beginPath();
+  c.moveTo(-12,-28+bob);
+  c.bezierCurveTo(-14,-20+bob,-13,-10+bob,-11,-2+bob);
+  c.bezierCurveTo(-10,2+bob,-8,3+bob,-7,1+bob);
+  c.bezierCurveTo(-8,-8+bob,-9,-18+bob,-8,-28+bob);
+  c.closePath();c.fill();
+  // Right side strand
+  c.beginPath();
+  c.moveTo(12,-28+bob);
+  c.bezierCurveTo(14,-20+bob,13,-10+bob,11,-2+bob);
+  c.bezierCurveTo(10,2+bob,8,3+bob,7,1+bob);
+  c.bezierCurveTo(8,-8+bob,9,-18+bob,8,-28+bob);
+  c.closePath();c.fill();
   // Hair highlight
-  c.fillStyle="rgba(255,255,200,0.25)";
+  c.fillStyle="rgba(255,255,210,0.3)";
   c.beginPath();c.arc(4,-31+bob,5,0,Math.PI*2);c.fill();
 
-  // Eyes
-  c.fillStyle="#fff";
-  c.fillRect(-6,-25+bob,5,4);c.fillRect(1,-25+bob,5,4);
-  c.fillStyle=P.eye;
-  c.fillRect(-5,-24+bob,3,3);c.fillRect(2,-24+bob,3,3);
-  // Eye sparkle
-  c.fillStyle="#fff";c.fillRect(-5,-25+bob,1,1);c.fillRect(2,-25+bob,1,1);
+  // Eyes — with blink, HP tiers, sparkle
+  if(blinking||hpFumes){
+    // Blink / fumes: flat line eyes
+    c.strokeStyle="#a06060";c.lineWidth=1;
+    c.beginPath();c.moveTo(-6,-25+bob);c.lineTo(-1,-25+bob);c.stroke();
+    c.beginPath();c.moveTo(1,-25+bob);c.lineTo(6,-25+bob);c.stroke();
+  }else if(hpGrimace){
+    // Low HP: droopy inner corners, small iris
+    c.fillStyle="#fff";c.fillRect(-6,-25+bob,5,3);c.fillRect(1,-25+bob,5,3);
+    c.fillStyle=P.eye;c.fillRect(-5,-24+bob,2,2);c.fillRect(2,-24+bob,2,2);
+    // Droopy inner brows
+    c.strokeStyle="#7a4040";c.lineWidth=0.8;
+    c.beginPath();c.moveTo(-6,-27+bob);c.lineTo(-2,-26+bob);c.stroke();
+    c.beginPath();c.moveTo(6,-27+bob);c.lineTo(2,-26+bob);c.stroke();
+  }else if(hpTired){
+    // Tired: half-lidded (top half of eye covered)
+    c.fillStyle="#fff";c.fillRect(-6,-25+bob,5,4);c.fillRect(1,-25+bob,5,4);
+    c.fillStyle=P.eye;c.fillRect(-5,-24+bob,3,3);c.fillRect(2,-24+bob,3,3);
+    c.fillStyle=P.skin;c.fillRect(-6,-26+bob,5,2);c.fillRect(1,-26+bob,5,2);// lid droop
+    c.fillStyle="#fff";c.fillRect(-5,-25+bob,1,1);c.fillRect(2,-25+bob,1,1);
+  }else{
+    // Normal: full eyes with sparkle
+    c.fillStyle="#fff";
+    c.fillRect(-6,-25+bob,5,4);c.fillRect(1,-25+bob,5,4);
+    c.fillStyle=P.eye;
+    c.fillRect(-5,-24+bob,3,3);c.fillRect(2,-24+bob,3,3);
+    c.fillStyle="#fff";c.fillRect(-5,-25+bob,1,1);c.fillRect(2,-25+bob,1,1);
+  }
 
-  // Mouth (smile)
-  c.strokeStyle=P.pink;c.lineWidth=1.2;
-  c.beginPath();c.arc(0,-19+bob,4,0.1*Math.PI,0.9*Math.PI);c.stroke();
+  // Mouth — HP-synced
+  if(hpFumes||hpGrimace){
+    // Grimace / wavy stressed mouth
+    c.strokeStyle="#a05050";c.lineWidth=1.2;
+    c.beginPath();
+    c.moveTo(-4,-19+bob);
+    c.bezierCurveTo(-2,-21+bob,0,-17+bob,2,-19+bob);
+    c.bezierCurveTo(3,-20+bob,4,-18+bob,4,-19+bob);
+    c.stroke();
+  }else if(hpTired){
+    // Neutral / slight frown
+    c.strokeStyle=P.pink;c.lineWidth=1.2;
+    c.beginPath();c.arc(0,-18+bob,3,0.15*Math.PI,0.85*Math.PI);c.stroke();
+  }else{
+    // Normal smile
+    c.strokeStyle=P.pink;c.lineWidth=1.2;
+    c.beginPath();c.arc(0,-19+bob,4,0.1*Math.PI,0.9*Math.PI);c.stroke();
+  }
 
   c.restore();
 }
@@ -112,6 +185,11 @@ function updateWalk(){
 }
 
 /* Holly random encounter: countdown and update */
+var hollyStaring=false,hollyStareTimer=0;
+
+var HOLLY_GREETINGS=["...hi.","...hey.","...oh.","...hello, mom.","...it's you.","...hi mom.","*slow blink*","...","...you're here.","...I thought I heard you."];
+var HOLLY_GOODBYES=["...bye.","...okay.","...see you.","...later.","...I'll be around.","*silent nod*","...love you.","...okay, bye.","...take care.","...found any keys?"];
+var HOLLY_STARES=["...",".......","............","...ok.","...I wasn't staring.","...just checking.","...hi.","...never mind."];
 var HOLLY_SAFE_ROOMS=[10,11,14,15,16]; // No Holly in Jesus Bath, Basement, Maze
 function updateHolly(){
   if(battleActive||paused||gameOver)return;
@@ -125,22 +203,32 @@ function updateHolly(){
       // Phase 2 (frames 40-0): scramble up and flee fast
       else{hollyX+=6;}
       if(hollyTripTimer<=0){
-        hollyRunning=false;hollyTrip=false;hollyX=-40;hollyMsg="";hollyMsgTimer=0;hollyCatchable=false;
+        hollyRunning=false;hollyTrip=false;hollyX=-40;hollyMsg="";hollyMsgTimer=0;hollyCatchable=false;hollyStaring=false;
         hollyTimer=Math.floor(500+Math.random()*300);
       }
       return;
     }
     hollyX+=3; // she moves slowly and quietly — that's what makes it unsettling
-    if(hollyX>60&&hollyX<200&&hollyMsgTimer===0){
-      hollyMsg="...hi.";hollyMsgTimer=80;
+    // Occasional stare: Holly stops dead and stares for a moment
+    if(!hollyStaring&&hollyX>100&&hollyX<180&&Math.random()<0.004){
+      hollyStaring=true;hollyStareTimer=55;
+      hollyMsg=HOLLY_STARES[Math.floor(Math.random()*HOLLY_STARES.length)];hollyMsgTimer=50;
     }
-    if(hollyX>230&&hollyMsg==="...hi."&&hollyMsgTimer<30){
-      hollyMsg="...bye.";hollyMsgTimer=60;
+    if(hollyStaring){
+      hollyStareTimer--;
+      if(hollyStareTimer<=0){hollyStaring=false;}
+      else return;// frozen in stare
+    }
+    if(hollyX>60&&hollyX<200&&hollyMsgTimer===0){
+      hollyMsg=HOLLY_GREETINGS[Math.floor(Math.random()*HOLLY_GREETINGS.length)];hollyMsgTimer=80;
+    }
+    if(hollyX>230&&HOLLY_GREETINGS.indexOf(hollyMsg)>=0&&hollyMsgTimer<30){
+      hollyMsg=HOLLY_GOODBYES[Math.floor(Math.random()*HOLLY_GOODBYES.length)];hollyMsgTimer=60;
       // Deal 1 damage
       kdeeHP=Math.max(0,kdeeHP-1);updateHUD();
     }
     if(hollyX>400){
-      hollyRunning=false;hollyX=-40;hollyMsg="";hollyMsgTimer=0;hollyCatchable=false;
+      hollyRunning=false;hollyX=-40;hollyMsg="";hollyMsgTimer=0;hollyCatchable=false;hollyStaring=false;
       hollyTimer=Math.floor(400+Math.random()*200);
     }
     return;
@@ -160,37 +248,33 @@ function drawHolly(c){
   var sc=1.8;
 
   if(hollyTrip){
-    // Tripped — draw her collapsed/scrambling
-    var phase=hollyTripTimer; // 60→0
+    var phase=hollyTripTimer;
     c.save();c.translate(hollyX,hollyY);c.scale(sc,sc);
     if(phase>40){
-      // Collapsed flat on ground
-      c.save();c.rotate(Math.PI/2);// rotated 90° — lying down
-      // Body horizontal
+      c.save();c.rotate(Math.PI/2);
       c.fillStyle="#DDA0DD";c.fillRect(-12,-4,24,8);
-      // Head
       c.fillStyle=P.skin;c.beginPath();c.arc(15,0,7,0,Math.PI*2);c.fill();
-      // Hair splayed
-      c.fillStyle="#654321";c.beginPath();c.arc(15,-4,7,Math.PI,2*Math.PI);c.fill();
-      D(c,12,-10,6,10,"#654321");D(c,17,-10,6,10,"#654321");
-      // Stars above head
+      // Bezier hair splayed on ground
+      c.fillStyle="#654321";
+      c.beginPath();c.arc(15,-4,7,Math.PI,2*Math.PI);c.fill();
+      c.beginPath();c.moveTo(9,-4);c.bezierCurveTo(5,-12,-2,-14,-6,-10);c.bezierCurveTo(-4,-6,-2,-4,2,-4);c.fill();
+      c.beginPath();c.moveTo(21,-4);c.bezierCurveTo(25,-12,30,-14,32,-10);c.bezierCurveTo(30,-6,28,-4,24,-4);c.fill();
       c.fillStyle=P.gold;c.font="bold 8px monospace";c.textAlign="center";
       c.fillText("*_*",15,-14+Math.sin(phase*0.3)*2);c.textAlign="left";
-      // Legs splayed
       D(c,-16,-6,8,4,"#8B668B");D(c,-16,2,8,4,"#8B668B");
       c.restore();
     } else {
-      // Scrambling back up and fleeing — wobbly upright
       var wobble=Math.sin(phase*0.8)*(phase/40)*6;
       c.save();c.rotate(wobble*0.08);
       D(c,-5,-8,4,12,"#8B668B");D(c,2,-8,4,12,"#8B668B");
       c.fillStyle="#DDA0DD";c.beginPath();
       c.moveTo(-7,-20);c.lineTo(-8,-8);c.lineTo(8,-8);c.lineTo(7,-20);c.closePath();c.fill();
-      D(c,-14,-20,4,14,"#DDA0DD");D(c,7,-20,4,14,"#DDA0DD");// arms flailing
+      D(c,-14,-20,4,14,"#DDA0DD");D(c,7,-20,4,14,"#DDA0DD");
       c.fillStyle=P.skin;c.beginPath();c.arc(0,-28,8,0,Math.PI*2);c.fill();
+      // Bezier hair scrambling
       c.fillStyle="#654321";c.beginPath();c.arc(0,-32,8,Math.PI,2*Math.PI);c.fill();
-      D(c,-8,-31,4,18,"#654321");D(c,4,-31,4,18,"#654321");
-      // Wide eyes — panicked
+      c.beginPath();c.moveTo(-8,-31);c.bezierCurveTo(-10,-22,-9,-12,-8,0+wobble);c.bezierCurveTo(-7,4,-5,4,-4,2);c.bezierCurveTo(-5,-8,-6,-20,-5,-31);c.fill();
+      c.beginPath();c.moveTo(8,-31);c.bezierCurveTo(10,-22,9,-12,8,0-wobble);c.bezierCurveTo(7,4,5,4,4,2);c.bezierCurveTo(5,-8,6,-20,5,-31);c.fill();
       c.fillStyle="#fff";c.fillRect(-4,-30,3,4);c.fillRect(1,-30,3,4);
       c.fillStyle="#333";c.fillRect(-3,-29,2,3);c.fillRect(2,-29,2,3);
       c.restore();
@@ -199,60 +283,102 @@ function drawHolly(c){
     return;
   }
 
-  var bob=Math.sin(hollyAnim*0.15)*1.5;// very gentle sway — she moves quietly
-  var legSwing=Math.sin(hollyAnim*0.2)*4;// slow deliberate stride
+  var bob=Math.sin(hollyAnim*0.15)*1.5;
+  var legSwing=Math.sin(hollyAnim*0.2)*4;
   c.save();c.translate(hollyX,hollyY);c.scale(sc,sc);
-  // Very faint shadow — she moves like a ghost
+  // Very faint shadow
   c.save();c.globalAlpha=0.08;c.fillStyle="#000";
   c.beginPath();c.ellipse(0,2,10,3,0,0,Math.PI*2);c.fill();c.restore();
-  // Long legs (tall character)
+  // Long legs
   D(c,-5+legSwing,-8+bob,4,12,"#8B668B");
   D(c,2-legSwing,-8+bob,4,12,"#8B668B");
   D(c,-6+legSwing,3+bob,5,3,"#333");
   D(c,2-legSwing,3+bob,5,3,"#333");
-  // Long body
-  c.fillStyle="#DDA0DD";c.beginPath();
+  // Body — gradient
+  var hbg=c.createLinearGradient(0,-20+bob,0,-8+bob);
+  hbg.addColorStop(0,"#E8B0E8");hbg.addColorStop(1,"#B070B0");
+  c.fillStyle=hbg;
+  c.beginPath();
   c.moveTo(-7,-20+bob);c.lineTo(-8,-8+bob);c.lineTo(8,-8+bob);c.lineTo(7,-20+bob);
   c.closePath();c.fill();
-  // Long arms hanging at sides (not flailing — calm)
+  // Shirt seam
+  c.strokeStyle="rgba(255,255,255,0.15)";c.lineWidth=0.6;
+  c.beginPath();c.moveTo(0,-20+bob);c.lineTo(0,-8+bob);c.stroke();
+  // Long arms
   D(c,-11,-20+bob,4,14,"#DDA0DD");
   D(c,7,-20+bob,4,14,"#DDA0DD");
-  // Head (higher up — tall)
-  c.fillStyle=P.skin;c.beginPath();c.arc(0,-28+bob,8,0,Math.PI*2);c.fill();
-  // Long straight hair
-  c.fillStyle="#654321";c.beginPath();c.arc(0,-32+bob,8,Math.PI,2*Math.PI);c.fill();
-  D(c,-8,-31+bob,4,18,"#654321");D(c,4,-31+bob,4,18,"#654321");
-  // Eyes — half-lidded, calm, slightly unsettling
+  // Head — radial gradient
+  var hhg=c.createRadialGradient(-2,-30+bob,2,0,-28+bob,8);
+  hhg.addColorStop(0,"#FFD8CC");hhg.addColorStop(1,"#e0a090");
+  c.fillStyle=hhg;
+  c.beginPath();c.arc(0,-28+bob,8,0,Math.PI*2);c.fill();
+  // Hair — long bezier strands
+  c.fillStyle="#654321";
+  c.beginPath();c.arc(0,-32+bob,8,Math.PI,2*Math.PI);c.fill();
+  // Left strand — curves gently inward at bottom
+  c.beginPath();
+  c.moveTo(-8,-31+bob);
+  c.bezierCurveTo(-10,-22+bob,-10,-10+bob,-8,2+bob);
+  c.bezierCurveTo(-7,6+bob,-5,6+bob,-4,4+bob);
+  c.bezierCurveTo(-5,-6+bob,-5,-20+bob,-4,-31+bob);
+  c.fill();
+  // Right strand
+  c.beginPath();
+  c.moveTo(8,-31+bob);
+  c.bezierCurveTo(10,-22+bob,10,-10+bob,8,2+bob);
+  c.bezierCurveTo(7,6+bob,5,6+bob,4,4+bob);
+  c.bezierCurveTo(5,-6+bob,5,-20+bob,4,-31+bob);
+  c.fill();
+  // Eyes — half-lidded
   c.fillStyle="#fff";c.fillRect(-4,-29+bob,3,2);c.fillRect(1,-29+bob,3,2);
   c.fillStyle="#333";c.fillRect(-3,-29+bob,2,2);c.fillRect(2,-29+bob,2,2);
-  // Slight smile — gentle, not alarmed
+  // Slight smile
   c.strokeStyle="#c0a0b0";c.lineWidth=0.8;
   c.beginPath();c.arc(0,-23+bob,2.5,0.15*Math.PI,0.85*Math.PI);c.stroke();
   c.restore();
 
-  // Holly message overlay — light bubble above her head, visible immediately
   if(hollyMsg){
     var alpha=Math.min(1,hollyMsgTimer/10);
     c.save();c.globalAlpha=alpha;
     c.font="bold 11px monospace";
     var tw=c.measureText(hollyMsg).width+18;
     var tx=Math.min(Math.max(hollyX,tw/2+5),355-tw/2);
-    // Light speech bubble — cream background, dark text, easy to read
     RR(c,tx-tw/2,hollyY-70,tw,20,4,"rgba(255,248,220,0.96)");
     c.strokeStyle="rgba(180,140,200,0.7)";c.lineWidth=1;
     c.beginPath();
     c.moveTo(tx-tw/2+4,hollyY-50);c.lineTo(tx-tw/2+4,hollyY-70);c.lineTo(tx+tw/2-4,hollyY-70);c.lineTo(tx+tw/2-4,hollyY-50);
     c.stroke();
-    // Text — dark so it shows on the light background
     c.fillStyle="#2a1a3e";c.textAlign="center";
-    c.fillText(hollyMsg,tx,hollyY-56);
-    c.textAlign="left";
+    c.fillText(hollyMsg,tx,hollyY-56);c.textAlign="left";
     c.restore();
   }
 }
 
 /* Milo follow: update position trailing K'Dee, random chatter */
-var MILO_QUIPS=["'Mom can I tell you something?'","'MOM. Mom. Mommy.'","'Did you know dinosaurs—'","'I made you a drawing!'","'Can we read later?'","'...mom?'","'The book said—'","'I love you!'"];
+var MILO_QUIPS=[
+  "'Mom can I tell you something?'",
+  "'MOM. Mom. Mommy. MOMMM.'",
+  "'Did you know dinosaurs—'",
+  "'I made you a drawing!'",
+  "'Can we read later?'",
+  "'...mom?'",
+  "'The book said—'",
+  "'I love you!'",
+  "'Guess what chapter I'm on!'",
+  "'So in this book ACTUALLY—'",
+  "'Mom I have a VERY important question.'",
+  "'Can I have a snack? Can I? Can I? Can I?'",
+  "'Will you listen to me read?'",
+  "'I found something cool!'",
+  "'MOM look at this picture!'",
+  "'Do you think dragons are real though?'",
+  "'The main character reminds me of you.'",
+  "'I named my dinosaur after you.'",
+  "'I'm writing a book. You're the hero.'",
+  "'Mom? I love you more than all the books.'",
+  "'Did you know that ACTUALLY—'",
+  "'Can we get a dog? Can we? CAN WE?'"
+];
 function updateMilo(){
   if(!miloFollowing)return;
   miloFollowAnim++;
@@ -269,27 +395,59 @@ function drawMilo(c){
   if(!miloFollowing)return;
   var bob=Math.sin(miloFollowAnim*0.2)*2;
   var leg=Math.sin(miloFollowAnim*0.25)*5;
-  var sc=1.6;// same scale as K'Dee
+  var sc=1.6;
   c.save();c.translate(miloFollowX,miloFollowY);c.scale(sc,sc);
   // Shadow
   c.save();c.globalAlpha=0.1;c.fillStyle="#000";c.beginPath();c.ellipse(0,4,8,3,0,0,Math.PI*2);c.fill();c.restore();
   // Legs
   D(c,-4+leg,0,4,10,"#3498db");D(c,1-leg,0,4,10,"#3498db");
+  // Shoes with tiny lace dot
   D(c,-5+leg,9,5,3,"#333");D(c,1-leg,9,5,3,"#333");
-  // Body
-  c.fillStyle="#87CEEB";c.beginPath();c.moveTo(-6,-12+bob);c.lineTo(-7,0+bob);c.lineTo(7,0+bob);c.lineTo(6,-12+bob);c.closePath();c.fill();
-  // Arms with book
+  c.fillStyle="rgba(255,255,255,0.2)";c.fillRect(-3+leg,10,2,1);c.fillRect(2-leg,10,2,1);
+  // Body — gradient
+  var mbg=c.createLinearGradient(0,-12+bob,0,0+bob);
+  mbg.addColorStop(0,"#a8e0ff");mbg.addColorStop(1,"#5ab0d8");
+  c.fillStyle=mbg;
+  c.beginPath();c.moveTo(-6,-12+bob);c.lineTo(-7,0+bob);c.lineTo(7,0+bob);c.lineTo(6,-12+bob);c.closePath();c.fill();
+  // Pocket
+  c.strokeStyle="rgba(60,140,180,0.5)";c.lineWidth=0.7;
+  c.strokeRect(-5,-8+bob,4,4);
+  // Arms
   D(c,-10,-12+bob,4,9,"#87CEEB");D(c,6,-12+bob,4,9,"#87CEEB");
-  // Book in hand
-  RR(c,6,-8+bob,8,10,2,"#e74c3c");c.fillStyle="#fff";c.font="bold 4px monospace";c.fillText("📖",6,-2+bob);
-  // Head
-  c.fillStyle=P.skin;c.beginPath();c.arc(0,-20+bob,8,0,Math.PI*2);c.fill();
-  // Hair
-  c.fillStyle="#654321";c.beginPath();c.arc(0,-24+bob,8,Math.PI,2*Math.PI);c.fill();
+  // Book in hand (right arm)
+  RR(c,6,-8+bob,8,10,2,"#e74c3c");
+  c.fillStyle="#c0392b";c.fillRect(7,-7+bob,6,1);c.fillRect(7,-5+bob,6,1);c.fillRect(7,-3+bob,6,1);
+  // Head — radial gradient
+  var mhg=c.createRadialGradient(-2,-22+bob,2,0,-20+bob,8);
+  mhg.addColorStop(0,"#FFD8C8");mhg.addColorStop(1,"#e8a080");
+  c.fillStyle=mhg;
+  c.beginPath();c.arc(0,-20+bob,8,0,Math.PI*2);c.fill();
+  // Hair — shaggy kid bezier
+  c.fillStyle="#654321";
+  c.beginPath();c.arc(0,-24+bob,8,Math.PI,2*Math.PI);c.fill();
+  // Shaggy left tuft
+  c.beginPath();
+  c.moveTo(-8,-24+bob);
+  c.bezierCurveTo(-11,-28+bob,-9,-32+bob,-5,-30+bob);
+  c.bezierCurveTo(-2,-28+bob,-1,-26+bob,-2,-24+bob);
+  c.fill();
+  // Shaggy right tuft
+  c.beginPath();
+  c.moveTo(8,-24+bob);
+  c.bezierCurveTo(11,-28+bob,9,-32+bob,5,-30+bob);
+  c.bezierCurveTo(2,-28+bob,1,-26+bob,2,-24+bob);
+  c.fill();
+  // Centre cowlick
+  c.beginPath();
+  c.moveTo(-2,-27+bob);
+  c.bezierCurveTo(-1,-32+bob,1,-33+bob,2,-31+bob);
+  c.bezierCurveTo(3,-29+bob,2,-27+bob,1,-26+bob);
+  c.fill();
   // Big happy eyes
   c.fillStyle="#fff";c.fillRect(-4,-22+bob,4,3);c.fillRect(1,-22+bob,4,3);
   c.fillStyle="#3498db";c.fillRect(-3,-22+bob,3,3);c.fillRect(2,-22+bob,3,3);
   c.fillStyle="#000";c.fillRect(-2,-21+bob,1,2);c.fillRect(3,-21+bob,1,2);
+  c.fillStyle="#fff";c.fillRect(-3,-22+bob,1,1);c.fillRect(2,-22+bob,1,1);
   // Big smile
   c.strokeStyle="#c07060";c.lineWidth=1;c.beginPath();c.arc(0,-14+bob,4,0.1*Math.PI,0.9*Math.PI);c.stroke();
   c.restore();
@@ -321,7 +479,7 @@ function updateGwyn(){
 }
 function drawGwyn(c){
   if(!gwynFollowing)return;
-  var bob=Math.sin(gwynFollowAnim*0.15)*1.5; // slower, sleepier
+  var bob=Math.sin(gwynFollowAnim*0.15)*1.5;
   var leg=Math.sin(gwynFollowAnim*0.18)*4;
   var sc=1.6;
   c.save();c.translate(gwynFollowX,gwynFollowY);c.scale(sc,sc);
@@ -330,20 +488,47 @@ function drawGwyn(c){
   // Legs
   D(c,-4+leg,0,4,10,"#1a3a7a");D(c,1-leg,0,4,10,"#1a3a7a");
   D(c,-5+leg,9,5,3,"#222");D(c,1-leg,9,5,3,"#222");
-  // Body — blue shirt
-  c.fillStyle="#4169E1";c.beginPath();c.moveTo(-6,-12+bob);c.lineTo(-7,0+bob);c.lineTo(7,0+bob);c.lineTo(6,-12+bob);c.closePath();c.fill();
-  // Arms — slightly droopy
+  // Body — gradient
+  var gbg=c.createLinearGradient(0,-12+bob,0,0+bob);
+  gbg.addColorStop(0,"#6080ff");gbg.addColorStop(1,"#2a40b0");
+  c.fillStyle=gbg;
+  c.beginPath();c.moveTo(-6,-12+bob);c.lineTo(-7,0+bob);c.lineTo(7,0+bob);c.lineTo(6,-12+bob);c.closePath();c.fill();
+  // Sleeve cuff
+  c.strokeStyle="rgba(100,130,255,0.5)";c.lineWidth=0.7;
+  c.beginPath();c.moveTo(-10,-4+bob);c.lineTo(-6,-4+bob);c.stroke();
+  c.beginPath();c.moveTo(6,-4+bob);c.lineTo(10,-4+bob);c.stroke();
+  // Arms — droopy (sleepy)
   c.fillStyle=P.skin;c.fillRect(-10,-10+bob,4,9);c.fillRect(6,-10+bob,4,9);
-  // Head
-  c.fillStyle=P.skin;c.beginPath();c.arc(0,-18+bob,7,0,Math.PI*2);c.fill();
-  // Long blue hair
-  c.fillStyle="#4169E1";c.beginPath();c.arc(0,-18+bob,7,Math.PI,0);c.fill();
-  c.fillStyle="#4169E1";c.fillRect(-7,-18+bob,3,14);c.fillRect(4,-18+bob,3,14);
-  // Closed eyes (sleeping)
-  c.strokeStyle="#333";c.lineWidth=1;
+  // Head — radial gradient
+  var ghg=c.createRadialGradient(-2,-20+bob,2,0,-18+bob,7);
+  ghg.addColorStop(0,"#FFD8C8");ghg.addColorStop(1,"#e0a090");
+  c.fillStyle=ghg;
+  c.beginPath();c.arc(0,-18+bob,7,0,Math.PI*2);c.fill();
+  // Hair — bezier flowing blue, soft wave
+  c.fillStyle="#3a5fd0";
+  c.beginPath();c.arc(0,-18+bob,7,Math.PI,0);c.fill();
+  // Left strand with gentle wave
+  c.beginPath();
+  c.moveTo(-7,-18+bob);
+  c.bezierCurveTo(-9,-12+bob,-8,-4+bob,-6,4+bob);
+  c.bezierCurveTo(-5,8+bob,-3,9+bob,-2,7+bob);
+  c.bezierCurveTo(-3,-2+bob,-4,-12+bob,-3,-18+bob);
+  c.fill();
+  // Right strand
+  c.beginPath();
+  c.moveTo(7,-18+bob);
+  c.bezierCurveTo(9,-12+bob,8,-4+bob,6,4+bob);
+  c.bezierCurveTo(5,8+bob,3,9+bob,2,7+bob);
+  c.bezierCurveTo(3,-2+bob,4,-12+bob,3,-18+bob);
+  c.fill();
+  // Hair highlight
+  c.fillStyle="rgba(150,180,255,0.25)";c.beginPath();c.arc(2,-21+bob,3,0,Math.PI*2);c.fill();
+  // Closed eyes (sleeping) — slightly thicker for expressiveness
+  c.strokeStyle="#445";c.lineWidth=1.2;
   c.beginPath();c.arc(-3,-19+bob,2,Math.PI,0);c.stroke();
   c.beginPath();c.arc(3,-19+bob,2,Math.PI,0);c.stroke();
   // Tiny smile
+  c.strokeStyle="#a08090";c.lineWidth=0.9;
   c.beginPath();c.arc(0,-16+bob,2,0,Math.PI);c.stroke();
   c.restore();
   // Speech bubble
@@ -1384,10 +1569,10 @@ var FIGHTERS={
     hair:"#654321",hairStyle:"shaggy",skin:P.skin,shirt:"#3498db",pants:"#4169E1",short:true,
     idleQuips:["*tugs K'Dee's shirt*","'Mom can you read to me?'","*holds up book dramatically*","'Guess what chapter I'm on!'"],
     attacks:[
-      {name:"BOOK REPORT",dmg:0,quips:["Milo gives a full plot summary. All 312 pages.","'So in CHAPTER ONE the main character—' It's a saga.","'The book is SO GOOD and you have to hear all of it RIGHT NOW.'","Milo describes every character's feelings. In detail."]},
-      {name:"SHOW DRAWING",dmg:1,quips:["Milo shows a drawing. 'It's you!' It's a blob.","'LOOK WHAT I MADE!' It's actually beautiful.","The drawing is... a dinosaur reading keys? Art."]},
-      {name:"HUG LEGS",dmg:1,quips:["Milo bear-hugs K'Dee's legs. She's rooted!","*CLAMP* Milo is now a leg accessory.","'I love you THIS much!' Legs: immobilized."]},
-      {name:"BUT MOM",dmg:2,quips:["'But MOOOOOM.' Critical emotional damage!","Milo deploys the puppy eyes. It's super effective!","'But you PROMISED to read with me.' K'Dee feels guilt.","'BUT MOM READ WITH ME.' Three words. Maximum devastation."]}
+      {name:"BOOK REPORT",dmg:0,quips:["Milo gives a full plot summary. All 312 pages.","'So in CHAPTER ONE the main character—' It's a saga.","'The book is SO GOOD and you have to hear all of it RIGHT NOW.'","Milo describes every character's feelings. In detail.","'And THEN, this is the BEST PART—' K'Dee's soul leaves her body.","He reads the dedication page aloud. With emotion.","Milo recites page 47 from memory. Word for word."]},
+      {name:"SHOW DRAWING",dmg:1,quips:["Milo shows a drawing. 'It's you!' It's a blob.","'LOOK WHAT I MADE!' It's actually beautiful.","The drawing is... a dinosaur reading keys? Art.","He has drawn forty-seven dinosaurs. All named.","'This one is you. This is dad. These are the keys.'","'It's abstract.' It is many colors. Very sincerely made."]},
+      {name:"HUG LEGS",dmg:1,quips:["Milo bear-hugs K'Dee's legs. She's rooted!","*CLAMP* Milo is now a leg accessory.","'I love you THIS much!' Legs: immobilized.","He refuses to let go until K'Dee hugs back. Stubborn. Effective.","Milo deploys the Full Koala. K'Dee cannot walk."]},
+      {name:"BUT MOM",dmg:2,quips:["'But MOOOOOM.' Critical emotional damage!","Milo deploys the puppy eyes. It's super effective!","'But you PROMISED to read with me.' K'Dee feels guilt.","'BUT MOM READ WITH ME.' Three words. Maximum devastation.","The puppy eyes have UPGRADED. K'Dee cannot function.","'Just FIVE more minutes, mom.' It has been 45 minutes.","'But MOOOOM you never LISTEN.' She is listening. She is dying."]}
     ],
     intro:["Milo blocks the doorway with a stack of books.","'MOM! Mom. Mom. Mommy. MOMMM!'","He has something VERY important to share.","It's book-related. Obviously."],
     defeat:["Milo finishes his book summary.","'OK bye mom!' He sprints away with three books.","...blissful silence. Brief. Very brief."],
@@ -1435,12 +1620,12 @@ var FIGHTERS={
   gwyneth:{
     name:"GWYNETH",title:"THE STYLISH NARCOLEPTIC",hp:6,maxHp:6,color:P.sky,
     hair:"#4169E1",hairStyle:"long",skin:P.skin,shirt:"#4169E1",pants:"#1a3a7a",narcolepsy:true,
-    idleQuips:["*zzzzzzz*","*snore*","*mumbles about unicorns*","*sleep-smiles*"],
+    idleQuips:["*zzzzzzz*","*snore*","*mumbles about unicorns*","*sleep-smiles*","*sleep-laughs at something*","*mumbles 'five more minutes'*","*curls tighter*","*snore intensifies*"],
     attacks:[
-      {name:"*SNORE*",dmg:0,quips:["Gwyneth snores. Somehow this is still stressful.","The snoring intensifies. K'Dee can't focus.","She snores so loud the room vibrates."]},
-      {name:"SLEEP TALK",dmg:1,quips:["'The unicorns... need more glitter...'","'No, MR. BUN-BUN, that's MY tiara...'","'Five more minutes...' She's been saying that for 2 hours.","'*mumble* ...the PRINCESS needs her KEYS...' Wait, what?"]},
-      {name:"ROLL OVER",dmg:2,quips:["Gwyneth rolls over and lands ON K'Dee's foot.","*THUD* She rolls like a sleepy bowling ball.","She unconsciously rolls toward K'Dee. Homing nap."]},
-      {name:"*zzzzz*",dmg:0,quips:["Gwyneth sleeps HARDER. This is honestly impressive.","She achieves a new level of sleep. Transcendent.","The sleeping is aggressive somehow."]}
+      {name:"*SNORE*",dmg:0,quips:["Gwyneth snores. Somehow this is still stressful.","The snoring intensifies. K'Dee can't focus.","She snores so loud the room vibrates.","The snoring has RHYTHM now. K'Dee is hypnotized.","SNORING. PROFESSIONAL GRADE. K'Dee cannot concentrate."]},
+      {name:"SLEEP TALK",dmg:1,quips:["'The unicorns... need more glitter...'","'No, MR. BUN-BUN, that's MY tiara...'","'Five more minutes...' She's been saying that for 2 hours.","'*mumble* ...the PRINCESS needs her KEYS...' Wait, what?","'...they're under... the...zzzz.' SO CLOSE.","'I WON'T eat the marshmallows— wait, yes I will...'","She talks in full sentences. None of them useful.","'Mom... mom you left your... zzzzz.' GWYNETH."]},
+      {name:"ROLL OVER",dmg:2,quips:["Gwyneth rolls over and lands ON K'Dee's foot.","*THUD* She rolls like a sleepy bowling ball.","She unconsciously rolls toward K'Dee. Homing nap.","*WHAM* Gwyneth rolls with unexpected force. K'Dee's shins.","The roll is PERFECT. Unconscious technique. Devastating."]},
+      {name:"*zzzzz*",dmg:0,quips:["Gwyneth sleeps HARDER. This is honestly impressive.","She achieves a new level of sleep. Transcendent.","The sleeping is aggressive somehow.","She is now sleeping in 4 dimensions.","Somehow the SLEEP ITSELF is an attack.","She is at maximum nap. This is her final form."]}
     ],
     intro:["Gwyneth is lying face-down on the floor.","'Gwyneth? ...Gwyneth?'","*magnificent snoring*","Oh. Narcolepsy nap. Classic Gwyneth."],
     defeat:["Gwyneth wakes up suddenly.","'Oh hi mom! Was I asleep?'","'For the whole battle.' 'What battle?'","'...never mind. Love you, baby.'"],
@@ -1589,7 +1774,7 @@ function startBattle(fighterId){
     turnCount:0,shakeTimer:0,shakeX:0,
     flashTimer:0,flashColor:"",
     kdeeAnim:0,enemyAnim:0,
-    phase:"vsIntro",vsTimer:90,// VS splash
+    phase:"vsIntro",vsTimer:150,// VS splash (extended for cinematic)
     introLine:0,introTimer:0,
     msg:"",msgLines:[],
     kdeePose:"idle",kdeeActionTimer:0,
@@ -1820,99 +2005,172 @@ function drawBattleKdee(c,x,y,pose,timer){
   var bob=Math.sin(frameTick*0.05)*1.5;
   var sc=1.8;// battle scale
   c.save();c.translate(x,y);c.scale(sc,sc);
-  var ax=0,ay=0;
+  var ax=0;
+
+  // HP-synced expressions (mirror world K'Dee)
+  var hpTired=kdeeHP<=8&&kdeeHP>4;
+  var hpGrimace=kdeeHP<=4&&kdeeHP>0;
+  var hpFumes=kdeeHP<=0;
+  var blinkPhase=frameTick%220;
+  var blinking=blinkPhase<3;
 
   // Action offsets
-  if(pose==="slap"){ax=Math.min(t*2,12);var sw=Math.sin(t*0.8)*8;}
-  if(pose==="nag"){var nag=Math.sin(t*0.5)*3;}
-  if(pose==="purse"){ax=Math.min(t*1.5,8);var pw=Math.sin(t*0.6)*15;}
-  if(pose==="item"){var glow=0.3+0.3*Math.sin(t*0.3);}
+  var sw=0,nag=0,pw=0,glow=0.3;
+  if(pose==="slap"){ax=Math.min(t*2,12);sw=Math.sin(t*0.8)*8;}
+  if(pose==="nag"){nag=Math.sin(t*0.5)*3;}
+  if(pose==="purse"){ax=Math.min(t*1.5,8);pw=Math.sin(t*0.6)*15;}
+  if(pose==="item"){glow=0.3+0.3*Math.sin(t*0.3);}
   if(pose==="hurt"){ax=Math.sin(t*2)*4;bob+=2;}
 
   // Shadow
   c.save();c.globalAlpha=0.18;c.fillStyle="#000";
   c.beginPath();c.ellipse(ax,2,10,3,0,0,Math.PI*2);c.fill();c.restore();
 
-  // Legs
+  // Legs — gradient jeans
   var lk=pose==="hurt"?Math.sin(t)*2:0;
-  D(c,ax-4+lk,-3+bob,4,6,"#4169E1");D(c,ax+1-lk,-3+bob,4,6,"#4169E1");
-  D(c,ax-5+lk,2+bob,5,3,"#333");D(c,ax+1-lk,2+bob,5,3,"#333");
+  var jg=c.createLinearGradient(ax-4,-3,ax+5,3);
+  jg.addColorStop(0,"#4a79f5");jg.addColorStop(1,"#2a4aaa");
+  c.fillStyle=jg;
+  c.fillRect(ax-4+lk,-3+bob,4,6);c.fillRect(ax+1-lk,-3+bob,4,6);
+  c.fillStyle="#222";
+  c.fillRect(ax-5+lk,2+bob,5,3);c.fillRect(ax+1-lk,2+bob,5,3);
+  // Shoe highlight
+  c.fillStyle="rgba(255,255,255,0.12)";
+  c.fillRect(ax-5+lk,2+bob,3,1);c.fillRect(ax+1-lk,2+bob,3,1);
 
-  // Body
-  c.fillStyle=P.pink;c.beginPath();
+  // Body — gradient pink top
+  var bg=c.createLinearGradient(ax-8,-13+bob,ax+8,-3+bob);
+  bg.addColorStop(0,"#FF9FD4");bg.addColorStop(0.5,P.pink);bg.addColorStop(1,"#E0509A");
+  c.fillStyle=bg;
+  c.beginPath();
   c.moveTo(ax-7,-12+bob);c.lineTo(ax-8,-3+bob);c.lineTo(ax+8,-3+bob);c.lineTo(ax+7,-12+bob);
   c.closePath();c.fill();
-  D(c,ax-1,-10+bob,2,7,"#FF85C8");
-  D(c,ax-7,-5+bob,14,4,"#4169E1");
+  // Collar V
+  c.strokeStyle="rgba(255,255,255,0.35)";c.lineWidth=0.8;
+  c.beginPath();c.moveTo(ax-2,-12+bob);c.lineTo(ax,-9+bob);c.lineTo(ax+2,-12+bob);c.stroke();
+  // Shirt seam centre
+  c.strokeStyle="rgba(200,60,120,0.4)";c.lineWidth=0.6;
+  c.beginPath();c.moveTo(ax,-9+bob);c.lineTo(ax,-3+bob);c.stroke();
+  // Hem shadow line
+  c.strokeStyle="rgba(0,0,0,0.18)";c.lineWidth=1;
+  c.beginPath();c.moveTo(ax-8,-3+bob);c.lineTo(ax+8,-3+bob);c.stroke();
+
+  // Skirt band
+  var sg=c.createLinearGradient(ax-8,-6+bob,ax+8,-3+bob);
+  sg.addColorStop(0,"#3a5fd0");sg.addColorStop(1,"#2a4aaa");
+  c.fillStyle=sg;c.fillRect(ax-8,-5+bob,16,4);
+  c.strokeStyle="rgba(100,140,255,0.3)";c.lineWidth=0.5;
+  c.beginPath();c.moveTo(ax-8,-4+bob);c.lineTo(ax+8,-4+bob);c.stroke();
 
   // Arms
   if(pose==="slap"&&t>0){
-    // Slap arm extended
     c.save();c.translate(ax+7,-12+bob);c.rotate(-0.5+sw*0.05);
     D(c,0,0,4,12,P.pink);c.fillStyle=P.skin;c.beginPath();c.arc(2,13,2.5,0,Math.PI*2);c.fill();
+    // Cuff
+    c.strokeStyle="rgba(255,255,255,0.3)";c.lineWidth=0.8;c.strokeRect(0,9,4,2);
     c.restore();
     D(c,ax-10,-12+bob,4,10,P.pink);
+    c.strokeStyle="rgba(255,255,255,0.3)";c.lineWidth=0.8;c.strokeRect(ax-10,-4+bob,4,2);
   }else if(pose==="purse"&&t>0){
-    // Purse swing
-    c.save();c.translate(ax+7,-12+bob);c.rotate(-0.8+(pw||0)*0.03);
+    c.save();c.translate(ax+7,-12+bob);c.rotate(-0.8+pw*0.03);
     D(c,0,0,4,14,P.pink);
-    // Purse
     RR(c,-2,12,10,8,2,"#8B4513");D(c,-1,10,8,2,P.gold);
     c.restore();
     D(c,ax-10,-12+bob,4,10,P.pink);
   }else if(pose==="nag"&&t>0){
-    // Wagging finger
     c.save();c.translate(ax+7,-12+bob);c.rotate(-0.3);
     D(c,0,0,4,10,P.pink);c.fillStyle=P.skin;c.beginPath();c.arc(2,11,2.5,0,Math.PI*2);c.fill();
-    // Finger up
     D(c,1,7,2,5,P.skin);
     c.restore();
-    D(c,ax-10,-12+bob+(nag||0),4,10,P.pink);
+    D(c,ax-10,-12+bob+nag,4,10,P.pink);
   }else if(pose==="item"&&t>0){
     D(c,ax-10,-12+bob,4,10,P.pink);
     c.save();c.translate(ax+7,-14+bob);
     D(c,0,0,4,10,P.pink);
-    // Glowing item
-    c.fillStyle="rgba(0,206,209,"+(glow||0.3)+")";
+    c.fillStyle="rgba(0,206,209,"+glow+")";
     c.beginPath();c.arc(3,0,6,0,Math.PI*2);c.fill();
     c.restore();
   }else{
     D(c,ax-10,-12+bob,4,10,P.pink);D(c,ax+6,-12+bob,4,10,P.pink);
+    // Cuffs
+    c.strokeStyle="rgba(255,255,255,0.28)";c.lineWidth=0.8;
+    c.strokeRect(ax-10,-4+bob,4,2);c.strokeRect(ax+6,-4+bob,4,2);
     c.fillStyle=P.skin;
     c.beginPath();c.arc(ax-8,-2+bob,2.5,0,Math.PI*2);c.fill();
     c.beginPath();c.arc(ax+8,-2+bob,2.5,0,Math.PI*2);c.fill();
   }
 
-  // Head
-  c.fillStyle=P.skin;c.beginPath();c.arc(ax,-20+bob,9,0,Math.PI*2);c.fill();
-  // Hair
-  c.fillStyle=P.hair;c.beginPath();c.arc(ax,-24+bob,9,Math.PI,2*Math.PI);c.fill();
-  D(c,ax-9,-23+bob,4,9,P.hair);D(c,ax+5,-23+bob,4,9,P.hair);
-  c.fillStyle="rgba(255,255,200,0.25)";c.beginPath();c.arc(ax+3,-26+bob,3,0,Math.PI*2);c.fill();
-  // Eyes
+  // Head — gradient skin
+  var hg=c.createRadialGradient(ax-2,-22+bob,1,ax,-20+bob,9);
+  hg.addColorStop(0,"#FFD0BE");hg.addColorStop(1,"#E8A898");
+  c.fillStyle=hg;c.beginPath();c.arc(ax,-20+bob,9,0,Math.PI*2);c.fill();
+
+  // Hair — bezier strands (matches world K'Dee)
+  c.fillStyle=P.hair;
+  // Left strand
+  c.beginPath();
+  c.moveTo(ax-9,-24+bob);
+  c.bezierCurveTo(ax-12,-18+bob,ax-11,-8+bob,ax-9,-2+bob);
+  c.bezierCurveTo(ax-8,1+bob,ax-6,2+bob,ax-5,0+bob);
+  c.bezierCurveTo(ax-6,-9+bob,ax-7,-19+bob,ax-6,-24+bob);
+  c.closePath();c.fill();
+  // Right strand
+  c.beginPath();
+  c.moveTo(ax+5,-24+bob);
+  c.bezierCurveTo(ax+8,-18+bob,ax+7,-8+bob,ax+5,-2+bob);
+  c.bezierCurveTo(ax+4,1+bob,ax+3,1+bob,ax+3,-1+bob);
+  c.bezierCurveTo(ax+3,-10+bob,ax+4,-19+bob,ax+3,-24+bob);
+  c.closePath();c.fill();
+  // Top cap
+  c.beginPath();c.arc(ax,-24+bob,9,Math.PI,2*Math.PI);c.fill();
+  // Hair highlight
+  c.fillStyle="rgba(255,255,200,0.32)";
+  c.beginPath();c.arc(ax-2,-26+bob,3,Math.PI*1.1,Math.PI*1.9);c.fill();
+
+  // Eyes — HP-aware + blink
+  var isAngry=pose==="nag"||hpFumes;
+  var isTired=hpTired&&pose==="idle";
   if(pose==="hurt"){
     c.strokeStyle="#333";c.lineWidth=1;
     c.beginPath();c.moveTo(ax-5,-21+bob);c.lineTo(ax-2,-19+bob);c.moveTo(ax-2,-21+bob);c.lineTo(ax-5,-19+bob);c.stroke();
     c.beginPath();c.moveTo(ax+2,-21+bob);c.lineTo(ax+5,-19+bob);c.moveTo(ax+5,-21+bob);c.lineTo(ax+2,-19+bob);c.stroke();
-  }else if(pose==="nag"){
-    // Angry eyes
+  }else if(blinking){
+    c.strokeStyle="#333";c.lineWidth=1.2;
+    c.beginPath();c.moveTo(ax-5,-20+bob);c.lineTo(ax-2,-20+bob);c.stroke();
+    c.beginPath();c.moveTo(ax+1,-20+bob);c.lineTo(ax+4,-20+bob);c.stroke();
+  }else if(isAngry){
     c.fillStyle="#fff";c.fillRect(ax-5,-21+bob,4,3);c.fillRect(ax+1,-21+bob,4,3);
     c.fillStyle=P.eye;c.fillRect(ax-4,-20+bob,2,2);c.fillRect(ax+2,-20+bob,2,2);
-    // Angry brows
     c.strokeStyle="#333";c.lineWidth=1;
     c.beginPath();c.moveTo(ax-6,-23+bob);c.lineTo(ax-2,-22+bob);c.stroke();
     c.beginPath();c.moveTo(ax+6,-23+bob);c.lineTo(ax+2,-22+bob);c.stroke();
+  }else if(isTired||hpGrimace){
+    // Half-lidded tired eyes
+    c.fillStyle="#fff";c.fillRect(ax-5,-21+bob,4,3);c.fillRect(ax+1,-21+bob,4,3);
+    c.fillStyle=P.eye;c.fillRect(ax-4,-20+bob,2,2);c.fillRect(ax+2,-20+bob,2,2);
+    c.fillStyle="rgba(230,180,140,0.7)";c.fillRect(ax-5,-21+bob,4,2);c.fillRect(ax+1,-21+bob,4,2);
+    c.strokeStyle="#555";c.lineWidth=0.7;
+    c.beginPath();c.moveTo(ax-5,-21+bob);c.lineTo(ax-1,-21+bob);c.stroke();
+    c.beginPath();c.moveTo(ax+1,-21+bob);c.lineTo(ax+5,-21+bob);c.stroke();
   }else{
     c.fillStyle="#fff";c.fillRect(ax-5,-21+bob,4,3);c.fillRect(ax+1,-21+bob,4,3);
     c.fillStyle=P.eye;c.fillRect(ax-4,-20+bob,2,2);c.fillRect(ax+2,-20+bob,2,2);
     c.fillStyle="#fff";c.fillRect(ax-4,-21+bob,1,1);c.fillRect(ax+2,-21+bob,1,1);
   }
-  // Mouth
-  if(pose==="nag"){
+
+  // Mouth — HP-aware
+  if(pose==="nag"||hpFumes){
+    // Open angry mouth
     c.fillStyle="#333";c.beginPath();c.arc(ax,-15+bob,2,0,Math.PI*2);c.fill();
-  }else if(pose==="hurt"){
+  }else if(pose==="hurt"||hpGrimace){
+    // Grimace / frown
     c.strokeStyle="#333";c.lineWidth=1;c.beginPath();c.arc(ax,-14+bob,2,Math.PI+0.3,2*Math.PI-0.3);c.stroke();
+  }else if(isTired){
+    // Flat tired mouth
+    c.strokeStyle="#c07070";c.lineWidth=0.8;
+    c.beginPath();c.moveTo(ax-2,-15+bob);c.lineTo(ax+2,-15+bob);c.stroke();
   }else{
+    // Normal smile
     c.strokeStyle=P.pink;c.lineWidth=1;c.beginPath();c.arc(ax,-15+bob,3,0.1*Math.PI,0.9*Math.PI);c.stroke();
   }
 
@@ -2233,45 +2491,130 @@ function drawBattle(c){
   var bs=battleState;if(!bs)return;
   var f=bs.fighter;
 
-  // === VS INTRO SPLASH ===
+  // === VS INTRO SPLASH (cinematic) ===
   if(bs.phase==="vsIntro"){
+    var vt=bs.vsTimer;// 150→0
+    // Phase breakdown:
+    // 150-110: K'Dee slides in from left, pink flash
+    // 110-70:  Enemy slides in from right, color flash
+    // 70-30:   VS text zooms in + shake
+    // 30-0:    Freeze frame hold
+
     c.fillStyle="#0a0a1a";c.fillRect(0,0,CW,CH);
-    var p=bs.vsTimer/90;// 1→0
 
-    // Diagonal split
+    // --- fighter color panels ---
+    var kPanel=Math.max(0,Math.min(1,(150-vt)/40));// 0→1 as vt 150→110
+    var ePanel=Math.max(0,Math.min(1,(110-vt)/40));// 0→1 as vt 110→70
+
+    // Pink panel (left half)
     c.save();
-    c.beginPath();c.moveTo(0,0);c.lineTo(CW*p*2,0);c.lineTo(0,CH);c.closePath();c.clip();
-    c.fillStyle="rgba(255,105,180,0.15)";c.fillRect(0,0,CW,CH);
-    drawBattleKdee(c,100,330,"idle",0);
+    c.globalAlpha=0.18*kPanel;
+    c.fillStyle="#FF69B4";c.fillRect(0,0,CW/2,CH);
     c.restore();
 
+    // Enemy color panel (right half)
+    var frgb=f.color||"#7766cc";
+    var fr=parseInt(frgb.slice(1,3),16)||119,fg2=parseInt(frgb.slice(3,5),16)||102,fb=parseInt(frgb.slice(5,7),16)||204;
     c.save();
-    c.beginPath();c.moveTo(CW,CH);c.lineTo(CW-CW*p*2,CH);c.lineTo(CW,0);c.closePath();c.clip();
-    c.fillStyle="rgba("+((f.color||"#fff").indexOf("#8a")>=0?"138,43,226":"0,150,200")+",0.15)";c.fillRect(0,0,CW,CH);
-    drawBattleEnemy(c,f,260,290,"idle",0,bs.enemyAnim);
+    c.globalAlpha=0.18*ePanel;
+    c.fillStyle="rgb("+fr+","+fg2+","+fb+")";
+    c.fillRect(CW/2,0,CW/2,CH);
     c.restore();
 
-    // VS text
-    if(bs.vsTimer<70){
-      var vs=Math.min(1,(70-bs.vsTimer)/15);
-      c.save();c.globalAlpha=vs;
-      c.fillStyle=P.gold;c.font="bold 48px monospace";c.textAlign="center";
-      c.fillText("VS",CW/2,CH/2-10);
-      c.font="bold 10px monospace";c.fillStyle="#fff";
-      c.fillText("K'DEE",CW/4,CH/2+20);
-      c.fillText(f.name,CW*3/4,CH/2+20);
-      c.font="8px monospace";c.fillStyle=f.color||"#aaa";
-      c.fillText(f.title||"",CW*3/4,CH/2+34);
+    // Diagonal divider line
+    c.save();
+    var dAlpha=Math.max(kPanel,ePanel)*0.7;
+    c.globalAlpha=dAlpha;
+    c.strokeStyle="rgba(255,215,0,0.9)";c.lineWidth=3;
+    c.beginPath();c.moveTo(CW/2-20,0);c.lineTo(CW/2+20,CH);c.stroke();
+    c.restore();
+
+    // --- K'Dee zooms in from left ---
+    if(kPanel>0){
+      var kSlide=1-Math.pow(1-kPanel,3);// ease out cubic
+      var kX=CW*0.28-( (1-kSlide)*CW*0.5 );// starts off-screen left
+      var kSc=0.9+kSlide*0.1;// slight zoom in
+      c.save();
+      c.translate(kX,CH*0.5);c.scale(kSc,kSc);c.translate(-kX,-CH*0.5);
+      // Pink flash on entry
+      if(vt>140){c.globalAlpha=Math.max(0,(vt-140)/10)*0.5;c.fillStyle="#FF69B4";c.fillRect(0,0,CW/2,CH);c.globalAlpha=1;}
+      drawBattleKdee(c,kX,CH*0.55,"idle",0);
+      c.restore();
+
+      // K'Dee name card slides in from bottom
+      var kNameY=Math.min(0,(kPanel-0.6)*2.5)*40;// slides up after 60%
+      c.save();
+      c.globalAlpha=Math.max(0,(kPanel-0.5)*2);
+      c.fillStyle="rgba(0,0,0,0.55)";c.fillRect(10,CH*0.72+kNameY,130,32);
+      c.fillStyle=P.gold;c.font="bold 12px monospace";c.textAlign="left";
+      c.fillText("K'DEE",18,CH*0.72+16+kNameY);
+      c.fillStyle="#FF69B4";c.font="8px monospace";
+      c.fillText("PLAYER",18,CH*0.72+28+kNameY);
       c.textAlign="left";
       c.restore();
     }
 
-    // Lightning line down center
-    c.strokeStyle="rgba(255,215,0,"+(0.3+0.3*Math.sin(bs.vsTimer*0.3))+")";
-    c.lineWidth=2;c.beginPath();
-    c.moveTo(CW/2,0);
-    for(var i=0;i<CH;i+=20){c.lineTo(CW/2+Math.sin(i*0.1+bs.vsTimer*0.2)*8,i);}
-    c.stroke();
+    // --- Enemy zooms in from right ---
+    if(ePanel>0){
+      var eSlide=1-Math.pow(1-ePanel,3);
+      var eX=CW*0.72+( (1-eSlide)*CW*0.5 );// starts off-screen right
+      var eSc=0.9+eSlide*0.1;
+      c.save();
+      c.translate(eX,CH*0.4);c.scale(eSc,eSc);c.translate(-eX,-CH*0.4);
+      // Enemy color flash on entry
+      if(vt>100&&vt<110){c.globalAlpha=Math.max(0,(vt-100)/10)*0.45;c.fillStyle="rgb("+fr+","+fg2+","+fb+")";c.fillRect(CW/2,0,CW/2,CH);c.globalAlpha=1;}
+      drawBattleEnemy(c,f,eX,CH*0.42,"idle",0,bs.enemyAnim);
+      c.restore();
+
+      // Enemy name card slides in from bottom
+      var eNameY=Math.min(0,(ePanel-0.6)*2.5)*40;
+      c.save();
+      c.globalAlpha=Math.max(0,(ePanel-0.5)*2);
+      c.fillStyle="rgba(0,0,0,0.55)";c.fillRect(CW-150,CH*0.18+eNameY,140,36);
+      c.fillStyle=f.color||"#aaa";c.font="bold 11px monospace";c.textAlign="right";
+      c.fillText(f.name,CW-14,CH*0.18+18+eNameY);
+      c.fillStyle="#aaa";c.font="8px monospace";
+      c.fillText(f.title||"OPPONENT",CW-14,CH*0.18+30+eNameY);
+      c.textAlign="left";
+      c.restore();
+    }
+
+    // --- VS text zooms in + shake ---
+    if(vt<70){
+      var vsProgress=Math.min(1,(70-vt)/20);
+      // zoom overshoot: scale 3→1 with bounce
+      var vsScale;
+      if(vsProgress<0.5){vsScale=3-vsProgress*4;}
+      else{vsScale=1+(1-vsProgress)*0.4*Math.sin((vsProgress-0.5)*Math.PI*4);}
+      vsScale=Math.max(1,vsScale);
+      // shake: strongest at 70-60
+      var shakeAmt=(vt>60&&vt<=70)?Math.sin(vt*3.7)*(70-vt)*1.5:0;
+      c.save();
+      c.translate(CW/2+shakeAmt,CH/2-10);
+      c.scale(vsScale,vsScale);
+      // Glow halo behind VS
+      c.globalAlpha=Math.min(1,(70-vt)/15)*0.6;
+      var vsGlow=c.createRadialGradient(0,0,5,0,0,60);
+      vsGlow.addColorStop(0,"rgba(255,215,0,0.8)");vsGlow.addColorStop(1,"rgba(255,215,0,0)");
+      c.fillStyle=vsGlow;c.beginPath();c.arc(0,0,60,0,Math.PI*2);c.fill();
+      // VS text
+      c.globalAlpha=Math.min(1,(70-vt)/12);
+      c.fillStyle=P.gold;c.font="bold 52px monospace";c.textAlign="center";c.textBaseline="middle";
+      // Text shadow
+      c.fillStyle="rgba(0,0,0,0.6)";c.fillText("VS",3,3);
+      c.fillStyle=P.gold;c.fillText("VS",0,0);
+      // White outline flash right as VS appears
+      if(vt>58&&vt<70){c.globalAlpha=(70-vt)/12*0.8;c.strokeStyle="#fff";c.lineWidth=3;c.strokeText("VS",0,0);}
+      c.textBaseline="alphabetic";c.textAlign="left";
+      c.restore();
+    }
+
+    // Screen-edge vignette
+    c.save();
+    var vg=c.createRadialGradient(CW/2,CH/2,CW*0.3,CW/2,CH/2,CW*0.85);
+    vg.addColorStop(0,"rgba(0,0,0,0)");vg.addColorStop(1,"rgba(0,0,0,0.55)");
+    c.fillStyle=vg;c.fillRect(0,0,CW,CH);
+    c.restore();
 
     return;
   }
