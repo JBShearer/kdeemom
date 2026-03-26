@@ -22,7 +22,7 @@ function paintFoyer(c){
   D(c,120,60,120,280,P.dbrown);RR(c,125,65,110,270,4,"#654321");
   c.fillStyle="rgba(0,0,0,0.15)";c.beginPath();c.arc(180,65,55,Math.PI,2*Math.PI);c.fill();
   D(c,213,190,10,10,P.gold);c.fillStyle="#b8960c";c.beginPath();c.arc(218,195,4,0,Math.PI*2);c.fill();
-  // Side passages with depth gradient
+  // Side passages with depth gradient — left leads to Kitchen, right to Living Room
   D(c,8,120,65,220,P.dbrown);var pg=c.createLinearGradient(12,0,69,0);pg.addColorStop(0,"#1a1a1a");pg.addColorStop(1,P.brown);c.fillStyle=pg;c.fillRect(12,125,57,210);
   D(c,287,120,65,220,P.dbrown);pg=c.createLinearGradient(291,0,348,0);pg.addColorStop(0,P.brown);pg.addColorStop(1,"#1a1a1a");c.fillStyle=pg;c.fillRect(291,125,57,210);
   // Clock
@@ -31,43 +31,44 @@ function paintFoyer(c){
   c.strokeStyle=P.gold;c.lineWidth=1;c.beginPath();c.moveTo(180,22);c.lineTo(180,14);c.moveTo(180,22);c.lineTo(187,22);c.stroke();
   // Welcome mat
   RR(c,140,480,80,22,4,P.dgreen);c.fillStyle=P.lgreen;c.font="bold 7px monospace";c.fillText("WELCOME",149,496);
-  // Shoe pile with scattered shoes
+  // Shoe pile — right floor area, away from door
   D(c,260,440,60,30,"#4a3553");
   [[265,435,"#e74c3c"],[282,437,"#3498db"],[298,439,"#2ecc71"],[270,450,"#9b59b6"]].forEach(function(s){RR(c,s[0],s[1],14,9,3,s[2]);});
-  // Coat rack
+  // Coat rack — on left wall ABOVE the side passage, clear of hotspot
   D(c,85,160,5,170,P.dbrown);D(c,73,155,30,6,P.dbrown);RR(c,70,141,14,20,3,"#e74c3c");RR(c,88,138,14,22,3,"#3498db");
-  // Mirror on LEFT wall (near coat rack, clear of door)
-  RR(c,15,140,42,55,4,"#c0c0c0");RR(c,18,143,36,49,3,P.sky);
-  c.fillStyle="rgba(255,255,255,0.12)";c.fillRect(18,143,11,49);
-  D(c,26,155,18,22,P.skin);
-  // Plant
+  // Mirror — on BACK WALL between front door and right passage (x=245-280, well clear of both passages)
+  RR(c,245,108,38,52,4,"#c0c0c0");RR(c,248,111,32,46,3,P.sky);
+  c.fillStyle="rgba(255,255,255,0.12)";c.fillRect(248,111,10,46);
+  D(c,254,122,16,20,P.skin);
+  // Plant — far right floor corner
   D(c,300,380,35,45,P.brown);SH(c,295,427,45);
   c.fillStyle=P.green;c.beginPath();c.arc(317,355,22,0,Math.PI*2);c.fill();
   c.fillStyle=P.lgreen;c.beginPath();c.arc(310,345,15,0,Math.PI*2);c.fill();
   c.fillStyle=P.lgreen;c.beginPath();c.arc(325,348,12,0,Math.PI*2);c.fill();
-  // Downstairs steps at center bottom
+  // Downstairs steps — center bottom floor
   var sx=140,sy=510;
-  D(c,sx,sy+36,80,10,P.dbrown);// shadow opening
+  D(c,sx,sy+36,80,10,P.dbrown);
   c.fillStyle="#0a0a0a";c.beginPath();c.ellipse(sx+40,sy+42,30,8,0,0,Math.PI*2);c.fill();
   for(var st=0;st<4;st++){var sw=80-st*10,sxo=sx+st*5,syo=sy+st*9;D(c,sxo,syo,sw,9,st%2===0?"#654321":"#7a6040");}
-  // Banister posts on stairs
-  c.fillStyle=P.dbrown;
   D(c,sx+4,sy,3,36,"#8B6914");D(c,sx+76,sy,3,36,"#8B6914");
   c.strokeStyle="#8B6914";c.lineWidth=2;c.beginPath();c.moveTo(sx+4,sy+2);c.lineTo(sx+76,sy+2);c.stroke();
-  // Upstairs staircase on right side of foyer
-  var usx=285,usy=200;
-  // Wall opening arch
-  D(c,usx,usy,65,160,P.dbrown);RR(c,usx+2,usy+2,61,158,6,"#3a2a14");
-  // Steps going up (perspective — narrower at top)
-  var stepColors=["#7a6040","#654321","#7a6040","#654321","#7a6040"];
-  for(var us=0;us<5;us++){var uw=55-us*5,uxo=usx+5+us*3,uyo=usy+130-us*26;D(c,uxo,uyo,uw,10,stepColors[us]);}
-  // Up-stair banister
-  c.strokeStyle="#8B6914";c.lineWidth=2;
-  c.beginPath();c.moveTo(usx+8,usy+140);c.lineTo(usx+20,usy+14);c.stroke();
-  c.beginPath();c.moveTo(usx+54,usy+140);c.lineTo(usx+60,usy+14);c.stroke();
-  // Label
-  c.fillStyle="rgba(255,215,0,0.5)";c.font="bold 6px monospace";c.textAlign="center";
-  c.fillText("UPSTAIRS",usx+32,usy+155);c.textAlign="left";
+  // Upstairs door — on BACK WALL left side (x=75-110), clear of front door and left passage
+  // Drawn as a narrow doorway in the back wall with stairs visible through it
+  var udx=76,udy=130,udw=38,udh=140;
+  D(c,udx,udy,udw,udh,P.dbrown);
+  RR(c,udx+2,udy+2,udw-4,udh-4,4,"#2a1a08");
+  // Arch top
+  c.fillStyle="#2a1a08";c.beginPath();c.arc(udx+udw/2,udy+2,udw/2-2,Math.PI,0);c.fill();
+  // Steps visible through doorway (going up into darkness)
+  var stC=["#6a5030","#5a4020","#4a3010","#3a2000"];
+  for(var us=0;us<4;us++){var uw=udw-8-us*5,uy=udy+udh-20-us*22;D(c,udx+4+us*2,uy,uw,10,stC[us]);}
+  // Banister inside doorway
+  c.strokeStyle="#8B6914";c.lineWidth=1.5;
+  c.beginPath();c.moveTo(udx+6,udy+udh-8);c.lineTo(udx+14,udy+12);c.stroke();
+  c.beginPath();c.moveTo(udx+udw-6,udy+udh-8);c.lineTo(udx+udw-10,udy+12);c.stroke();
+  // "UPSTAIRS" label below doorway
+  c.fillStyle="rgba(255,215,0,0.55)";c.font="bold 5px monospace";c.textAlign="center";
+  c.fillText("UPSTAIRS",udx+udw/2,udy+udh+12);c.textAlign="left";
 }
 function paintKitchen(c){
   D(c,0,370,360,270,"#d4a76a");for(var i=0;i<360;i+=28)for(var j=370;j<640;j+=28){if((Math.floor(i/28)+Math.floor(j/28))%2===0)D(c,i,j,28,28,"#c99a5b");}
@@ -1108,8 +1109,14 @@ var ROOMS=[
 ];
 
 function makeHS(){return[
-// Room 0: Foyer — mirror moved left, upstairs added
-[{id:"fdoor",x:120,y:60,w:120,h:280,name:"Front Door",look:"Locked. You need keys.",open:"LOCKED."},{id:"shoes",x:260,y:435,w:60,h:35,name:"Shoe Pile",look:"Chaotic. None match.",push:"Cheerio rolls out."},{id:"coat",x:68,y:140,w:35,h:70,name:"Coat Rack",look:"Two coats, something alive.",use:"Gum wrapper and lint."},{id:"mirror",x:15,y:138,w:44,h:57,name:"Mirror",look:"Needs coffee. And keys.",talk:"'Have fun, don't die.'"},{id:"plant",x:295,y:340,w:45,h:60,name:"Suspicious Plant",look:"Thrives on chaos.",push:"A KEY falls out!",hasKey:true},{id:"fmat",x:140,y:475,w:80,h:25,name:"Welcome Mat",look:"WELCOME. Ironic.",push:"Dead bug and disappointment."},{id:"stairs",x:140,y:505,w:80,h:48,name:"Stairs Down",look:"Dark stairs descending.",open:"goto:11"},{id:"ustairsF",x:280,y:195,w:70,h:165,name:"Upstairs",look:"Stairs going up to the bedroom.",open:"goto:9"},{id:"doorL",x:0,y:120,w:75,h:240,name:"Kitchen",open:"goto:1"},{id:"doorR",x:287,y:120,w:73,h:240,name:"Living Room",open:"goto:2"},{id:"jbdoor",x:0,y:430,w:30,h:90,name:"Jesus Bathroom",open:"goto:10"}],
+// Room 0: Foyer
+// doorL  = x:0–75   (left passage → Kitchen)
+// doorR  = x:287–360 (right passage → Living Room)
+// mirror = x:245–283 (back wall right of front door, clear of both passages)
+// ustairsF = x:75–115 (back wall left of front door, clear of left passage)
+// jbdoor = x:0, bottom-left floor
+// stairs = center bottom floor
+[{id:"fdoor",x:120,y:60,w:120,h:280,name:"Front Door",look:"Locked. You need keys.",open:"LOCKED."},{id:"shoes",x:260,y:435,w:60,h:35,name:"Shoe Pile",look:"Chaotic. None match.",push:"Cheerio rolls out."},{id:"coat",x:68,y:140,w:35,h:70,name:"Coat Rack",look:"Two coats, something alive.",use:"Gum wrapper and lint."},{id:"mirror",x:244,y:105,w:40,h:55,name:"Mirror",look:"Needs coffee. And keys.",talk:"'Have fun, don't die.'"},{id:"plant",x:295,y:340,w:45,h:60,name:"Suspicious Plant",look:"Thrives on chaos.",push:"A KEY falls out!",hasKey:true},{id:"fmat",x:140,y:475,w:80,h:25,name:"Welcome Mat",look:"WELCOME. Ironic.",push:"Dead bug and disappointment."},{id:"stairs",x:140,y:505,w:80,h:48,name:"Stairs Down",look:"Dark stairs descending.",open:"goto:11"},{id:"ustairsF",x:75,y:128,w:42,h:145,name:"Upstairs",look:"Stairs going up to the bedroom.",open:"goto:9"},{id:"doorL",x:0,y:120,w:75,h:240,name:"Kitchen",open:"goto:1"},{id:"doorR",x:287,y:120,w:73,h:240,name:"Living Room",open:"goto:2"},{id:"jbdoor",x:0,y:430,w:30,h:90,name:"Jesus Bathroom",open:"goto:10"}],
 [{id:"stove",x:110,y:155,w:115,h:65,name:"Stove",look:"All burners on. Nothing cooking.",use:"Turns off burners. Safety first."},{id:"fridge",x:275,y:78,w:78,h:195,name:"Fridge",look:"Kids' drawings. Expired coupons.",open:"Mystery leftovers. One sad yogurt."},{id:"sink",x:10,y:245,w:80,h:55,name:"Sink",look:"Full of dishes. Always.",use:"Rubber duck floats up."},{id:"banana",x:235,y:258,w:25,h:12,name:"Banana",look:"Groundbreaking.",take:"Takes it. For scale.",quest:"banana"},{id:"cab",x:8,y:15,w:345,h:80,name:"Cabinets",look:"Mismatched Tupperware.",open:"Avalanche of containers!"},{id:"kdoorL",x:0,y:300,w:14,h:200,name:"Foyer",open:"goto:0"},{id:"kdoorR",x:346,y:300,w:14,h:200,name:"Laundry",open:"goto:6"},{id:"pantry",x:160,y:320,w:50,h:40,name:"Pantry",open:"goto:13"}],
 [{id:"tv",x:100,y:55,w:165,h:125,name:"TV",look:"Nobody watching. Remote MIA.",use:"Volume to 100. Neighbor's cat yowls in response."},{id:"couch",x:16,y:355,w:232,h:70,name:"Couch",look:"More pillow than couch.",push:"ALL pillows moved. Remote AND a KEY!",hasKey:true},{id:"bookshelf",x:268,y:95,w:85,h:230,name:"Bookshelf",look:"Unread since 2018.",take:"'Parenting Without Losing Your Mind.'"},{id:"lamp",x:245,y:280,w:35,h:70,name:"Lamp",look:"Only approved light.",push:"LEGO rolls out."},{id:"rug",x:60,y:435,w:200,h:50,name:"Rug",look:"Hides crumbs.",push:"Cheerios, crayon, Monopoly house."},{id:"ldoorL",x:0,y:260,w:14,h:200,name:"Foyer",open:"goto:0"},{id:"ldoorR",x:346,y:260,w:14,h:200,name:"Kids' Room",open:"goto:3"}],
 [{id:"bunk",x:8,y:135,w:115,h:230,name:"Bunk Bed",look:"Top: fort. Bottom: stuffed animals.",open:"Half-eaten granola bar."},{id:"toybox",x:135,y:410,w:75,h:55,name:"Toy Box",look:"90% random objects.",open:"Avalanche of action figures."},{id:"lego",x:170,y:465,w:180,h:45,name:"LEGO Minefield",look:"Colorful landmines.",push:"OW. OWWW."},{id:"dino",x:298,y:395,w:35,h:45,name:"Mr. Rex",look:"Kids say he's real.",talk:"'Keys are in the garage.'"},{id:"poster",x:178,y:55,w:68,h:60,name:"Poster",look:"GAME OVER. Ominous."},{id:"desk",x:218,y:215,w:135,h:110,name:"Desk",look:"Crayon drawings.",open:"'Mom But Cool.'"},{id:"kdoorL",x:0,y:260,w:14,h:200,name:"Living Room",open:"goto:2"},{id:"kdoorR",x:346,y:260,w:14,h:200,name:"Bathroom",open:"goto:4"}],
