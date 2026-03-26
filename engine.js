@@ -337,7 +337,7 @@ function drawScene(){
 }
 
 var animRunning=false;
-function gameLoop(){if(!animRunning)return;frameTick++;if(battleActive){updateBattle();drawBattle(ctx);}else if(miniActive){updateCatchGame();drawCatchGame(ctx);}else{updateWalk();updateHolly();drawScene();}requestAnimationFrame(gameLoop);}
+function gameLoop(){if(!animRunning)return;frameTick++;if(battleActive){updateBattle();drawBattle(ctx);}else if(miniActive){updateCatchGame();drawCatchGame(ctx);}else if(frogActive){updateFrogger();drawFrogger(ctx);}else if(racerActive){updateRacer();drawRacer(ctx);}else{updateWalk();updateHolly();drawScene();}requestAnimationFrame(gameLoop);}
 function startLoop(){if(!animRunning){animRunning=true;gameLoop();}}
 
 function updateHUD(){
@@ -473,6 +473,14 @@ function performAction(h,v){
     usedHS[uid]=true;
     hideDlg();
     startCatchGame();
+    return;
+  }
+
+  // Mini-game trigger: backyard BBQ (starts poop frogger)
+  if(h.id==="bbq"&&v==="open"&&!usedHS[uid]){
+    usedHS[uid]=true;
+    hideDlg();
+    startFrogger();
     return;
   }
 
@@ -622,6 +630,215 @@ document.getElementById("bagbtn").addEventListener("click",function(){
   if(document.getElementById("inv-screen").classList.contains("on")){hideInv();}else{showInv();}
 });
 document.getElementById("inv-close").addEventListener("click",hideInv);
+
+/* --- FROGGER MINI-GAME --- */
+/* Backyard poop dodger: tap/click to hop K'Dee across the yard avoiding dog poop. */
+var frogActive=false,frogRow=0,frogCol=3,frogTimer=0,frogLives=3,frogScore=0,frogLevel=1;
+var frogPoops=[],frogComplete=false,frogMsgTimer=0,frogMsg="",frogMoveDelay=0;
+var FROG_ROWS=7,FROG_COLS=7;// 7x7 grid
+var FROG_CELLW=Math.floor(360/FROG_COLS),FROG_CELLH=Math.floor(490/FROG_ROWS);// visible play area
+var FROG_TOP=80;// y offset from top of canvas
+
+function startFrogger(){
+  frogActive=true;frogRow=FROG_ROWS-1;frogCol=3;frogTimer=0;frogLives=3;frogScore=0;frogLevel=1;
+  frogPoops=[];frogComplete=false;frogMsg="DODGE THE POOP!";frogMsgTimer=80;frogMoveDelay=0;
+  paused=true;
+  spawnFrogPoops();
+}
+
+function spawnFrogPoops(){
+  frogPoops=[];
+  // Each row (except top row = goal, bottom row = start) gets poop obstacles
+  // Rows 1..FROG_ROWS-2 are danger rows
+  for(var r=1;r<FROG_ROWS-1;r++){
+    var count=2+frogLevel+Math.floor(Math.random()*2);
+    var dir=(r%2===0)?1:-1;
+    var speed=0.3+frogLevel*0.15+Math.random()*0.2;
+    for(var i=0;i<count;i++){
+      frogPoops.push({
+        row:r,
+        x:Math.random()*360,
+        speed:speed*dir,
+        size:frogLevel>=3?16:14
+      });
+    }
+  }
+}
+
+function updateFrogger(){
+  frogTimer++;
+  if(frogMsgTimer>0)frogMsgTimer--;
+  if(frogMoveDelay>0)frogMoveDelay--;
+  if(frogComplete)return;
+
+  // Move poops horizontally within their row
+  frogPoops.forEach(function(p){
+    p.x+=p.speed;
+    if(p.x<-20)p.x=380;
+    if(p.x>380)p.x=-20;
+  });
+
+  // Check collision
+  if(frogRow>0&&frogRow<FROG_ROWS-1){
+    var px=frogCol*FROG_CELLW+FROG_CELLW/2;
+    var py=FROG_TOP+frogRow*FROG_CELLH+FROG_CELLH/2;
+    frogPoops.forEach(function(p){
+      if(p.row!==frogRow)return;
+      var dist=Math.abs(p.x-px);
+      if(dist<p.size+10){
+        frogHit();
+      }
+    });
+  }
+
+  // Win condition: reached top
+  if(frogRow===0){
+    frogScore+=10+frogLevel*5;
+    frogMsg="MADE IT! +"+(10+frogLevel*5)+" pts";frogMsgTimer=80;
+    if(frogScore>=50){
+      frogComplete=true;
+      frogMsg="YOU ESCAPED! K'Dee: "+frogScore+" pts";frogMsgTimer=220;
+      // Apply reward: small HP restore
+      kdeeHP=Math.min(kdeeMaxHP,kdeeHP+2);updateHUD();
+    } else {
+      frogLevel++;frogRow=FROG_ROWS-1;frogCol=3;
+      spawnFrogPoops();
+    }
+  }
+}
+
+function frogHit(){
+  frogLives--;frogRow=FROG_ROWS-1;frogCol=3;
+  frogMsg=frogLives>0?"POOP HIT! "+frogLives+" \u2665 left":"GAME OVER!";frogMsgTimer=90;
+  if(frogLives<=0){
+    frogComplete=true;
+    frogMsg="K'Dee slipped. She smells. "+frogScore+" pts";frogMsgTimer=200;
+    kdeeHP=Math.max(1,kdeeHP-2);updateHUD();
+  }
+}
+
+function drawFrogger(c){
+  // Sky bg
+  var bg=c.createLinearGradient(0,0,0,FROG_TOP+FROG_ROWS*FROG_CELLH);
+  bg.addColorStop(0,"#87CEEB");bg.addColorStop(1,"#5a8a40");
+  c.fillStyle=bg;c.fillRect(0,0,CW,CH);
+
+  // Title bar
+  c.fillStyle="rgba(0,0,0,0.7)";c.fillRect(0,0,CW,FROG_TOP);
+  c.fillStyle="#fff";c.font="bold 12px monospace";c.textAlign="center";
+  c.fillText("POOP DODGER",CW/2,22);c.textAlign="left";
+  c.fillStyle="#2ecc71";c.font="10px monospace";c.textAlign="center";
+  c.fillText("Score: "+frogScore+"  Lives: "+"\u2665".repeat(Math.max(0,frogLives))+"  Level: "+frogLevel,CW/2,42);c.textAlign="left";
+
+  // Draw grid rows
+  for(var r=0;r<FROG_ROWS;r++){
+    var ry=FROG_TOP+r*FROG_CELLH;
+    var rh=FROG_CELLH;
+    if(r===0){
+      // Goal: grass patch
+      c.fillStyle="#3a7a20";c.fillRect(0,ry,CW,rh);
+      c.fillStyle="#FFD700";c.font="bold 10px monospace";c.textAlign="center";
+      c.fillText("\u2605 SAFE ZONE \u2605",CW/2,ry+rh/2+4);c.textAlign="left";
+    } else if(r===FROG_ROWS-1){
+      // Start zone: path
+      c.fillStyle="#7a6a50";c.fillRect(0,ry,CW,rh);
+    } else {
+      // Danger rows: alternate lawn stripes
+      c.fillStyle=(r%2===0)?"#4a8a30":"#5a9a38";c.fillRect(0,ry,CW,rh);
+      // Row divider
+      c.strokeStyle="rgba(0,0,0,0.1)";c.lineWidth=1;c.beginPath();c.moveTo(0,ry);c.lineTo(CW,ry);c.stroke();
+    }
+  }
+
+  // Draw poop obstacles
+  frogPoops.forEach(function(p){
+    var py=FROG_TOP+p.row*FROG_CELLH+FROG_CELLH/2;
+    c.font=(p.size*1.4)+"px serif";c.textAlign="center";
+    c.fillText("\uD83D\uDCA9",p.x,py+p.size/2);
+    c.textAlign="left";
+  });
+
+  // Draw K'Dee (frog-mode: cute jumping sprite)
+  var kx=frogCol*FROG_CELLW+FROG_CELLW/2;
+  var ky=FROG_TOP+frogRow*FROG_CELLH+FROG_CELLH/2;
+  var bounce=frogMoveDelay>0?-Math.sin(frogMoveDelay/8*Math.PI)*10:0;
+  c.save();c.translate(kx,ky+bounce);
+  // Mini K'Dee
+  c.fillStyle=P.skin;c.beginPath();c.arc(0,-14,7,0,Math.PI*2);c.fill();
+  c.fillStyle=P.hair;c.beginPath();c.arc(0,-18,7,Math.PI,2*Math.PI);c.fill();
+  c.fillStyle=P.pink;c.fillRect(-7,-10,14,10);// body
+  c.fillStyle="#4169E1";c.fillRect(-7,-2,14,5);// legs
+  c.fillStyle=P.eye;c.fillRect(-3,-15,2,2);c.fillRect(1,-15,2,2);
+  c.restore();
+
+  // Overlay message
+  if(frogMsgTimer>0&&frogMsg){
+    var alpha=Math.min(1,frogMsgTimer/20);
+    c.save();c.globalAlpha=alpha*0.92;
+    var tw=c.measureText(frogMsg).width+20;
+    c.font="bold 12px monospace";
+    RR(c,CW/2-tw/2,CH/2-26,tw,28,6,"rgba(0,0,0,0.85)");
+    c.fillStyle="#FFD700";c.textAlign="center";
+    c.fillText(frogMsg,CW/2,CH/2-6);c.textAlign="left";
+    c.restore();
+  }
+
+  // Done overlay
+  if(frogComplete&&frogMsgTimer<150){
+    c.fillStyle="rgba(0,0,0,0.6)";c.fillRect(0,CH-60,CW,60);
+    c.fillStyle="#FFD700";c.font="bold 11px monospace";c.textAlign="center";
+    c.fillText("[ TAP TO CONTINUE ]",CW/2,CH-25);c.textAlign="left";
+  }
+
+  // Timer progress bar
+  var t=frogTimer;
+  var barW=((t%300)/300)*CW;
+  c.fillStyle="rgba(255,100,100,0.5)";c.fillRect(0,FROG_TOP-6,barW,4);
+}
+
+// Frogger input: swipe direction or tap arrows
+var frogSwipeStart=null;
+canvas.addEventListener("touchstart",function(e){
+  if(!frogActive)return;
+  var p=getCanvasCoords(e);frogSwipeStart={x:p.x,y:p.y};
+},{passive:false});
+canvas.addEventListener("touchend",function(e){
+  if(!frogActive)return;
+  e.preventDefault();
+  if(frogComplete){
+    var msg=frogLives>0?"K'Dee made it through the poop! She smells like victory. +2 HP!":"K'Dee took a tumble. -2 HP. She's fine. Mostly.";
+    frogActive=false;paused=false;
+    showSimpleDlg("POOP DODGER",msg,frogLives>0?"excited":"hurt");return;
+  }
+  if(!frogSwipeStart)return;
+  var p=getCanvasCoords(e);
+  var dx=p.x-frogSwipeStart.x,dy=p.y-frogSwipeStart.y;
+  frogSwipeStart=null;
+  frogMove(dx,dy);
+},{passive:false});
+
+document.addEventListener("keydown",function(e){
+  if(!frogActive)return;
+  if(e.key==="ArrowUp"||e.key==="w")frogMove(0,-1);
+  else if(e.key==="ArrowDown"||e.key==="s")frogMove(0,1);
+  else if(e.key==="ArrowLeft"||e.key==="a")frogMove(-1,0);
+  else if(e.key==="ArrowRight"||e.key==="d")frogMove(1,0);
+  else if(e.key===" "||e.key==="Enter"){
+    if(frogComplete){
+      var msg=frogLives>0?"K'Dee made it through the poop! She smells like victory. +2 HP!":"K'Dee took a tumble. -2 HP. She's fine. Mostly.";
+      frogActive=false;paused=false;
+      showSimpleDlg("POOP DODGER",msg,frogLives>0?"excited":"hurt");
+    }
+  }
+});
+
+function frogMove(dx,dy){
+  if(frogMoveDelay>0||frogComplete)return;
+  if(Math.abs(dx)>Math.abs(dy)){frogCol+=dx>0?1:-1;}else{frogRow+=dy>0?1:-1;}
+  frogCol=Math.max(0,Math.min(FROG_COLS-1,frogCol));
+  frogRow=Math.max(0,Math.min(FROG_ROWS-1,frogRow));
+  frogMoveDelay=10;
+}
 
 /* --- CATCH MINI-GAME --- */
 /* Kitchen cabinet avalanche: catch falling Tupperware! */
@@ -780,6 +997,24 @@ function findHS(mx,my){
 
 canvas.addEventListener("click",function(e){
   if(battleActive){var p=getCanvasCoords(e);battleClick(p.x,p.y);return;}
+  // Frogger: click left/right half to move
+  if(frogActive){
+    if(frogComplete){
+      var msg=frogLives>0?"K'Dee made it through the poop! She smells like victory. +2 HP!":"K'Dee took a tumble. -2 HP. She's fine. Mostly.";
+      frogActive=false;paused=false;
+      showSimpleDlg("POOP DODGER",msg,frogLives>0?"excited":"hurt");return;
+    }
+    var p=getCanvasCoords(e);
+    if(p.x<CW/2)frogMove(-1,0);else frogMove(1,0);
+    return;
+  }
+  // Racer: click left/right half to lane change
+  if(racerActive){
+    if(racerOver){racerFinish();return;}
+    var p=getCanvasCoords(e);
+    if(p.x<CW/2)racerLaneMoveBy(-1);else racerLaneMoveBy(1);
+    return;
+  }
   if(paused||gameOver)return;
   var p=getCanvasCoords(e);
   // Check if player clicked on running Holly
@@ -2034,6 +2269,238 @@ function updateBattle(){
   dmgFloats=dmgFloats.filter(function(d){return d.life>0;});
 }
 
+/* --- ENDLESS RACER MINI-GAME --- */
+/* K'Dee drives the red Audi TT down the road after finding all 3 keys. */
+var racerActive=false,racerX=180,racerSpeed=2.5,racerScore=0,racerDist=0;
+var racerObstacles=[],racerLanes=[90,180,270];// 3 lane X centers
+var racerLane=1,racerTargetX=180,racerScrollY=0,racerLives=3,racerOver=false;
+var racerMsg="",racerMsgTimer=0,racerSpawnTimer=0,racerTick=0;
+var RACER_ROAD_L=40,RACER_ROAD_R=320;// road edges
+
+function startRacer(){
+  racerActive=true;racerX=180;racerLane=1;racerTargetX=180;racerSpeed=2.5;
+  racerScore=0;racerDist=0;racerObstacles=[];racerLives=3;racerOver=false;
+  racerMsg="DRIVE HOME!";racerMsgTimer=90;racerScrollY=0;racerTick=0;racerSpawnTimer=0;
+  // Don't pause — racer is its own loop mode
+  paused=true;
+}
+
+function updateRacer(){
+  if(racerOver)return;
+  racerTick++;
+  racerScrollY=(racerScrollY+racerSpeed*4)%80;
+  racerDist+=racerSpeed;
+  racerScore=Math.floor(racerDist/10);
+  if(racerMsgTimer>0)racerMsgTimer--;
+
+  // Gradually increase speed
+  if(racerTick%300===0&&racerSpeed<8)racerSpeed+=0.4;
+
+  // Smooth K'Dee car toward target lane
+  racerX+=(racerTargetX-racerX)*0.18;
+
+  // Spawn obstacles
+  racerSpawnTimer--;
+  if(racerSpawnTimer<=0){
+    var spd=racerSpeed*3+(Math.random()-0.5);
+    var laneIdx=Math.floor(Math.random()*3);
+    var type=Math.random()<0.3?"pothole":"car";
+    racerObstacles.push({x:racerLanes[laneIdx],y:-30,speed:spd,type:type,lane:laneIdx,hit:false});
+    racerSpawnTimer=Math.max(30,80-racerScore*0.5);
+    // Sometimes spawn two
+    if(Math.random()<0.3&&racerScore>20){
+      var l2=(laneIdx+1+Math.floor(Math.random()*2))%3;
+      racerObstacles.push({x:racerLanes[l2],y:-60,speed:spd,type:"pothole",lane:l2,hit:false});
+    }
+  }
+
+  // Move obstacles
+  racerObstacles.forEach(function(o){
+    o.y+=o.speed;
+  });
+  racerObstacles=racerObstacles.filter(function(o){return o.y<680&&!o.hit;});
+
+  // Collision check — K'Dee car hitbox y=540–610
+  racerObstacles.forEach(function(o){
+    if(o.hit)return;
+    if(o.y>510&&o.y<620&&Math.abs(o.x-racerX)<30){
+      o.hit=true;racerLives--;
+      racerMsg=racerLives>0?"WATCH OUT! "+racerLives+" \u2665":"CRASHED!";
+      racerMsgTimer=80;
+      if(racerLives<=0){
+        racerOver=true;
+        racerMsg="CRASHED! "+racerScore+" pts";racerMsgTimer=240;
+      }
+    }
+  });
+}
+
+function drawRacer(c){
+  // Sky
+  c.fillStyle="#87CEEB";c.fillRect(0,0,CW,200);
+  // Distant scenery
+  c.fillStyle="#4a8a30";c.fillRect(0,200,CW,100);
+  // Road
+  var roadGrad=c.createLinearGradient(0,300,0,CH);
+  roadGrad.addColorStop(0,"#555");roadGrad.addColorStop(1,"#777");
+  c.fillStyle=roadGrad;c.fillRect(RACER_ROAD_L,300,RACER_ROAD_R-RACER_ROAD_L,CH-300);
+  // Grass verges
+  c.fillStyle="#4a8a30";c.fillRect(0,300,RACER_ROAD_L,CH-300);
+  c.fillStyle="#4a8a30";c.fillRect(RACER_ROAD_R,300,CW-RACER_ROAD_R,CH-300);
+  // Road markings (scrolling dashes)
+  c.strokeStyle="rgba(255,255,255,0.6)";c.lineWidth=3;c.setLineDash([30,20]);
+  c.lineDashOffset=-racerScrollY*3;
+  c.beginPath();c.moveTo(135,300);c.lineTo(135,CH);c.stroke();
+  c.beginPath();c.moveTo(225,300);c.lineTo(225,CH);c.stroke();
+  c.setLineDash([]);
+
+  // Road edges
+  c.strokeStyle="rgba(255,255,255,0.9)";c.lineWidth=2;
+  c.beginPath();c.moveTo(RACER_ROAD_L,300);c.lineTo(RACER_ROAD_L,CH);c.stroke();
+  c.beginPath();c.moveTo(RACER_ROAD_R,300);c.lineTo(RACER_ROAD_R,CH);c.stroke();
+
+  // Perspective vanishing point lines
+  c.strokeStyle="rgba(255,255,255,0.08)";c.lineWidth=1;
+  c.beginPath();c.moveTo(RACER_ROAD_L,300);c.lineTo(CW/2,300);c.stroke();
+  c.beginPath();c.moveTo(RACER_ROAD_R,300);c.lineTo(CW/2,300);c.stroke();
+
+  // Obstacles
+  racerObstacles.forEach(function(o){
+    if(o.type==="pothole"){
+      c.save();c.globalAlpha=0.9;
+      c.fillStyle="#333";c.beginPath();c.ellipse(o.x,o.y,18,10,0,0,Math.PI*2);c.fill();
+      c.fillStyle="#222";c.beginPath();c.ellipse(o.x,o.y,12,6,0,0,Math.PI*2);c.fill();
+      c.restore();
+    } else {
+      // Oncoming car (simple block)
+      drawRacerCar(c,o.x,o.y,"#3333cc",false);
+    }
+  });
+
+  // K'Dee's red Audi TT convertible
+  drawRacerCar(c,racerX,560,"#e74c3c",true);
+
+  // HUD bar
+  c.fillStyle="rgba(0,0,0,0.7)";c.fillRect(0,0,CW,56);
+  c.fillStyle="#FFD700";c.font="bold 11px monospace";c.textAlign="center";
+  c.fillText("DRIVE HOME!",CW/2,18);c.textAlign="left";
+  c.fillStyle="#fff";c.font="10px monospace";c.textAlign="center";
+  c.fillText("DIST: "+racerScore+"m   \u2665"+racerLives+"   SPD: "+racerSpeed.toFixed(1)+"x",CW/2,38);c.textAlign="left";
+
+  // Speed lines at high speed
+  if(racerSpeed>5){
+    var sl=Math.floor((racerSpeed-5)*4);
+    c.save();c.globalAlpha=0.1;c.strokeStyle="#fff";c.lineWidth=1;
+    for(var i=0;i<sl;i++){
+      var sx=RACER_ROAD_L+Math.random()*(RACER_ROAD_R-RACER_ROAD_L);
+      c.beginPath();c.moveTo(sx,300);c.lineTo(sx-20,CH);c.stroke();
+    }
+    c.restore();
+  }
+
+  // Message overlay
+  if(racerMsgTimer>0&&racerMsg){
+    var alpha=Math.min(1,racerMsgTimer/20);
+    c.save();c.globalAlpha=alpha*0.92;
+    c.font="bold 13px monospace";
+    var tw=c.measureText(racerMsg).width+20;
+    RR(c,CW/2-tw/2,CH/2-26,tw,28,6,"rgba(0,0,0,0.85)");
+    c.fillStyle="#FFD700";c.textAlign="center";
+    c.fillText(racerMsg,CW/2,CH/2-6);c.textAlign="left";
+    c.restore();
+  }
+
+  // Done overlay
+  if(racerOver&&racerMsgTimer<180){
+    c.fillStyle="rgba(0,0,0,0.65)";c.fillRect(0,CH-60,CW,60);
+    c.fillStyle="#FFD700";c.font="bold 11px monospace";c.textAlign="center";
+    c.fillText("[ TAP TO FINISH ]",CW/2,CH-25);c.textAlign="left";
+  }
+}
+
+function drawRacerCar(c,x,y,color,isKdee){
+  // Car body
+  c.save();c.translate(x,y);
+  var w=28,h=44;
+  // Shadow
+  c.save();c.globalAlpha=0.2;c.fillStyle="#000";
+  c.beginPath();c.ellipse(0,h/2+4,w/2+2,5,0,0,Math.PI*2);c.fill();c.restore();
+  // Main body
+  RR(c,-w/2,-h/2,w,h,5,color);
+  // Windshield
+  c.fillStyle="rgba(180,220,255,0.7)";
+  RR(c,-w/2+4,-h/2+6,w-8,h*0.3,3,"rgba(180,220,255,0.7)");
+  // Wheels
+  c.fillStyle="#222";
+  c.beginPath();c.ellipse(-w/2+1,-h/2+10,5,4,0,0,Math.PI*2);c.fill();
+  c.beginPath();c.ellipse(w/2-1,-h/2+10,5,4,0,0,Math.PI*2);c.fill();
+  c.beginPath();c.ellipse(-w/2+1,h/2-10,5,4,0,0,Math.PI*2);c.fill();
+  c.beginPath();c.ellipse(w/2-1,h/2-10,5,4,0,0,Math.PI*2);c.fill();
+  // Headlights/tail lights
+  if(isKdee){
+    // Tail lights (top of car since going away = rear)
+    c.fillStyle="#e74c3c";c.fillRect(-w/2+2,-h/2,7,4);c.fillRect(w/2-9,-h/2,7,4);
+    // K'Dee driver (small head in windshield)
+    c.fillStyle=P.skin;c.beginPath();c.arc(0,-h/2+11,4,0,Math.PI*2);c.fill();
+    c.fillStyle=P.hair;c.beginPath();c.arc(0,-h/2+8,4,Math.PI,2*Math.PI);c.fill();
+  } else {
+    c.fillStyle="#FFD700";c.fillRect(-w/2+2,h/2-4,7,4);c.fillRect(w/2-9,h/2-4,7,4);
+  }
+  c.restore();
+}
+
+// Racer touch input: swipe left/right or tap left/right half
+var racerSwipeStart=null;
+canvas.addEventListener("touchstart",function(e){
+  if(!racerActive)return;
+  var p=getCanvasCoords(e);racerSwipeStart={x:p.x,y:p.y};
+},{passive:false});
+canvas.addEventListener("touchend",function(e){
+  if(!racerActive)return;
+  e.preventDefault();
+  if(racerOver){racerFinish();return;}
+  if(!racerSwipeStart)return;
+  var p=getCanvasCoords(e);
+  var dx=p.x-racerSwipeStart.x;
+  racerSwipeStart=null;
+  if(Math.abs(dx)<15){// tap: left or right half
+    if(p.x<CW/2)racerLaneMoveBy(-1);else racerLaneMoveBy(1);
+  } else {
+    if(dx<0)racerLaneMoveBy(-1);else racerLaneMoveBy(1);
+  }
+},{passive:false});
+
+document.addEventListener("keydown",function(e){
+  if(!racerActive)return;
+  if(e.key==="ArrowLeft"||e.key==="a")racerLaneMoveBy(-1);
+  else if(e.key==="ArrowRight"||e.key==="d")racerLaneMoveBy(1);
+  else if((e.key===" "||e.key==="Enter")&&racerOver)racerFinish();
+});
+
+function racerLaneMoveBy(dir){
+  racerLane=Math.max(0,Math.min(2,racerLane+dir));
+  racerTargetX=racerLanes[racerLane];
+}
+
+function racerFinish(){
+  racerActive=false;paused=false;
+  var msg;
+  if(racerLives>0){
+    msg="K'Dee floors it home in the red Audi TT! "+racerScore+"m without crashing! She has arrived. Have fun, don't die!";
+  } else {
+    msg="K'Dee's TT is dented. Worth it. She got home eventually. "+racerScore+"m driven.";
+  }
+  gameOver=true;clearInterval(timerInterval);
+  var d=document.getElementById("dlg");var inner=document.getElementById("dlg-inner");
+  d.classList.remove("on");inner.style.animation="none";void inner.offsetWidth;inner.style.animation="";d.classList.add("on");
+  setPortraitMode("excited");
+  document.getElementById("dlg-name").textContent="HOME FREE!";
+  typeText(document.getElementById("dlg-text"),msg);
+  document.getElementById("dlg-choices").innerHTML='<div class="dlg-ch" id="play-again3" style="border-color:#FFD700;color:#FFD700">\uD83C\uDF89 PLAY AGAIN</div>';
+  document.getElementById("play-again3").addEventListener("click",function(){location.reload();});
+}
+
+
 function winGame(){
   gameOver=true;paused=true;clearInterval(timerInterval);
   document.getElementById("dlg-continue").style.display="none";
@@ -2044,8 +2511,15 @@ function winGame(){
   setPortraitMode("excited");
   document.getElementById("dlg-name").textContent="YOU WIN!";
   var m=Math.floor((780-timer)/60),s=(780-timer)%60;
-  typeText(document.getElementById("dlg-text"),"K'Dee found all 3 keys in "+m+"m "+s+"s! She grabs her purse, kisses the kids, and heads out the door. Have fun, don't die!");
-  document.getElementById("dlg-choices").innerHTML='<div class="dlg-ch" id="play-again" style="border-color:#FFD700;color:#FFD700">\uD83C\uDF89 PLAY AGAIN</div>';
+  typeText(document.getElementById("dlg-text"),"K'Dee found all 3 keys in "+m+"m "+s+"s! She grabs her purse, kisses the kids, and runs out the door. The red Audi TT is waiting. Time to DRIVE HOME!");
+  document.getElementById("dlg-choices").innerHTML=
+    '<div class="dlg-ch" id="drive-home-btn" style="border-color:#e74c3c;color:#e74c3c">\uD83D\uDE97 DRIVE HOME!</div>'+
+    '<div class="dlg-ch" id="play-again" style="border-color:#FFD700;color:#FFD700">\uD83C\uDF89 PLAY AGAIN</div>';
+  document.getElementById("drive-home-btn").addEventListener("click",function(){
+    document.getElementById("dlg").classList.remove("on");
+    gameOver=false;paused=false;
+    startRacer();
+  });
   document.getElementById("play-again").addEventListener("click",function(){location.reload();});
 }
 
