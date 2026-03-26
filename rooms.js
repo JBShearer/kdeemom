@@ -81,15 +81,35 @@ function paintKitchen(c){
   D(c,238,262,22,8,P.gold);
 }
 function paintLiving(c){
+  var ft=window._ft?window._ft():0;
+  var lrk=window._lrk||{};
   D(c,0,370,360,270,"#5c4a3a");
   // Hardwood grain
   for(var i=0;i<360;i+=24){c.fillStyle="rgba(80,60,40,0.15)";c.fillRect(i,370,1,270);}
   var g=c.createLinearGradient(0,0,0,370);g.addColorStop(0,"#3d3450");g.addColorStop(1,"#4d3c5e");c.fillStyle=g;c.fillRect(0,0,360,370);
   WF(c,370);
-  // TV with screen glow
+  // TV — screen flickers when Forest is home (he's changed the input)
   RR(c,100,60,160,100,4,"#222");RR(c,105,65,150,90,3,"#111");
-  var tg=c.createRadialGradient(180,110,10,180,110,70);tg.addColorStop(0,"#1a4a7a");tg.addColorStop(1,"#0a1a3a");c.fillStyle=tg;c.fillRect(110,70,140,80);
-  c.fillStyle="rgba(30,80,150,0.06)";c.fillRect(80,50,200,180); // screen glow
+  var tvFlicker=lrk.forest?0.7+0.3*Math.sin(ft*0.18+Math.sin(ft*0.07)*2):1;
+  // Screen color shifts based on who's watching
+  var tvR=lrk.forest?10:26,tvG=lrk.forest?30:74,tvB=lrk.forest?80:122;
+  var tg=c.createRadialGradient(180,110,10,180,110,70);
+  tg.addColorStop(0,"rgba("+Math.round(tvR*tvFlicker*3)+","+Math.round(tvG*tvFlicker*2)+","+Math.round(tvB*tvFlicker)+",1)");
+  tg.addColorStop(1,"#0a1a3a");
+  c.fillStyle=tg;c.fillRect(110,70,140,80);
+  // Screen glow — brighter and more colorful if Forest
+  var glowA=lrk.forest?(0.06+0.04*Math.sin(ft*0.12))*tvFlicker:0.06;
+  var glowC=lrk.forest?"rgba(20,80,255,"+glowA+")":"rgba(30,80,150,"+glowA+")";
+  c.fillStyle=glowC;c.fillRect(80,50,200,180);
+  // If Forest is here, show a gaming HUD on the TV
+  if(lrk.forest){
+    c.save();c.globalAlpha=0.7*tvFlicker;
+    c.fillStyle="#0f0";c.font="bold 7px monospace";c.textAlign="center";
+    c.fillText("LVL 847  HP: ♥♥♥♥♥",180,95);
+    c.fillStyle="#ff0";c.font="6px monospace";
+    c.fillText("SCORE: "+Math.floor(ft*13.7)%999999,180,108);
+    c.restore();
+  }
   RR(c,150,160,60,18,3,"#333");D(c,135,176,90,3,"#222");
   // Couch with cushions
   RR(c,16,355,228,68,6,"#8B4513");RR(c,20,350,220,10,3,"#A0522D");
@@ -258,6 +278,15 @@ function paintLiving(c){
     c.fillStyle="#555";c.beginPath();c.arc(-2,-61,1,0,Math.PI*2);c.fill();c.beginPath();c.arc(2,-61,1,0,Math.PI*2);c.fill();
     // Tiny smile
     c.strokeStyle="#c08090";c.lineWidth=1;c.beginPath();c.arc(0,-58,2,0,Math.PI);c.stroke();
+    c.restore();
+  }
+  // Secret ending hint — when 5 of 6 kids are collected, TV shows a faint message
+  var kidCount=[lrk.milo,lrk.greyson,lrk.gwyneth,lrk.forest,lrk.daed,lrk.holly].filter(Boolean).length;
+  if(kidCount>=5&&kidCount<6){
+    var pulse=0.4+0.35*Math.sin(ft*0.06);
+    c.save();c.globalAlpha=pulse;
+    c.fillStyle="#FFD700";c.font="bold 7px monospace";c.textAlign="center";
+    c.fillText("...one more.",180,340);c.textAlign="left";
     c.restore();
   }
 }

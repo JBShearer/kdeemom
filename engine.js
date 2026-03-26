@@ -1,7 +1,9 @@
 /* K'DEE MOM — GAME ENGINE (portrait 360x640 canvas) */
 (function(){
 var CW=360,CH=640,curRoom=0,keys=0,timer=780,inv=[],usedHS={},questItems={},paused=false,gameOver=false;
-var kdeeHP=20,kdeeMaxHP=20;
+/* Hearts: each container = 4 quarters. Start with 4 containers = 16 quarters */
+var kdeeHearts=4,kdeeMaxHearts=4; // containers
+var kdeeHP=16,kdeeMaxHP=16;       // quarters (kdeeMaxHP always = kdeeMaxHearts*4)
 var canvas=document.getElementById("scene"),ctx=canvas.getContext("2d");
 var hotspots=makeHS();
 var invEmoji={banana:"\uD83C\uDF4C",duck:"\uD83E\uDD86",bible:"\uD83D\uDCD6",flashlight:"\uD83D\uDD26",necronomicon:"\uD83D\uDCDA",shovel:"\u26CF\uFE0F",wrench:"\uD83D\uDD27",towel:"\uD83E\uDDF4",book:"\uD83D\uDCDA",tidepen:"\uD83E\uDDF4",phone:"\uD83D\uDCF1"};
@@ -28,6 +30,7 @@ var gwynMsg="",gwynMsgTimer=0;
 var livingRoomKids={milo:false,greyson:false,gwyneth:false,forest:false,daed:false,holly:false};
 var hollyWasTripped=false;
 window._lrk=livingRoomKids; // expose for room painter
+window._ft=function(){return frameTick;}; // expose frameTick for room animations
 function drawKdee(c,x,y){
   var breathe=Math.sin(frameTick*0.04)*1;
   var bob=kdeeWalking?Math.sin(walkAnim*0.3)*3.5:breathe*0.7;
@@ -101,7 +104,7 @@ function drawKdee(c,x,y){
 function updateWalk(){
   if(!kdeeWalking)return;
   walkAnim++;
-  var spd=kdeeHP<=0?Math.max(1,walkSpeed+kdeeHP*0.3):kdeeHP<5?3:walkSpeed;
+  var spd=kdeeHP<=0?Math.max(1,walkSpeed+kdeeHP*0.3):kdeeHP<4?3:walkSpeed;
   var dx=kdeeTargetX-kdeeX,dy=kdeeTargetY-kdeeY;
   var dist=Math.sqrt(dx*dx+dy*dy);
   if(dist<spd+1){kdeeX=kdeeTargetX;kdeeY=kdeeTargetY;kdeeWalking=false;walkAnim=0;return;}
@@ -529,6 +532,7 @@ function fadeToRoom(roomIdx){
       }
     }
     checkBattle(roomIdx);
+    saveGame();
   };
 }
 
@@ -577,7 +581,18 @@ function updateHUD(){
   var m=Math.floor(timer/60),s=timer%60;
   document.getElementById("hs").textContent="\u23F0 "+m+":"+(s<10?"0":"")+s;
   var hpEl=document.getElementById("hhp");
-  if(hpEl)hpEl.textContent="\u2764 "+kdeeHP+"/"+kdeeMaxHP;
+  if(hpEl){
+    var hearts="";
+    for(var hi=0;hi<kdeeMaxHearts;hi++){
+      var q=kdeeHP-hi*4; // quarters remaining for this container
+      if(q>=4)hearts+="\u2764\uFE0F";       // full heart
+      else if(q===3)hearts+="\uD83D\uDC97"; // almost full (green = 3/4)
+      else if(q===2)hearts+="\uD83D\uDC9B"; // half (yellow = 2/4)
+      else if(q===1)hearts+="\uD83E\uDDE1"; // sliver (orange = 1/4)
+      else hearts+="\uD83E\uDD0D";           // empty (broken)
+    }
+    hpEl.textContent=hearts;
+  }
 }
 
 function setDesc(t){document.getElementById("desc-text").textContent=t;}
@@ -666,7 +681,7 @@ function performAction(h,v){
 
   // Key discovery
   if(h.hasKey&&v===keyVerb){
-    keys++;usedHS[uid]=true;
+    keys++;usedHS[uid]=true;saveGame();
     setPortraitMode("key");
     typeText(document.getElementById("dlg-text"),txt+"\n\n\uD83D\uDD11 KEY FOUND! ("+keys+"/3)");
     buildVerbButtons(h);
@@ -793,8 +808,8 @@ function interactWith(h){
 
 /* --- FULL INVENTORY SYSTEM --- */
 var invDetails={
-  banana:{emoji:"\uD83C\uDF4C",name:"Banana",desc:"A perfectly ripe banana. Restores 3 HP when eaten.",type:"Food",battle:"Super effective vs. Milo!",heal:3},
-  cookie:{emoji:"\uD83C\uDF6A",name:"Snack Cookie",desc:"Confiscated from Greyson's stash. Peanut butter. Restores 5 HP.",type:"Food",battle:"General battle item",heal:5},
+  banana:{emoji:"\uD83C\uDF4C",name:"Banana",desc:"A perfectly ripe banana. Restores 1 heart when eaten.",type:"Food",battle:"Super effective vs. Milo!",heal:4},
+  cookie:{emoji:"\uD83C\uDF6A",name:"Snack Cookie",desc:"Confiscated from Greyson's stash. Peanut butter. Restores 2 hearts.",type:"Food",battle:"General battle item",heal:8},
   duck:{emoji:"\uD83E\uDD86",name:"General Quackers",desc:"Leader of the rubber duck army. Seen things. Won't talk about it.",type:"Companion",battle:"Super effective vs. Milo!"},
   bible:{emoji:"\uD83D\uDCD6",name:"Bible",desc:"Proverbs 31. Divine guidance for finding lost keys. (Results may vary.)",type:"Sacred Text",battle:"Super effective vs. Greyson, Space Jesus & Baal'thazar!"},
   flashlight:{emoji:"\uD83D\uDD26",name:"Flashlight",desc:"Found at the workbench. Batteries at 12%. Classic.",type:"Tool",battle:"Useful in battle vs. Forest"},
@@ -864,7 +879,8 @@ function showInv(){
       if(existingUse)existingUse.remove();
       if(info.heal&&!battleActive){
         var useBtn=document.createElement("button");
-        useBtn.id="inv-use-btn";useBtn.textContent="🍽 EAT (+"+info.heal+" HP)";
+        var heartCount=info.heal/4;
+        useBtn.id="inv-use-btn";useBtn.textContent="\uD83C\uDF7D EAT (+"+(heartCount===1?"1 heart":heartCount+" hearts")+")";
         useBtn.style="font-family:monospace;font-size:0.75rem;color:#2ecc71;border:1px solid #2ecc71;background:transparent;padding:8px 20px;border-radius:16px;cursor:pointer;margin-top:8px;letter-spacing:1px;display:block;margin-left:auto;margin-right:auto";
         useBtn.addEventListener("click",function(){
           if(kdeeHP>=kdeeMaxHP){setDesc("K'Dee is already at full health!");return;}
@@ -872,7 +888,8 @@ function showInv(){
           kdeeHP=Math.min(kdeeMaxHP,kdeeHP+info.heal);
           updateHUD();
           inv.splice(inv.indexOf(it),1);
-          setDesc(info.name+" eaten! +" +healed+" HP!");
+          var hh=Math.ceil(healed/4);
+          setDesc(info.name+" eaten! +"+hh+(hh===1?" heart!":" hearts!"));
           hideInv();
         });
         document.getElementById("inv-detail").appendChild(useBtn);
@@ -955,8 +972,8 @@ function updateFrogger(){
     if(frogScore>=50){
       frogComplete=true;
       frogMsg="YOU ESCAPED! K'Dee: "+frogScore+" pts";frogMsgTimer=220;
-      // Apply reward: small HP restore
-      kdeeHP=Math.min(kdeeMaxHP,kdeeHP+2);updateHUD();
+      // Apply reward: restore 1 full heart
+      kdeeHP=Math.min(kdeeMaxHP,kdeeHP+4);updateHUD();
     } else {
       frogLevel++;frogRow=FROG_ROWS-1;frogCol=3;
       spawnFrogPoops();
@@ -970,7 +987,7 @@ function frogHit(){
   if(frogLives<=0){
     frogComplete=true;
     frogMsg="K'Dee slipped. She smells. "+frogScore+" pts";frogMsgTimer=200;
-    kdeeHP=Math.max(1,kdeeHP-2);updateHUD();
+    kdeeHP=Math.max(1,kdeeHP-2);updateHUD(); // -2 quarters (half a heart)
   }
 }
 
@@ -1253,6 +1270,7 @@ function findHS(mx,my){
 }
 
 canvas.addEventListener("click",function(e){
+  if(paused&&!battleActive){paused=false;document.getElementById("pausebtn").textContent="⏸";setDesc("What should K'Dee do?");return;}
   if(battleActive){var p=getCanvasCoords(e);battleClick(p.x,p.y);return;}
   // Frogger: click left/right half to move
   if(frogActive){
@@ -1556,7 +1574,10 @@ function greysonHug(){
   document.getElementById("dlg-continue").style.display="none";
   document.getElementById("gd-hug-done").addEventListener("click",function(){
     hideDlg();battleDone["greyson"]=true;livingRoomKids.greyson=true;
-    setDesc("Greyson headed to the living room.");
+    if(kdeeMaxHearts<10)kdeeMaxHearts++;
+    kdeeMaxHP=kdeeMaxHearts*4;kdeeHP=kdeeMaxHP;
+    updateHUD();
+    setDesc("Greyson headed to the living room. +1 \u2764\uFE0F");
   });
 }
 
@@ -2288,18 +2309,18 @@ function drawBattle(c){
   c.fillStyle="#fff";c.font="bold 11px monospace";c.fillText(f.name,ebx+2,eby-4);
   c.fillStyle="#ccc";c.font="9px monospace";c.fillText(bs.enemyHP+"/"+f.maxHp,ebx+100,eby-4);
 
-  // K'Dee HP bar
+  // K'Dee heart containers (Zelda-style)
   var kbx=20,kby=350;
-  RR(c,kbx-2,kby-2,148,16,4,"#222");
-  var khpW=Math.max(0,kdeeHP/kdeeMaxHP)*140;
-  var khCol=kdeeHP>10?"#2ecc71":kdeeHP>5?"#e8a820":"#e74c3c";
-  if(kdeeHP<=0)khCol="#8B0000";
-  if(khpW>0)RR(c,kbx+2,kby+2,Math.max(0,khpW),8,3,khCol);
-  c.fillStyle="#fff";c.font="bold 11px monospace";c.fillText("K'DEE",kbx+2,kby-4);
-  c.fillStyle="#ccc";c.font="9px monospace";c.fillText(kdeeHP+"/"+kdeeMaxHP,kbx+100,kby-4);
-  // Exhaustion indicator
-  if(kdeeHP<=5&&kdeeHP>0){c.fillStyle="rgba(255,0,0,0.4)";c.font="bold 9px monospace";c.fillText("EXHAUSTED",kbx+2,kby+26);}
-  if(kdeeHP<=0){c.fillStyle="rgba(139,0,0,0.6)";c.font="bold 9px monospace";c.fillText("RUNNING ON FUMES",kbx+2,kby+26);}
+  c.fillStyle="#fff";c.font="bold 10px monospace";c.fillText("K'DEE",kbx,kby-4);
+  // Draw up to 10 containers in rows of 5
+  for(var hi=0;hi<kdeeMaxHearts;hi++){
+    var hx2=kbx+(hi%5)*22,hy2=kby+2+Math.floor(hi/5)*18;
+    var q=kdeeHP-hi*4;
+    var hemoji=q>=4?"\u2764\uFE0F":q===3?"\uD83D\uDC97":q===2?"\uD83D\uDC9B":q===1?"\uD83E\uDDE1":"\uD83E\uDD0D";
+    c.font="13px monospace";c.fillText(hemoji,hx2,hy2+12);
+  }
+  if(kdeeHP<=0){c.fillStyle="rgba(139,0,0,0.7)";c.font="bold 9px monospace";c.fillText("RUNNING ON FUMES",kbx,kby+40);}
+  else if(kdeeHP<=4){c.fillStyle="rgba(255,60,60,0.5)";c.font="bold 9px monospace";c.fillText("EXHAUSTED",kbx,kby+40);}
 
   // Screen flash
   if(bs.flashTimer>0){c.save();c.globalAlpha=bs.flashTimer/12*0.4;c.fillStyle=bs.flashColor;c.fillRect(0,0,CW,CH);c.restore();}
@@ -2444,7 +2465,14 @@ function battleClick(mx,my){
   if(bs.phase==="victory"){
     var wasHug=bs.hugWin;var wasId=bs.id;
     battleActive=false;paused=false;battleDone[bs.id]=true;
-    battleState=null;updateHUD();
+    battleState=null;
+    // Hug a kid = +1 heart container + full heal
+    if(wasHug&&(wasId==="milo"||wasId==="gwyneth"||wasId==="forest")){
+      if(kdeeMaxHearts<10)kdeeMaxHearts++;
+      kdeeMaxHP=kdeeMaxHearts*4;
+      kdeeHP=kdeeMaxHP;
+    }
+    updateHUD();
     if(wasHug&&wasId==="milo"){
       miloFollowing=true;miloRoomsLeft=3;
       miloFollowX=kdeeX+35;miloFollowY=kdeeY;
@@ -2909,8 +2937,8 @@ function tetEndGame(){
     inv.push("phone");questItems["phone"]=true;updateInv();
     showSimpleDlg("PHONE FOUND!","K'Dee digs through the avalanche... and there it is! 214 missed photos. 8% battery. 'I attached a photo' (no photo). The phone is FOUND.","phone");
   } else {
-    kdeeHP=Math.max(1,kdeeHP-1);updateHUD();
-    showSimpleDlg("BURIED!","The pile fought back. K'Dee emerges disheveled. -1 HP. The phone is still in there somewhere. Maybe try again?","hurt");
+    kdeeHP=Math.max(1,kdeeHP-2);updateHUD(); // -2 quarters (half a heart)
+    showSimpleDlg("BURIED!","The pile fought back. K'Dee emerges disheveled. The phone is still in there somewhere. Maybe try again?","hurt");
   }
 }
 
@@ -3182,6 +3210,7 @@ function racerFinish(){
 
 
 function winGame(){
+  clearSave();
   gameOver=true;paused=true;clearInterval(timerInterval);
   document.getElementById("dlg-continue").style.display="none";
   var d=document.getElementById("dlg");
@@ -3223,6 +3252,7 @@ function winGame(){
 }
 
 function loseGame(){
+  clearSave();
   gameOver=true;paused=true;clearInterval(timerInterval);
   document.getElementById("dlg-continue").style.display="none";
   var d=document.getElementById("dlg");
@@ -3239,7 +3269,42 @@ function loseGame(){
 var timerInterval;
 function startTimer(){timerInterval=setInterval(function(){if(paused||gameOver)return;timer--;updateHUD();if(timer<=0){clearInterval(timerInterval);loseGame();}},1000);}
 
+/* ── SAVE / LOAD ─────────────────────────────── */
+var SAVE_KEY="kdeemom_save";
+function saveGame(){
+  try{
+    localStorage.setItem(SAVE_KEY,JSON.stringify({
+      curRoom:curRoom,keys:keys,timer:timer,
+      inv:inv,usedHS:usedHS,questItems:questItems,
+      kdeeHP:kdeeHP,kdeeMaxHP:kdeeMaxHP,kdeeHearts:kdeeHearts,kdeeMaxHearts:kdeeMaxHearts,
+      kdeeX:Math.round(kdeeX),kdeeY:Math.round(kdeeY),
+      battleDone:battleDone,
+      livingRoomKids:livingRoomKids,hollyWasTripped:hollyWasTripped
+    }));
+  }catch(e){}
+}
+function loadGame(){
+  try{
+    var raw=localStorage.getItem(SAVE_KEY);
+    if(!raw)return false;
+    var s=JSON.parse(raw);
+    curRoom=s.curRoom||0;keys=s.keys||0;timer=s.timer!=null?s.timer:780;
+    inv=s.inv||[];usedHS=s.usedHS||{};questItems=s.questItems||{};
+    kdeeHP=s.kdeeHP||16;kdeeMaxHP=s.kdeeMaxHP||16;
+    kdeeHearts=s.kdeeHearts||4;kdeeMaxHearts=s.kdeeMaxHearts||4;
+    kdeeX=s.kdeeX||180;kdeeY=s.kdeeY||520;
+    kdeeTargetX=kdeeX;kdeeTargetY=kdeeY;
+    if(s.battleDone)for(var k2 in s.battleDone)battleDone[k2]=s.battleDone[k2];
+    if(s.livingRoomKids)for(var k3 in s.livingRoomKids)livingRoomKids[k3]=s.livingRoomKids[k3];
+    hollyWasTripped=s.hollyWasTripped||false;
+    return true;
+  }catch(e){return false;}
+}
+function clearSave(){try{localStorage.removeItem(SAVE_KEY);}catch(e){}}
+function hasSave(){try{return!!localStorage.getItem(SAVE_KEY);}catch(e){return false;}}
+
 document.getElementById("startbtn").addEventListener("click",function(){
+  clearSave();
   document.getElementById("title").style.display="none";
   document.getElementById("game").classList.add("on");
   kdeeX=180;kdeeY=520;// start center of foyer above welcome mat
@@ -3249,8 +3314,43 @@ document.getElementById("startbtn").addEventListener("click",function(){
   startLoop();startTimer();
 });
 
+// Wire continue button (shown if save exists)
+(function(){
+  var cb=document.getElementById("contbtn");
+  if(cb&&hasSave()){
+    cb.style.display="";
+    cb.addEventListener("click",function(){
+      if(loadGame()){
+        document.getElementById("title").style.display="none";
+        document.getElementById("game").classList.add("on");
+        hotspots=makeHS();
+        spawnParticles(curRoom);
+        drawScene();updateHUD();updateInv();
+        initPortrait();
+        startLoop();startTimer();
+      }
+    });
+  }
+})();
+
+document.getElementById("pausebtn").addEventListener("click",function(){
+  if(gameOver||battleActive||miniActive||frogActive||racerActive||tetActive)return;
+  paused=!paused;
+  document.getElementById("pausebtn").textContent=paused?"▶":"⏸";
+  if(paused){saveGame();setDesc("— PAUSED — tap anywhere to resume");}
+  else{setDesc("What should K'Dee do?");}
+});
+
 document.getElementById("qbtn").addEventListener("click",function(){
-  if(confirm("Quit game?")){gameOver=true;animRunning=false;clearInterval(timerInterval);document.getElementById("game").classList.remove("on");document.getElementById("title").style.display="flex";}
+  if(confirm("Quit game? Progress will be saved.")){
+    saveGame();
+    gameOver=true;animRunning=false;clearInterval(timerInterval);
+    document.getElementById("game").classList.remove("on");
+    var t=document.getElementById("title");
+    t.style.display="flex";
+    var cb=document.getElementById("contbtn");
+    if(cb)cb.style.display="";
+  }
 });
 
 })();
