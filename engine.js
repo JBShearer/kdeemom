@@ -11,6 +11,10 @@ var verbLabels={use:"\u270B USE",take:"\uD83E\uDD1A TAKE",talk:"\uD83D\uDCAC TAL
 var kdeeX=180,kdeeY=560,kdeeTargetX=180,kdeeTargetY=560,kdeeWalking=false,walkSpeed=4;
 var walkAnim=0,frameTick=0;
 
+/* Holly random encounter state */
+var hollyRunning=false,hollyX=-40,hollyY=520,hollyTimer=Math.floor(400+Math.random()*200);
+var hollyAnim=0,hollyMsg="",hollyMsgTimer=0,hollyCatchable=false;
+
 function drawKdee(c,x,y){
   var breathe=Math.sin(frameTick*0.04)*1;
   var bob=kdeeWalking?Math.sin(walkAnim*0.3)*3.5:breathe*0.7;
@@ -89,6 +93,84 @@ function updateWalk(){
   var dist=Math.sqrt(dx*dx+dy*dy);
   if(dist<spd+1){kdeeX=kdeeTargetX;kdeeY=kdeeTargetY;kdeeWalking=false;walkAnim=0;return;}
   kdeeX+=dx/dist*spd;kdeeY+=dy/dist*spd;
+}
+
+/* Holly random encounter: countdown and update */
+var HOLLY_SAFE_ROOMS=[10,11,14,15,16]; // No Holly in Jesus Bath, Basement, Maze
+function updateHolly(){
+  if(battleActive||paused||gameOver)return;
+  if(hollyRunning){
+    hollyAnim++;
+    hollyX+=7; // she runs fast
+    if(hollyMsgTimer>0)hollyMsgTimer--;
+    if(hollyX>60&&hollyX<200&&hollyMsgTimer===0){
+      hollyMsg="HOLLY HAS ENTERED THE CHAT";hollyMsgTimer=80;
+    }
+    if(hollyX>230&&hollyMsg==="HOLLY HAS ENTERED THE CHAT"&&hollyMsgTimer<30){
+      hollyMsg="holly.exe detected by AI — fled";hollyMsgTimer=60;
+      // Deal 1 damage
+      kdeeHP=Math.max(0,kdeeHP-1);updateHUD();
+    }
+    if(hollyX>400){
+      hollyRunning=false;hollyX=-40;hollyMsg="";hollyMsgTimer=0;hollyCatchable=false;
+      hollyTimer=Math.floor(400+Math.random()*200);
+    }
+    return;
+  }
+  if(HOLLY_SAFE_ROOMS.indexOf(curRoom)>=0)return;
+  hollyTimer--;
+  if(hollyTimer<=0&&Math.random()<0.05){
+    hollyRunning=true;hollyX=-40;hollyY=Math.floor(490+Math.random()*60);hollyAnim=0;
+    hollyCatchable=true;hollyMsg="";hollyMsgTimer=40;
+    hollyTimer=Math.floor(400+Math.random()*200);
+  }
+}
+
+/* Draw running Holly during encounter */
+function drawHolly(c){
+  if(!hollyRunning)return;
+  var bob=Math.sin(hollyAnim*0.5)*4;
+  var legSwing=Math.sin(hollyAnim*0.4)*8;
+  var sc=1.4;
+  c.save();c.translate(hollyX,hollyY);c.scale(sc,sc);
+  // Shadow
+  c.save();c.globalAlpha=0.15;c.fillStyle="#000";
+  c.beginPath();c.ellipse(0,2,10,3,0,0,Math.PI*2);c.fill();c.restore();
+  // Legs (running spread)
+  D(c,-5+legSwing,-4+bob,4,8,"#8B668B");
+  D(c,2-legSwing,-4+bob,4,8,"#8B668B");
+  D(c,-6+legSwing,3+bob,5,3,"#333");
+  D(c,2-legSwing,3+bob,5,3,"#333");
+  // Body
+  c.fillStyle="#DDA0DD";c.beginPath();
+  c.moveTo(-7,-12+bob);c.lineTo(-8,-3+bob);c.lineTo(8,-3+bob);c.lineTo(7,-12+bob);
+  c.closePath();c.fill();
+  // Arms flailing
+  D(c,-11,-14+bob+legSwing*0.5,4,10,"#DDA0DD");
+  D(c,7,-14+bob-legSwing*0.5,4,10,"#DDA0DD");
+  // Head
+  c.fillStyle=P.skin;c.beginPath();c.arc(0,-20+bob,8,0,Math.PI*2);c.fill();
+  // Long hair flying back
+  c.fillStyle="#654321";c.beginPath();c.arc(0,-24+bob,8,Math.PI,2*Math.PI);c.fill();
+  D(c,-8,-23+bob,4,14,"#654321");D(c,4,-23+bob,4,14,"#654321");
+  // Eyes wide (surprised/excited)
+  c.fillStyle="#fff";c.fillRect(-4,-21+bob,3,3);c.fillRect(1,-21+bob,3,3);
+  c.fillStyle="#333";c.fillRect(-3,-20+bob,2,2);c.fillRect(2,-20+bob,2,2);
+  // Open mouth
+  c.fillStyle="#333";c.beginPath();c.arc(0,-15+bob,2,0,Math.PI);c.fill();
+  c.restore();
+
+  // Holly message overlay
+  if(hollyMsg){
+    var alpha=Math.min(1,hollyMsgTimer/20);
+    c.save();c.globalAlpha=alpha*0.9;
+    var tw=c.measureText(hollyMsg).width+16;
+    c.fillStyle="#DDA0DD";c.font="bold 10px monospace";
+    var tx=Math.min(Math.max(hollyX,tw/2+5),355-tw/2);
+    RR(c,tx-tw/2,hollyY-55,tw,18,4,"rgba(40,0,60,0.88)");
+    c.fillText(hollyMsg,tx-tw/2+8,hollyY-41);
+    c.restore();
+  }
 }
 
 function walkTo(tx,ty,cb){
@@ -229,6 +311,7 @@ function drawScene(){
   drawParticles(ctx);
   drawNavArrows(ctx);
   drawKdee(ctx,Math.round(kdeeX),Math.round(kdeeY));
+  drawHolly(ctx);
   drawHoverHighlights(ctx);
 
   // Tap flash feedback
@@ -254,7 +337,7 @@ function drawScene(){
 }
 
 var animRunning=false;
-function gameLoop(){if(!animRunning)return;frameTick++;if(battleActive){updateBattle();drawBattle(ctx);}else if(miniActive){updateCatchGame();drawCatchGame(ctx);}else{updateWalk();drawScene();}requestAnimationFrame(gameLoop);}
+function gameLoop(){if(!animRunning)return;frameTick++;if(battleActive){updateBattle();drawBattle(ctx);}else if(miniActive){updateCatchGame();drawCatchGame(ctx);}else{updateWalk();updateHolly();drawScene();}requestAnimationFrame(gameLoop);}
 function startLoop(){if(!animRunning){animRunning=true;gameLoop();}}
 
 function updateHUD(){
@@ -473,7 +556,7 @@ var invDetails={
   towel:{emoji:"\uD83E\uDDF4",name:"Towel",desc:"Seen better days. Mostly decorative at this point.",type:"Textile",battle:"Super effective vs. Holly & Forest!"},
   book:{emoji:"\uD83D\uDCDA",name:"Parenting Book",desc:"'Parenting Without Losing Your Mind.' Chapter 1: Too late.",type:"Literature",battle:"Super effective vs. Holly!"},
   tidepen:{emoji:"\uD83E\uDDF4",name:"Tide Pen",desc:"For stain emergencies. Which is every day.",type:"Supply",battle:"General battle item"},
-  phone:{emoji:"\uD83D\uDCF1",name:"K'Dee's Phone",desc:"47 unread texts. 3 missed calls from 'Mom.' Battery at 8%. 214 photos of the kids. One good selfie.",type:"Technology",battle:"Super effective vs. Gwyneth!"},
+  phone:{emoji:"\uD83D\uDCF1",name:"K'Dee's Phone",desc:"Texts from Mom: 'Did you see what Janet did' (no context). 'I need to know about the casserole.' 'I attached a photo' (no photo). Forwarded chain email: IF YOU DON'T SHARE THIS. Battery: 8%. 214 kid photos. One good selfie.",type:"Technology",battle:"Super effective vs. Gwyneth!"},
   bookshelf:{emoji:"\uD83D\uDCDA",name:"Parenting Book",desc:"'Parenting Without Losing Your Mind.' Still on chapter 1.",type:"Literature",battle:"Super effective vs. Holly!"},
   tools:{emoji:"\uD83D\uDD27",name:"Wrench",desc:"Heavy duty. Good for opening stubborn trunks.",type:"Tool",battle:"Super effective vs. Daed!"},
   shelf:{emoji:"\uD83E\uDDF4",name:"Tide Pen",desc:"Almost empty. Story of K'Dee's life.",type:"Supply"},
@@ -489,9 +572,12 @@ var battleItems=["banana","duck","bible","necronomicon","wrench","towel","book",
 
 function updateInv(){
   var bc=document.getElementById("bag-count");
-  bc.textContent=inv.length>0?("("+inv.length+")"):"";
+  bc.textContent=inv.length>0?inv.length:"";
   var ic=document.getElementById("inv-count");
   if(ic)ic.textContent=inv.length>0?(inv.length+" ITEMS"):"EMPTY";
+  // Pulse bag button to draw attention when item added
+  var btn=document.getElementById("bagbtn");
+  if(btn&&inv.length>0){btn.classList.remove("new-item");void btn.offsetWidth;btn.classList.add("new-item");}
 }
 
 function showInv(){
@@ -694,7 +780,16 @@ function findHS(mx,my){
 canvas.addEventListener("click",function(e){
   if(battleActive){var p=getCanvasCoords(e);battleClick(p.x,p.y);return;}
   if(paused||gameOver)return;
-  var p=getCanvasCoords(e);var h=findHS(p.x,p.y);
+  var p=getCanvasCoords(e);
+  // Check if player clicked on running Holly
+  if(hollyRunning&&hollyCatchable){
+    var hsc=1.4*30; // approximate catch radius
+    if(Math.abs(p.x-hollyX)<hsc&&Math.abs(p.y-hollyY)<hsc){
+      hollyRunning=false;hollyCatchable=false;hollyMsg="";
+      startBattle("holly");return;
+    }
+  }
+  var h=findHS(p.x,p.y);
   if(h){interactWith(h);}else{walkTo(p.x,p.y);setDesc("Nothing interesting there.");}
 });
 
@@ -757,17 +852,17 @@ var dmgFloats=[];// {x,y,txt,color,life}
 
 var FIGHTERS={
   milo:{
-    name:"MILO",title:"THE CHATTERBOX",hp:8,maxHp:8,color:"#3498db",
+    name:"MILO",title:"THE SOCIAL READER",hp:8,maxHp:8,color:"#3498db",
     hair:"#654321",hairStyle:"shaggy",skin:P.skin,shirt:"#3498db",pants:"#4169E1",short:true,
-    idleQuips:["*tugs K'Dee's shirt*","'Mom? Mom? Mom?'","*shows crayon drawing*","'Guess what!'"],
+    idleQuips:["*tugs K'Dee's shirt*","'Mom can you read to me?'","*holds up book dramatically*","'Guess what chapter I'm on!'"],
     attacks:[
-      {name:"CHATTER",dmg:0,quips:["Milo talks about his day. ALL of it.","'And THEN Jayden said—' It's a saga.","Milo describes lunch in forensic detail.","'Did you know caterpillars have 16 legs?'"]},
-      {name:"SHOW DRAWING",dmg:1,quips:["Milo shows a drawing. 'It's you!' It's a blob.","'LOOK WHAT I MADE!' It's actually beautiful.","The drawing is... a dinosaur eating keys?"]},
+      {name:"BOOK REPORT",dmg:0,quips:["Milo gives a full plot summary. All 312 pages.","'So in CHAPTER ONE the main character—' It's a saga.","'The book is SO GOOD and you have to hear all of it RIGHT NOW.'","Milo describes every character's feelings. In detail."]},
+      {name:"SHOW DRAWING",dmg:1,quips:["Milo shows a drawing. 'It's you!' It's a blob.","'LOOK WHAT I MADE!' It's actually beautiful.","The drawing is... a dinosaur reading keys? Art."]},
       {name:"HUG LEGS",dmg:1,quips:["Milo bear-hugs K'Dee's legs. She's rooted!","*CLAMP* Milo is now a leg accessory.","'I love you THIS much!' Legs: immobilized."]},
-      {name:"BUT MOM",dmg:2,quips:["'But MOOOOOM.' Critical emotional damage!","Milo deploys the puppy eyes. It's super effective!","'But you PROMISED.' K'Dee doesn't remember promising.","'BUT MOM WHY.' Three words. Maximum devastation."]}
+      {name:"BUT MOM",dmg:2,quips:["'But MOOOOOM.' Critical emotional damage!","Milo deploys the puppy eyes. It's super effective!","'But you PROMISED to read with me.' K'Dee feels guilt.","'BUT MOM READ WITH ME.' Three words. Maximum devastation."]}
     ],
-    intro:["Milo blocks the doorway!","'MOM! Mom. Mom. Mommy. MOMMM!'","He has something VERY important to say."],
-    defeat:["Milo finishes his caterpillar story.","'OK bye mom!' He sprints away.","...blissful silence."],
+    intro:["Milo blocks the doorway with a stack of books.","'MOM! Mom. Mom. Mommy. MOMMM!'","He has something VERY important to share.","It's book-related. Obviously."],
+    defeat:["Milo finishes his book summary.","'OK bye mom!' He sprints away with three books.","...blissful silence. Brief. Very brief."],
     itemEffects:{
       banana:{dmg:5,msg:["K'Dee hands Milo the banana.","His eyes go WIDE. 'FOR ME?!'","He peels it and runs off, narrating his banana adventure."],super:true},
       duck:{dmg:6,msg:["K'Dee deploys General Quackers.","Milo GASPS. 'A DUCK!'","He immediately starts a duck army campaign. Battle over."],super:true},
@@ -792,17 +887,17 @@ var FIGHTERS={
     }
   },
   greyson:{
-    name:"GREYSON",title:"THE PHILOSOPHER KING",hp:12,maxHp:12,color:"#8a2be2",
+    name:"GREYSON",title:"THE CHILL KING",hp:12,maxHp:12,color:"#8a2be2",
     hair:"#1a1a1a",hairStyle:"dark",moustache:true,skin:P.skin,shirt:"#111",pants:"#1a1a1a",
-    idleQuips:["*strokes moustache*","'Hmm, interesting.'","*adjusts in gaming chair*","'You see, mother...'"],
+    idleQuips:["*strokes moustache*","'Yeah, no worries.'","*leans back in gaming chair*","'Honestly? Pretty chill.'"],
     attacks:[
-      {name:"PHILOSOPHIZE",dmg:1,quips:["'Do we really CHOOSE to find keys, or do keys find US?'","'What IS a key, fundamentally?'","'Mom. Is cereal a soup?' K'Dee's brain glitches.","'If a key falls in a house and nobody finds it...'"]},
-      {name:"EXISTENTIAL Q",dmg:2,quips:["'What if the keys don't WANT to be found?'","'Are we searching for keys, or searching for meaning?'","'Mom, what if we're all just NPCs?'","'Time is a flat circle, mother.' K'Dee's migraine: activated."]},
-      {name:"DEEP STARE",dmg:1,quips:["Greyson stares into the middle distance. Unsettling.","He gazes at nothing for 30 seconds. K'Dee is disturbed.","The thousand-yard stare. He's seen things. On Reddit."]},
-      {name:"NIETZSCHE",dmg:2,quips:["'God is dead, mother.' 'Greyson, it's 8 AM.'","'Time is a construct.' 'So is being grounded.'","'We are all trapped in Plato's cave.' 'You're trapped in your ROOM.'","'I think, therefore—' 'GREYSON.'"]}
+      {name:"VIBE CHECK",dmg:1,quips:["'Bro just relax.' K'Dee cannot relax.","'You're giving very chaotic energy right now.'","'Have you tried just... not stressing?' K'Dee has not tried that.","Greyson radiates such chill energy K'Dee forgets what she was doing."]},
+      {name:"WISDOM DROP",dmg:2,quips:["'Keys are just a thing, mom. You are bigger than the thing.'","'What if you just... didn't need keys?'","'In the grand scheme, does it really matter?' IT DOES GREYSON.","'Lower your expectations and raise your vibe.' K'Dee stares."]},
+      {name:"DEEP STARE",dmg:1,quips:["Greyson stares calmly at K'Dee. Somehow more unsettling than anger.","He nods slowly. He's fine. K'Dee is not fine.","The serene thousand-yard stare. He's at peace. She is not."]},
+      {name:"CHILL AURA",dmg:2,quips:["Greyson's chill aura is TOO powerful. K'Dee loses momentum.","'It's all good, mom.' Nothing is good. Everything is chaos.","He sighs peacefully. K'Dee experiences a productivity crash.","'No stress.' K'Dee's stress doubles from the irony."]}
     ],
-    intro:["Greyson sits in his RGB gaming throne.","The monitors cast an ethereal glow.","'Ah, Mother. Sit. We must discuss...'","'...the nature of existence.'","'Greyson I need my keys.' 'Keys are a metaphor.'"],
-    defeat:["Greyson nods sagely.","'You've passed the test, Mother.'","'The keys were inside you all along.'","'...GREYSON.' 'Fine. Try the garage.'"],
+    intro:["Greyson sits in his RGB gaming throne.","The monitors glow, a playlist plays softly.","'Oh hey mom. You good?'","'I need my keys, Greyson.'","'Yeah for sure. Just vibe for a sec.'"],
+    defeat:["Greyson gives a slow nod.","'Respect the hustle, mom.'","'I think I saw keys by the— actually try the garage.'","He returns to his game. Tranquil. Unbothered."],
     itemEffects:{
       necronomicon:{dmg:6,msg:["K'Dee holds up the Necronomicon.","Greyson's eyes go WIDE.","'FINALLY. Some CULTURE in this house.'","He grabs it and starts reading. Battle over."],super:true},
       bible:{dmg:5,msg:["'Have you considered... faith?'","Greyson.exe has stopped working.","He sits in stunned silence. A first."],super:true},
@@ -810,8 +905,8 @@ var FIGHTERS={
     }
   },
   gwyneth:{
-    name:"GWYNETH",title:"THE NARCOLEPTIC",hp:6,maxHp:6,color:P.sky,
-    hair:"#654321",hairStyle:"long",skin:P.skin,shirt:P.sky,pants:"#5F9EA0",narcolepsy:true,
+    name:"GWYNETH",title:"THE STYLISH NARCOLEPTIC",hp:6,maxHp:6,color:P.sky,
+    hair:"#4169E1",hairStyle:"long",skin:P.skin,shirt:"#4169E1",pants:"#1a3a7a",narcolepsy:true,
     idleQuips:["*zzzzzzz*","*snore*","*mumbles about unicorns*","*sleep-smiles*"],
     attacks:[
       {name:"*SNORE*",dmg:0,quips:["Gwyneth snores. Somehow this is still stressful.","The snoring intensifies. K'Dee can't focus.","She snores so loud the room vibrates."]},
@@ -827,21 +922,21 @@ var FIGHTERS={
     }
   },
   forest:{
-    name:"FOREST",title:"PATIENT ZERO",hp:5,maxHp:5,color:"#556b2f",
-    hair:"#F0E68C",hairStyle:"shock",beard:"#CD5C5C",skin:P.skin,shirt:"#556b2f",pants:"#333",
-    idleQuips:["*wheeze*","*sniffle*","*groan*","*reaches for tissues*"],
+    name:"FOREST",title:"DO NOT DISTURB",hp:5,maxHp:5,color:"#556b2f",
+    hair:"#F0E68C",hairStyle:"shock",skin:P.skin,shirt:"#1a1a2e",pants:"#333",
+    idleQuips:["*typing intensifies*","*does not look up*","*headphones stay on*","*snack wrapper crinkle*"],
     attacks:[
-      {name:"*WHEEZE*",dmg:1,quips:["Forest wheezes so hard the WALLS shake.","*WHEEEEZE* K'Dee is genuinely concerned.","He wheezes AND coughs. Combo move!","The wheeze echoes through the house."]},
-      {name:"COUGH",dmg:1,quips:["Forest coughs directly at K'Dee. BIO-WARFARE!","*COUGH COUGH* K'Dee dodges! Mostly.","He coughs like a Victorian gentleman. With more phlegm."]},
-      {name:"SNEEZE",dmg:2,quips:["ACHOO! K'Dee gets blown back three feet!","Forest sneezes with the force of a small hurricane!","The sneeze sets off a car alarm outside. Somehow.","ACHOO! Tissues go flying. K'Dee takes splash damage!"]},
-      {name:"GROAN",dmg:0,quips:["Forest groans pathetically. K'Dee's morale drops.","'...I think I'm dying, mom.' 'You have a cold.'","*groan* He's so pitiful K'Dee just stands there."]}
+      {name:"IGNORE",dmg:1,quips:["Forest ignores K'Dee so hard it physically hurts.","*no response* K'Dee is invisible apparently.","He tabs back to his game mid-sentence. K'Dee is defeated.","Maximum ignore. Expert level. Years of practice."]},
+      {name:"MUTE",dmg:1,quips:["Forest mutes his mic. AND K'Dee. Somehow.","*headphones on* Your words cannot reach him now.","He puts on noise-canceling headphones. Total blackout."]},
+      {name:"WALL OF SILENCE",dmg:2,quips:["The silence is DEAFENING. K'Dee can't think.","He hasn't spoken in 6 hours. This is normal for him.","The quiet is a weapon. Forest has mastered it.","*complete stillness* K'Dee checks if he's breathing. He is."]},
+      {name:"SNACK THROW",dmg:2,quips:["An empty energy drink can flies across the room!","SNACK BARRAGE! Empty wrappers everywhere! K'Dee takes snack damage!","He throws Goldfish crackers with alarming precision!","*FLING* A bag of chips hits K'Dee directly. Full bag. Ow."]}
     ],
-    intro:["Forest is buried in a mountain of tissues.","His red beard pokes out from the blankets.","'...mom? *wheeze* I think I'm dying.'","'You have a cold, Forest.'","'*wheeze* ...still dying.'"],
-    defeat:["Forest blows his nose TRIUMPHANTLY.","'I feel... 2% better. Thanks mom.'","He immediately falls back asleep.","K'Dee tucks him in. Even mid-key-crisis."],
+    intro:["K'Dee opens the door to the bubble den.","Signs: GO AWAY. LOADING. DO NOT DISTURB.","Forest sits inside his gaming dome. Headphones on.","*typing* *not looking up*","'Forest. FOREST.'","*one AirPod removed*","'...what.'"],
+    defeat:["Forest removes both headphones. Shocking.","'Did you check the kitchen counter?'","'I saw them like... yesterday maybe.'","*headphones back on* He's gone again."],
     itemEffects:{
-      towel:{dmg:4,msg:["K'Dee drapes the towel over Forest.","He feels SO CARED FOR.","'*sniffle* You're the best mom.'","His fever drops 0.1 degrees. Victory."],super:true},
-      flashlight:{dmg:3,msg:["K'Dee checks Forest's throat.","'Say ahh.' 'BLEEEH.'","'Yep. That's a throat alright.'"]},
-      bible:{dmg:2,msg:["K'Dee reads healing prayers.","Forest feels spiritually better.","Physically? Still a mess."]}
+      towel:{dmg:4,msg:["K'Dee drapes the towel over Forest's monitor.","'HEY—' He can't see the screen!","'OKAY OKAY I'll help!' Screen dependency: confirmed."],super:true},
+      flashlight:{dmg:3,msg:["K'Dee shines the flashlight into the gaming dome.","'THE BRIGHTNESS! MY EYES AREN'T CALIBRATED FOR THIS!'","He covers his screen. Chaos in the den."]},
+      bible:{dmg:2,msg:["K'Dee reads healing prayers.","Forest looks up briefly.","'...was that from Proverbs?' Close enough."]}
     }
   },
   daed:{
@@ -897,15 +992,10 @@ var FIGHTERS={
   }
 };
 
-var battleRoomMap={3:"milo",5:"daed",10:"jesus",11:"demon",19:"greyson",20:"holly",21:"forest"};
+var battleRoomMap={3:"milo",5:"daed",10:"jesus",11:"demon",19:"greyson",20:"gwyneth",21:"forest"};
 var gwynBattle=false;
 
 function checkBattle(roomIdx){
-  if(roomIdx===20&&battleDone["holly"]&&!battleDone["gwyneth"]&&!gwynBattle){
-    gwynBattle=true;
-    setTimeout(function(){startBattle("gwyneth");},600);
-    return;
-  }
   var fid=battleRoomMap[roomIdx];
   if(!fid||battleDone[fid])return;
   setTimeout(function(){startBattle(fid);},600);
@@ -1401,14 +1491,14 @@ function drawBattle(c){
 
   // Ambient glow behind fighters
   var pulse=0.5+0.5*Math.sin(frameTick*0.04);
-  c.fillStyle="rgba(255,105,180,"+(0.03+0.02*pulse)+")";c.beginPath();c.arc(80,480,70,0,Math.PI*2);c.fill();
+  c.fillStyle="rgba(255,105,180,"+(0.03+0.02*pulse)+")";c.beginPath();c.arc(80,455,70,0,Math.PI*2);c.fill();
   c.fillStyle="rgba("+(f.color?parseInt(f.color.slice(1,3),16)+","+parseInt(f.color.slice(3,5),16)+","+parseInt(f.color.slice(5,7),16):"150,150,255")+","+(0.03+0.02*pulse)+")";
   c.beginPath();c.arc(265,330,70,0,Math.PI*2);c.fill();
 
   // Enemy (top right, facing left)
   drawBattleEnemy(c,f,265,340,bs.enemyPose,bs.enemyActionTimer,bs.enemyAnim);
-  // K'Dee (bottom left, facing right) — pushed lower so buttons don't cover face
-  drawBattleKdee(c,80,518,bs.kdeePose,bs.kdeeActionTimer);
+  // K'Dee (bottom left, facing right) — raised so full body is visible above message box
+  drawBattleKdee(c,80,490,bs.kdeePose,bs.kdeeActionTimer);
 
   // HP Bars
   // Enemy HP bar
@@ -1479,11 +1569,14 @@ function drawBattle(c){
     ];
     actions.forEach(function(a){
       RR(c,a.x,btnY,a.w,btnH,6,a.color);
-      c.fillStyle="#fff";c.font="bold 11px monospace";c.fillText(a.label,a.x+8,btnY+22);
+      // Dark text + subtle shadow for readability on colored bg
+      c.fillStyle="rgba(0,0,0,0.25)";c.font="bold 11px monospace";c.fillText(a.label,a.x+9,btnY+23);
+      c.fillStyle="#1a0a2e";c.font="bold 11px monospace";c.fillText(a.label,a.x+8,btnY+22);
     });
     if(inv.length>0){
       RR(c,258,btnY,92,btnH,6,"#00CED1");
-      c.fillStyle="#fff";c.font="bold 11px monospace";c.fillText("\uD83C\uDF81 ITEM",266,btnY+22);
+      c.fillStyle="rgba(0,0,0,0.25)";c.font="bold 11px monospace";c.fillText("\uD83C\uDF81 ITEM",267,btnY+23);
+      c.fillStyle="#1a0a2e";c.font="bold 11px monospace";c.fillText("\uD83C\uDF81 ITEM",266,btnY+22);
     }
   }
 
@@ -1752,7 +1845,7 @@ function loseGame(){
   document.getElementById("dlg-portrait").textContent="\u23F0";
   document.getElementById("dlg-portrait").style.borderColor="#CD5C5C";
   document.getElementById("dlg-name").textContent="TIME'S UP!";
-  typeText(document.getElementById("dlg-text"),"K'Dee is officially late. The kids are feral. The dog ate something suspicious. "+keys+"/3 keys found. Try again?");
+  typeText(document.getElementById("dlg-text"),"K'Dee is officially late. The kids are feral. The neighbor's cat is judging everyone through the window. "+keys+"/3 keys found. Try again?");
   document.getElementById("dlg-choices").innerHTML='<div class="dlg-ch" id="play-again2" style="border-color:#CD5C5C;color:#CD5C5C">\u23F0 TRY AGAIN</div>';
   document.getElementById("play-again2").addEventListener("click",function(){location.reload();});
 }
