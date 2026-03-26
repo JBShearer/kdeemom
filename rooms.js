@@ -124,6 +124,142 @@ function paintLiving(c){
   c.beginPath();c.moveTo(udx+udw-6,udy+udh-8);c.lineTo(udx+udw-10,udy+12);c.stroke();
   c.fillStyle="rgba(255,215,0,0.55)";c.font="bold 5px monospace";c.textAlign="center";
   c.fillText("UPSTAIRS",udx+udw/2,udy+udh+12);c.textAlign="left";
+  // Draw kids who have congregated in the living room
+  var lrk=window._lrk||{};
+  // Forest at the TV — sitting cross-legged on the floor in front of it, controller in hand
+  if(lrk.forest){
+    var fx=155,fy=310;
+    c.save();c.translate(fx,fy);
+    // Shadow
+    c.save();c.globalAlpha=0.1;c.fillStyle="#000";c.beginPath();c.ellipse(0,8,10,3,0,0,Math.PI*2);c.fill();c.restore();
+    // Crossed legs (sitting)
+    c.fillStyle="#333";c.beginPath();c.ellipse(0,8,10,5,0,0,Math.PI*2);c.fill();
+    // Body
+    c.fillStyle="#1a1a2e";c.fillRect(-8,-12,16,14);
+    // Arms with controller
+    c.fillStyle=P.skin;c.fillRect(-12,-8,5,8);c.fillRect(7,-8,5,8);
+    c.fillStyle="#444";c.fillRect(-12,-4,19,4);// controller
+    // Head
+    c.fillStyle=P.skin;c.beginPath();c.arc(0,-18,7,0,Math.PI*2);c.fill();
+    // Shock hair (yellowish)
+    c.fillStyle="#F0E68C";c.beginPath();c.arc(0,-18,7,Math.PI,0);c.fill();
+    c.fillRect(-2,-26,4,8);c.fillRect(4,-25,3,6);c.fillRect(-7,-25,3,6);// spiky
+    // Eyes — focused on screen
+    c.fillStyle="#333";c.fillRect(-4,-19,2,2);c.fillRect(2,-19,2,2);
+    c.restore();
+  }
+  // Milo — sitting on floor near bookshelf reading
+  if(lrk.milo){
+    var mx2=295,my2=330;
+    c.save();c.translate(mx2,my2);
+    c.save();c.globalAlpha=0.1;c.fillStyle="#000";c.beginPath();c.ellipse(0,8,8,3,0,0,Math.PI*2);c.fill();c.restore();
+    // Sitting legs
+    c.fillStyle="#3498db";c.beginPath();c.ellipse(0,7,8,4,0,0,Math.PI*2);c.fill();
+    // Body
+    c.fillStyle="#87CEEB";c.fillRect(-6,-10,12,12);
+    // Book held up
+    c.fillStyle="#e74c3c";c.fillRect(-8,-16,10,12);
+    c.fillStyle="#fff";c.fillRect(-7,-15,8,10);
+    // Arms
+    c.fillStyle=P.skin;c.fillRect(-10,-8,4,7);c.fillRect(6,-8,4,7);
+    // Head
+    c.fillStyle=P.skin;c.beginPath();c.arc(0,-17,6,0,Math.PI*2);c.fill();
+    // Brown shaggy hair
+    c.fillStyle="#654321";c.beginPath();c.arc(0,-17,6,Math.PI,0);c.fill();
+    // Eyes
+    c.fillStyle="#333";c.fillRect(-3,-18,2,2);c.fillRect(1,-18,2,2);
+    c.restore();
+  }
+  // Gwyneth — asleep on couch (drawn over the couch cushions)
+  if(lrk.gwyneth){
+    var gx=80,gy=370;
+    c.save();c.translate(gx,gy);
+    // Body horizontal (lying on couch)
+    c.fillStyle="#4169E1";c.fillRect(-30,-6,60,12);
+    // Head
+    c.fillStyle=P.skin;c.beginPath();c.arc(35,-4,8,0,Math.PI*2);c.fill();
+    // Long blue hair spread out
+    c.fillStyle="#4169E1";c.beginPath();c.arc(35,-4,8,Math.PI*0.8,Math.PI*2.2);c.fill();
+    c.fillRect(28,0,20,10);
+    // Closed eyes
+    c.strokeStyle="#333";c.lineWidth=1;
+    c.beginPath();c.arc(32,-5,2,Math.PI,0);c.stroke();
+    c.beginPath();c.arc(38,-5,2,Math.PI,0);c.stroke();
+    // ZZZ
+    c.fillStyle="rgba(65,105,225,0.7)";c.font="bold 7px monospace";
+    c.fillText("z",50,-14);c.font="bold 9px monospace";c.fillText("z",57,-20);c.font="bold 11px monospace";c.fillText("Z",65,-28);
+    c.restore();
+  }
+  // Greyson — in armchair-ish spot near bookshelf, reading/taking notes
+  if(lrk.greyson){
+    var grx=265,gry=275;
+    c.save();c.translate(grx,gry);
+    c.save();c.globalAlpha=0.1;c.fillStyle="#000";c.beginPath();c.ellipse(0,8,9,3,0,0,Math.PI*2);c.fill();c.restore();
+    // Legs (sitting)
+    c.fillStyle="#8B6914";c.beginPath();c.ellipse(0,8,9,4,0,0,Math.PI*2);c.fill();
+    // Body
+    c.fillStyle="#c8a45a";c.fillRect(-7,-12,14,14);
+    // Notepad
+    c.fillStyle="#fffde7";c.fillRect(3,-14,10,13);c.strokeStyle="#aaa";c.lineWidth=0.5;
+    for(var nl=0;nl<4;nl++){c.beginPath();c.moveTo(4,-12+nl*3);c.lineTo(12,-12+nl*3);c.stroke();}
+    // Arms
+    c.fillStyle=P.skin;c.fillRect(-11,-9,4,7);c.fillRect(7,-9,4,7);
+    // Head
+    c.fillStyle=P.skin;c.beginPath();c.arc(0,-18,6,0,Math.PI*2);c.fill();
+    // Trucker hat
+    c.fillStyle="#8B6914";c.fillRect(-7,-24,14,5);c.fillRect(-9,-24,4,3);
+    // Moustache
+    c.fillStyle="#654321";c.beginPath();c.arc(-2,-15,2,Math.PI,0);c.fill();c.beginPath();c.arc(2,-15,2,Math.PI,0);c.fill();
+    // Eyes
+    c.fillStyle="#333";c.fillRect(-3,-19,2,2);c.fillRect(1,-19,2,2);
+    c.restore();
+  }
+  // Daed — asleep on the floor, remote in hand
+  if(lrk.daed){
+    var dx=50,dy=440;
+    c.save();c.translate(dx,dy);
+    // Body horizontal
+    c.fillStyle="#555";c.fillRect(-25,-6,50,12);
+    // Head
+    c.fillStyle=P.skin;c.beginPath();c.arc(-28,-3,8,0,Math.PI*2);c.fill();
+    // Mullet
+    c.fillStyle="#654321";c.beginPath();c.arc(-28,-3,8,Math.PI*0.5,Math.PI*1.8);c.fill();
+    c.fillRect(-34,0,8,10);
+    // Trucker hat
+    c.fillStyle="#cc0000";c.fillRect(-35,-7,14,4);c.fillRect(-37,-7,4,3);
+    // Remote in hand
+    c.fillStyle="#222";c.fillRect(10,-3,12,6);
+    // Zzzs
+    c.fillStyle="rgba(200,100,100,0.7)";c.font="bold 7px monospace";
+    c.fillText("z",-20,-18);c.font="bold 9px monospace";c.fillText("z",-14,-24);
+    c.restore();
+  }
+  // Holly — tall, standing silently in the far corner behind the couch
+  if(lrk.holly){
+    var hx=255,hy=490;
+    c.save();c.translate(hx,hy);
+    c.save();c.globalAlpha=0.08;c.fillStyle="#000";c.beginPath();c.ellipse(0,2,6,2,0,0,Math.PI*2);c.fill();c.restore();
+    // Very long legs
+    c.fillStyle="#8B668B";c.fillRect(-4,-30,4,30);c.fillRect(2,-30,4,30);
+    // Shoes
+    c.fillStyle="#333";c.fillRect(-5,-1,5,4);c.fillRect(2,-1,5,4);
+    // Body
+    c.fillStyle="#DDA0DD";c.fillRect(-6,-46,12,18);
+    // Arms hanging at sides
+    c.fillStyle=P.skin;c.fillRect(-9,-44,3,16);c.fillRect(6,-44,3,16);
+    // Very long neck + head
+    c.fillStyle=P.skin;c.fillRect(-3,-54,6,10);
+    c.beginPath();c.arc(0,-60,6,0,Math.PI*2);c.fill();
+    // Long brown hair
+    c.fillStyle="#654321";c.beginPath();c.arc(0,-60,6,Math.PI,0);c.fill();
+    c.fillRect(-6,-60,3,18);c.fillRect(3,-60,3,18);
+    // Eyes — calm, watching
+    c.fillStyle="#fff";c.beginPath();c.ellipse(-2,-61,2,1.5,0,0,Math.PI*2);c.fill();c.beginPath();c.ellipse(2,-61,2,1.5,0,0,Math.PI*2);c.fill();
+    c.fillStyle="#555";c.beginPath();c.arc(-2,-61,1,0,Math.PI*2);c.fill();c.beginPath();c.arc(2,-61,1,0,Math.PI*2);c.fill();
+    // Tiny smile
+    c.strokeStyle="#c08090";c.lineWidth=1;c.beginPath();c.arc(0,-58,2,0,Math.PI);c.stroke();
+    c.restore();
+  }
 }
 function paintKids(c){
   D(c,0,370,360,270,"#5c6b8a");var g=c.createLinearGradient(0,0,0,370);g.addColorStop(0,"#4a6fa5");g.addColorStop(1,"#3d5a80");c.fillStyle=g;c.fillRect(0,0,360,370);

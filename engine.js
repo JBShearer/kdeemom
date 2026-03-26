@@ -19,6 +19,15 @@ var hollyTrip=false,hollyTripTimer=0;
 /* Milo follow state — after Big Hug win he tags along for a few rooms */
 var miloFollowing=false,miloRoomsLeft=0,miloFollowX=180,miloFollowY=540,miloFollowAnim=0;
 var miloMsg="",miloMsgTimer=0;
+
+/* Gwyneth follow state — after hug she drifts to living room in 3 rooms */
+var gwynFollowing=false,gwynRoomsLeft=0,gwynFollowX=220,gwynFollowY=540,gwynFollowAnim=0;
+var gwynMsg="",gwynMsgTimer=0;
+
+/* Living room kids — who has been hugged/collected */
+var livingRoomKids={milo:false,greyson:false,gwyneth:false,forest:false,daed:false,holly:false};
+var hollyWasTripped=false;
+window._lrk=livingRoomKids; // expose for room painter
 function drawKdee(c,x,y){
   var breathe=Math.sin(frameTick*0.04)*1;
   var bob=kdeeWalking?Math.sin(walkAnim*0.3)*3.5:breathe*0.7;
@@ -295,6 +304,58 @@ function drawMilo(c){
   }
 }
 
+/* Gwyneth follow state — drowsy, drifts behind K'Dee, mumbles in sleep */
+var GWYN_QUIPS=["'*snore*'","'...five more minutes...'","'*mumbles*'","'...the unicorns...'","'...MR BUN-BUN...'"];
+function updateGwyn(){
+  if(!gwynFollowing)return;
+  gwynFollowAnim++;
+  gwynFollowX+=(kdeeX+30-gwynFollowX)*0.08;
+  gwynFollowY+=(kdeeY-gwynFollowY)*0.08;
+  if(gwynMsgTimer>0)gwynMsgTimer--;
+  if(gwynMsgTimer===0&&Math.random()<0.003){
+    gwynMsg=GWYN_QUIPS[Math.floor(Math.random()*GWYN_QUIPS.length)];gwynMsgTimer=110;
+  }
+}
+function drawGwyn(c){
+  if(!gwynFollowing)return;
+  var bob=Math.sin(gwynFollowAnim*0.15)*1.5; // slower, sleepier
+  var leg=Math.sin(gwynFollowAnim*0.18)*4;
+  var sc=1.6;
+  c.save();c.translate(gwynFollowX,gwynFollowY);c.scale(sc,sc);
+  // Shadow
+  c.save();c.globalAlpha=0.1;c.fillStyle="#000";c.beginPath();c.ellipse(0,4,8,3,0,0,Math.PI*2);c.fill();c.restore();
+  // Legs
+  D(c,-4+leg,0,4,10,"#1a3a7a");D(c,1-leg,0,4,10,"#1a3a7a");
+  D(c,-5+leg,9,5,3,"#222");D(c,1-leg,9,5,3,"#222");
+  // Body — blue shirt
+  c.fillStyle="#4169E1";c.beginPath();c.moveTo(-6,-12+bob);c.lineTo(-7,0+bob);c.lineTo(7,0+bob);c.lineTo(6,-12+bob);c.closePath();c.fill();
+  // Arms — slightly droopy
+  c.fillStyle=P.skin;c.fillRect(-10,-10+bob,4,9);c.fillRect(6,-10+bob,4,9);
+  // Head
+  c.fillStyle=P.skin;c.beginPath();c.arc(0,-18+bob,7,0,Math.PI*2);c.fill();
+  // Long blue hair
+  c.fillStyle="#4169E1";c.beginPath();c.arc(0,-18+bob,7,Math.PI,0);c.fill();
+  c.fillStyle="#4169E1";c.fillRect(-7,-18+bob,3,14);c.fillRect(4,-18+bob,3,14);
+  // Closed eyes (sleeping)
+  c.strokeStyle="#333";c.lineWidth=1;
+  c.beginPath();c.arc(-3,-19+bob,2,Math.PI,0);c.stroke();
+  c.beginPath();c.arc(3,-19+bob,2,Math.PI,0);c.stroke();
+  // Tiny smile
+  c.beginPath();c.arc(0,-16+bob,2,0,Math.PI);c.stroke();
+  c.restore();
+  // Speech bubble
+  if(gwynMsg&&gwynMsgTimer>0){
+    var alpha=Math.min(1,gwynMsgTimer/12);
+    c.save();c.globalAlpha=alpha;
+    c.fillStyle="rgba(255,255,255,0.92)";c.strokeStyle="#4169E1";c.lineWidth=1;
+    RR(c,gwynFollowX-38,gwynFollowY-85,76,22,5,"rgba(255,255,255,0.92)");
+    c.strokeRect(gwynFollowX-38,gwynFollowY-85,76,22);
+    c.fillStyle="#1a0a2e";c.font="bold 8px monospace";c.textAlign="center";
+    c.fillText(gwynMsg,gwynFollowX,gwynFollowY-70);c.textAlign="left";
+    c.restore();
+  }
+}
+
 function walkTo(tx,ty,cb){
   kdeeTargetX=Math.max(20,Math.min(340,tx));
   kdeeTargetY=Math.max(480,Math.min(600,ty));
@@ -449,12 +510,22 @@ function fadeToRoom(roomIdx){
     spawnParticles(curRoom);
     updateHUD();setDesc("Entered "+ROOMS[curRoom].name);
     fadeDir=-1;
-    // Milo follows but gets bored after a few rooms
+    // Milo follows but heads to the living room after a few rooms
     if(miloFollowing){
       miloRoomsLeft--;miloFollowX=210;miloFollowY=560;
       if(miloRoomsLeft<=0){
         miloFollowing=false;miloMsg="";miloMsgTimer=0;
-        setDesc("Milo wandered off to read.");
+        livingRoomKids.milo=true;
+        setDesc("Milo headed to the living room to read.");
+      }
+    }
+    // Gwyneth follows drowsily, then collapses on the living room couch
+    if(gwynFollowing){
+      gwynRoomsLeft--;gwynFollowX=220;gwynFollowY=560;
+      if(gwynRoomsLeft<=0){
+        gwynFollowing=false;gwynMsg="";gwynMsgTimer=0;
+        livingRoomKids.gwyneth=true;
+        setDesc("Gwyneth sleepwalked to the couch.");
       }
     }
     checkBattle(roomIdx);
@@ -470,6 +541,7 @@ function drawScene(){
   drawNavArrows(ctx);
   drawKdee(ctx,Math.round(kdeeX),Math.round(kdeeY));
   drawMilo(ctx);
+  drawGwyn(ctx);
   drawHolly(ctx);
   drawHoverHighlights(ctx);
 
@@ -496,7 +568,7 @@ function drawScene(){
 }
 
 var animRunning=false;
-function gameLoop(){if(!animRunning)return;frameTick++;if(battleActive){updateBattle();drawBattle(ctx);}else if(miniActive){updateCatchGame();drawCatchGame(ctx);}else if(frogActive){updateFrogger();drawFrogger(ctx);}else if(racerActive){updateRacer();drawRacer(ctx);}else if(tetActive){updateTetris();drawTetris(ctx);}else{updateWalk();updateHolly();updateMilo();drawScene();}requestAnimationFrame(gameLoop);}
+function gameLoop(){if(!animRunning)return;frameTick++;if(battleActive){updateBattle();drawBattle(ctx);}else if(miniActive){updateCatchGame();drawCatchGame(ctx);}else if(frogActive){updateFrogger();drawFrogger(ctx);}else if(racerActive){updateRacer();drawRacer(ctx);}else if(tetActive){updateTetris();drawTetris(ctx);}else{updateWalk();updateHolly();updateMilo();updateGwyn();drawScene();}requestAnimationFrame(gameLoop);}
 function startLoop(){if(!animRunning){animRunning=true;gameLoop();}}
 
 function updateHUD(){
@@ -1214,6 +1286,7 @@ canvas.addEventListener("click",function(e){
     if(Math.abs(p.x-hollyX)<hsc&&Math.abs(p.y-hollyY)<hsc){
       hollyTrip=true;hollyTripTimer=60;hollyCatchable=false;
       hollyMsg="";hollyMsgTimer=0;
+      hollyWasTripped=true;livingRoomKids.holly=true;
       return;
     }
   }
@@ -1262,6 +1335,7 @@ canvas.addEventListener("touchend",function(e){
       var hsc=1.4*30;
       if(Math.abs(p.x-hollyX)<hsc&&Math.abs(p.y-hollyY)<hsc){
         hollyTrip=true;hollyTripTimer=60;hollyCatchable=false;hollyMsg="";hollyMsgTimer=0;
+        hollyWasTripped=true;livingRoomKids.holly=true;
         touchStart=null;return;
       }
     }
@@ -1454,8 +1528,9 @@ function startGreysonDialog(){
   document.getElementById("dlg-continue").style.display="none";
   document.getElementById("gd-keys").addEventListener("click",function(){
     document.getElementById("dlg-text").textContent="'Keys...' He strokes his moustache. 'Based on historical data and my own field research — garage. Near the Corvette. Scientifically speaking.'\n\n'GREYSON.'\n\n'I said scientifically.'";
-    choices.innerHTML='<div class="dlg-ch" id="gd-thanks">Thanks, Greyson.</div>';
+    choices.innerHTML='<div class="dlg-ch" id="gd-thanks">Thanks, Greyson.</div><div class="dlg-ch" id="gd-hug-keys">🤗 Hug him.</div>';
     document.getElementById("gd-thanks").addEventListener("click",function(){hideDlg();battleDone["greyson"]=true;});
+    document.getElementById("gd-hug-keys").addEventListener("click",function(){greysonHug();});
   });
   document.getElementById("gd-science").addEventListener("click",function(){
     document.getElementById("dlg-text").textContent="His eyes light up. He gestures at three bubbling flasks.\n\n'A compound that theoretically accelerates sock-finding. Currently also turns things orange. Unrelated.'\n\nHe holds up his hand. It is orange.";
@@ -1464,10 +1539,25 @@ function startGreysonDialog(){
   });
   document.getElementById("gd-mars").addEventListener("click",function(){
     document.getElementById("dlg-text").textContent="He slowly swivels his chair to face you fully. He removes his hat.\n\n'...I thought you'd never ask.'\n\nFifteen minutes later. You know more about Mars than NASA. You feel changed.\n\n'Anyway. Garage. Keys. Go.'";
-    choices.innerHTML='<div class="dlg-ch" id="gd-done">I need a moment.</div>';
+    choices.innerHTML='<div class="dlg-ch" id="gd-done">I need a moment.</div><div class="dlg-ch" id="gd-hug-mars">🤗 Hug him.</div>';
     document.getElementById("gd-done").addEventListener("click",function(){hideDlg();battleDone["greyson"]=true;});
+    document.getElementById("gd-hug-mars").addEventListener("click",function(){greysonHug();});
   });
   document.getElementById("gd-leave").addEventListener("click",function(){hideDlg();battleDone["greyson"]=true;});
+}
+
+function greysonHug(){
+  var d=document.getElementById("dlg");var inner=document.getElementById("dlg-inner");
+  d.classList.remove("on");inner.style.animation="none";void inner.offsetWidth;inner.style.animation="";d.classList.add("on");
+  document.getElementById("dlg-name").textContent="GREYSON";
+  document.getElementById("dlg-text").textContent="K'Dee hugs him.\n\nGreyson goes completely rigid.\n\nFive full seconds of silence.\n\nHis hat tips 2 degrees. Maximum emotion.\n\n'...statistically speaking, that was... acceptable.'\n\nHe picks up a book and heads downstairs.";
+  var choices=document.getElementById("dlg-choices");
+  choices.innerHTML='<div class="dlg-ch" id="gd-hug-done">❤️ Love you, kid.</div>';
+  document.getElementById("dlg-continue").style.display="none";
+  document.getElementById("gd-hug-done").addEventListener("click",function(){
+    hideDlg();battleDone["greyson"]=true;livingRoomKids.greyson=true;
+    setDesc("Greyson headed to the living room.");
+  });
 }
 
 function startBattle(fighterId){
@@ -2261,7 +2351,7 @@ function drawBattle(c){
       c.fillStyle="#1a0a2e";c.font="bold 11px monospace";c.fillText(a.label,a.x+8,btnY+22);
     });
     // Big Hug for Milo, ITEM otherwise
-    if(bs.id==="milo"){
+    if(bs.id==="milo"||bs.id==="gwyneth"||bs.id==="forest"){
       RR(c,258,btnY,92,btnH,6,"#FF69B4");
       c.fillStyle="rgba(0,0,0,0.25)";c.font="bold 11px monospace";c.fillText("\uD83E\uDD17 HUG",267,btnY+23);
       c.fillStyle="#1a0a2e";c.font="bold 11px monospace";c.fillText("\uD83E\uDD17 HUG",266,btnY+22);
@@ -2360,6 +2450,18 @@ function battleClick(mx,my){
       miloFollowX=kdeeX+35;miloFollowY=kdeeY;
       miloMsg="'I love you mom!'";miloMsgTimer=120;
     }
+    if(wasHug&&wasId==="gwyneth"){
+      gwynFollowing=true;gwynRoomsLeft=3;
+      gwynFollowX=kdeeX+40;gwynFollowY=kdeeY;
+      gwynMsg="'*snore*'";gwynMsgTimer=120;
+    }
+    if(wasHug&&wasId==="forest"){
+      livingRoomKids.forest=true;
+      setDesc("Forest claimed the living room TV.");
+    }
+    if(wasId==="daed"){
+      livingRoomKids.daed=true;
+    }
     return;
   }
 
@@ -2412,6 +2514,26 @@ function battleClick(mx,my){
         bs.phase="victory";bs.hugWin=true;
         bs.flashTimer=15;bs.flashColor="rgba(255,105,180,0.35)";
         addDmgFloat(265,290,"💗","#FF69B4");
+        return;
+      }
+      if(bs.id==="gwyneth"){
+        // Hug — Gwyneth wakes up just enough to hug back, then follows sleepily
+        bs.kdeePose="item";bs.kdeeActionTimer=1;
+        bs.enemyHP=0;
+        bs.msg="K'Dee wraps Gwyneth in a hug.\n\nGwyneth's eyes open halfway.\n\n'...oh. hi mom.'\n\nShe hugs back with surprising grip.\n\n'...love you.' *immediately falls back asleep standing up*";
+        bs.phase="victory";bs.hugWin=true;
+        bs.flashTimer=15;bs.flashColor="rgba(65,105,225,0.3)";
+        addDmgFloat(265,290,"💙","#4169E1");
+        return;
+      }
+      if(bs.id==="forest"){
+        // Hug — Forest emerges from bubble, goes to claim the TV
+        bs.kdeePose="item";bs.kdeeActionTimer=1;
+        bs.enemyHP=0;
+        bs.msg="K'Dee knocks on the bubble.\n\n'Forest. Come out.'\n\nLong pause.\n\n*airlock hiss*\n\nForest emerges. He allows a hug. Brief. Firm.\n\n'...okay.' He picks up the TV remote.\n\n'I'm taking the living room.'";
+        bs.phase="victory";bs.hugWin=true;
+        bs.flashTimer=15;bs.flashColor="rgba(85,107,47,0.3)";
+        addDmgFloat(265,290,"🎮","#556b2f");
         return;
       }
       if(inv.length>0){bs.phase="items";bs.msg="Choose an item to use...";return;}
@@ -3066,6 +3188,25 @@ function winGame(){
   var inner=document.getElementById("dlg-inner");
   d.classList.remove("on");inner.style.animation="none";
   void inner.offsetWidth;inner.style.animation="";d.classList.add("on");
+  // Check for secret movie night ending
+  var lrk=livingRoomKids;
+  var allKids=lrk.milo&&lrk.greyson&&lrk.gwyneth&&lrk.forest&&lrk.daed&&lrk.holly;
+  if(allKids){
+    setPortraitMode("excited");
+    document.getElementById("dlg-name").textContent="✨ MOVIE NIGHT";
+    typeText(document.getElementById("dlg-text"),"K'Dee has her keys. She has her purse. She has her whole route planned.\n\nShe walks to the door.\n\nFrom the living room: TV sounds. Milo laughing. Gwyneth snoring. Forest typing. Greyson scientifically critiquing the film. Holly lurking tall and content in the corner. Daed asleep on the floor with the remote.\n\nK'Dee looks at the door.\n\nShe puts down her keys.\n\n'...okay. One movie.'\n\nShe never makes it to the car.");
+    document.getElementById("dlg-choices").innerHTML=
+      '<div class="dlg-ch" id="movie-night-btn" style="border-color:#FFD700;color:#FFD700">🎬 STAY HOME.</div>'+
+      '<div class="dlg-ch" id="play-again-secret" style="border-color:#aaa;color:#aaa">🎉 PLAY AGAIN</div>';
+    document.getElementById("movie-night-btn").addEventListener("click",function(){
+      document.getElementById("dlg-name").textContent="THE END";
+      typeText(document.getElementById("dlg-text"),"They watch two movies and half of a third.\n\nMilo falls asleep on K'Dee's shoulder.\nGreyson takes detailed notes on the science errors.\nGwyneth wakes up for exactly four minutes and cries at the dog scene.\nForest pauses it during 'the best part' three times to get snacks.\nDaed stays asleep through everything.\nHolly watches in complete silence from behind the couch.\n\nKdee doesn't move.\n\nShe earned this.");
+      document.getElementById("dlg-choices").innerHTML='<div class="dlg-ch" id="play-again-end" style="border-color:#FFD700;color:#FFD700">🎉 PLAY AGAIN</div>';
+      document.getElementById("play-again-end").addEventListener("click",function(){location.reload();});
+    });
+    document.getElementById("play-again-secret").addEventListener("click",function(){location.reload();});
+    return;
+  }
   setPortraitMode("excited");
   document.getElementById("dlg-name").textContent="YOU WIN!";
   var m=Math.floor((780-timer)/60),s=(780-timer)%60;
