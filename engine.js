@@ -257,7 +257,7 @@ function drawMilo(c){
   if(!miloFollowing)return;
   var bob=Math.sin(miloFollowAnim*0.2)*2;
   var leg=Math.sin(miloFollowAnim*0.25)*5;
-  var sc=0.85;// small kid
+  var sc=1.6;// same scale as K'Dee
   c.save();c.translate(miloFollowX,miloFollowY);c.scale(sc,sc);
   // Shadow
   c.save();c.globalAlpha=0.1;c.fillStyle="#000";c.beginPath();c.ellipse(0,4,8,3,0,0,Math.PI*2);c.fill();c.restore();
