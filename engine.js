@@ -458,30 +458,35 @@ function interactWith(h){
 
 /* --- FULL INVENTORY SYSTEM --- */
 var invDetails={
-  banana:{emoji:"\uD83C\uDF4C",name:"Banana",desc:"A perfectly ripe banana. For scale, obviously."},
-  duck:{emoji:"\uD83E\uDD86",name:"General Quackers",desc:"Leader of the rubber duck army. Seen things. Won't talk about it."},
-  bible:{emoji:"\uD83D\uDCD6",name:"Bible",desc:"Proverbs 31. Divine guidance for finding lost keys. (Results may vary.)"},
-  flashlight:{emoji:"\uD83D\uDD26",name:"Flashlight",desc:"Found at the workbench. Batteries at 12%. Classic."},
-  necronomicon:{emoji:"\uD83D\uDCDA",name:"Necronomicon",desc:"It whispers. Mostly complaints. Do NOT read aloud at bedtime."},
-  shovel:{emoji:"\u26CF\uFE0F",name:"Shovel",desc:"From the shed. The dog is VERY interested in this."},
-  wrench:{emoji:"\uD83D\uDD27",name:"Wrench",desc:"A sturdy wrench. Opens things that shouldn't be opened."},
-  towel:{emoji:"\uD83E\uDDF4",name:"Towel",desc:"Seen better days. Mostly decorative at this point."},
-  book:{emoji:"\uD83D\uDCDA",name:"Parenting Book",desc:"'Parenting Without Losing Your Mind.' Chapter 1: Too late."},
-  tidepen:{emoji:"\uD83E\uDDF4",name:"Tide Pen",desc:"For stain emergencies. Which is every day."},
-  phone:{emoji:"\uD83D\uDCF1",name:"K'Dee's Phone",desc:"47 unread texts. 3 missed calls from 'Mom.' Battery at 8%. 214 photos of the kids. One good selfie."},
-  bookshelf:{emoji:"\uD83D\uDCDA",name:"Parenting Book",desc:"'Parenting Without Losing Your Mind.' Still on chapter 1."},
-  tools:{emoji:"\uD83D\uDD27",name:"Wrench",desc:"Heavy duty. Good for opening stubborn trunks."},
-  shelf:{emoji:"\uD83E\uDDF4",name:"Tide Pen",desc:"Almost empty. Story of K'Dee's life."},
-  flowers:{emoji:"\uD83C\uDF3A",name:"Flowers",desc:"A self-care purchase. Smells like lavender and victory."},
-  drinks:{emoji:"\uD83E\uDD64",name:"Energy Drinks",desc:"Confiscated from Greyson. Three empty cans. Gross."},
-  beds:{emoji:"\uD83C\uDF3F",name:"Fresh Herbs",desc:"Rosemary and basil. Tonight's dinner is going to be great."},
-  fthermo:{emoji:"\uD83C\uDF21\uFE0F",name:"Thermometer",desc:"102.3. Poor Forest. Sending healing vibes."},
-  dumbbells:{emoji:"\uD83C\uDFCB\uFE0F",name:"Dumbbell",desc:"Almost lifted one. Almost."}
+  banana:{emoji:"\uD83C\uDF4C",name:"Banana",desc:"A perfectly ripe banana. For scale, obviously.",type:"Food",battle:"Super effective vs. Milo!"},
+  duck:{emoji:"\uD83E\uDD86",name:"General Quackers",desc:"Leader of the rubber duck army. Seen things. Won't talk about it.",type:"Companion",battle:"Super effective vs. Milo!"},
+  bible:{emoji:"\uD83D\uDCD6",name:"Bible",desc:"Proverbs 31. Divine guidance for finding lost keys. (Results may vary.)",type:"Sacred Text",battle:"Super effective vs. Greyson!"},
+  flashlight:{emoji:"\uD83D\uDD26",name:"Flashlight",desc:"Found at the workbench. Batteries at 12%. Classic.",type:"Tool",battle:"Useful in battle vs. Forest"},
+  necronomicon:{emoji:"\uD83D\uDCDA",name:"Necronomicon",desc:"It whispers. Mostly complaints. Do NOT read aloud at bedtime.",type:"Forbidden Text",battle:"Super effective vs. Greyson!"},
+  shovel:{emoji:"\u26CF\uFE0F",name:"Shovel",desc:"From the shed. The dog is VERY interested in this.",type:"Tool",battle:"General battle item"},
+  wrench:{emoji:"\uD83D\uDD27",name:"Wrench",desc:"A sturdy wrench. Opens things that shouldn't be opened.",type:"Tool",battle:"Super effective vs. Daed!"},
+  towel:{emoji:"\uD83E\uDDF4",name:"Towel",desc:"Seen better days. Mostly decorative at this point.",type:"Textile",battle:"Super effective vs. Holly & Forest!"},
+  book:{emoji:"\uD83D\uDCDA",name:"Parenting Book",desc:"'Parenting Without Losing Your Mind.' Chapter 1: Too late.",type:"Literature",battle:"Super effective vs. Holly!"},
+  tidepen:{emoji:"\uD83E\uDDF4",name:"Tide Pen",desc:"For stain emergencies. Which is every day.",type:"Supply",battle:"General battle item"},
+  phone:{emoji:"\uD83D\uDCF1",name:"K'Dee's Phone",desc:"47 unread texts. 3 missed calls from 'Mom.' Battery at 8%. 214 photos of the kids. One good selfie.",type:"Technology",battle:"Super effective vs. Gwyneth!"},
+  bookshelf:{emoji:"\uD83D\uDCDA",name:"Parenting Book",desc:"'Parenting Without Losing Your Mind.' Still on chapter 1.",type:"Literature",battle:"Super effective vs. Holly!"},
+  tools:{emoji:"\uD83D\uDD27",name:"Wrench",desc:"Heavy duty. Good for opening stubborn trunks.",type:"Tool",battle:"Super effective vs. Daed!"},
+  shelf:{emoji:"\uD83E\uDDF4",name:"Tide Pen",desc:"Almost empty. Story of K'Dee's life.",type:"Supply"},
+  flowers:{emoji:"\uD83C\uDF3A",name:"Flowers",desc:"A self-care purchase. Smells like lavender and victory.",type:"Self-Care"},
+  drinks:{emoji:"\uD83E\uDD64",name:"Energy Drinks",desc:"Confiscated from Greyson. Three empty cans. Gross.",type:"Contraband",battle:"Useful in battle vs. Greyson"},
+  beds:{emoji:"\uD83C\uDF3F",name:"Fresh Herbs",desc:"Rosemary and basil. Tonight's dinner is going to be great.",type:"Ingredient"},
+  fthermo:{emoji:"\uD83C\uDF21\uFE0F",name:"Thermometer",desc:"102.3. Poor Forest. Sending healing vibes.",type:"Medical"},
+  dumbbells:{emoji:"\uD83C\uDFCB\uFE0F",name:"Dumbbell",desc:"Almost lifted one. Almost.",type:"Equipment"}
 };
+
+// Items that are super-effective somewhere
+var battleItems=["banana","duck","bible","necronomicon","wrench","towel","book","phone","flashlight","drinks"];
 
 function updateInv(){
   var bc=document.getElementById("bag-count");
   bc.textContent=inv.length>0?("("+inv.length+")"):"";
+  var ic=document.getElementById("inv-count");
+  if(ic)ic.textContent=inv.length>0?(inv.length+" ITEMS"):"EMPTY";
 }
 
 function showInv(){
@@ -494,17 +499,26 @@ function showInv(){
   if(inv.length===0){empty.style.display="block";return;}
   empty.style.display="none";
   inv.forEach(function(it,idx){
-    var info=invDetails[it]||{emoji:invEmoji[it]||"\u2753",name:it,desc:"A mysterious item."};
+    var info=invDetails[it]||{emoji:invEmoji[it]||"\u2753",name:it,desc:"A mysterious item.",type:"???"};
     var cell=document.createElement("div");cell.className="inv-cell";
-    cell.innerHTML='<div class="inv-cell-emoji">'+info.emoji+'</div><div class="inv-cell-name">'+info.name+'</div>';
+    if(battleItems.indexOf(it)>=0)cell.classList.add("rarity-battle");
+    var inner='<div class="inv-cell-emoji">'+info.emoji+'</div><div class="inv-cell-name">'+info.name+'</div>';
+    if(info.battle)inner+='<div class="inv-cell-badge">\u2694</div>';
+    cell.innerHTML=inner;
     cell.addEventListener("click",function(){
-      // Deselect others
       var all=grid.querySelectorAll(".inv-cell");
       for(var j=0;j<all.length;j++)all[j].classList.remove("selected");
       cell.classList.add("selected");
       document.getElementById("inv-detail-emoji").textContent=info.emoji;
       document.getElementById("inv-detail-name").textContent=info.name;
+      var typeEl=document.getElementById("inv-detail-type");
+      if(typeEl)typeEl.textContent=info.type||"";
       document.getElementById("inv-detail-desc").textContent=info.desc;
+      var battleEl=document.getElementById("inv-detail-battle");
+      if(battleEl){
+        if(info.battle){battleEl.textContent="\u2694 "+info.battle;battleEl.classList.add("on");}
+        else{battleEl.classList.remove("on");}
+      }
       detail.classList.add("on");
     });
     grid.appendChild(cell);
@@ -731,93 +745,119 @@ canvas.addEventListener("mousemove",function(e){
 document.getElementById("dlg-continue").addEventListener("click",hideDlg);
 document.getElementById("dlg").addEventListener("click",function(e){if(e.target===document.getElementById("dlg")||e.target===document.getElementById("dlg-inner"))hideDlg();});
 
-/* --- TURN-BASED BATTLE SYSTEM --- */
+/* --- TURN-BASED BATTLE SYSTEM v2 --- */
+/* Cinematic VS splash, attack animations, floating damage, unique character sprites */
 var battleActive=false,battleDone={},battleState=null;
+var dmgFloats=[];// {x,y,txt,color,life}
 
 var FIGHTERS={
   milo:{
-    name:"MILO",emoji:"\uD83D\uDE4B",hp:8,maxHp:8,
-    hair:"#654321",hairStyle:"shaggy",skin:P.skin,shirt:"#3498db",short:true,
+    name:"MILO",title:"THE CHATTERBOX",hp:8,maxHp:8,color:"#3498db",
+    hair:"#654321",hairStyle:"shaggy",skin:P.skin,shirt:"#3498db",pants:"#4169E1",short:true,
+    idleQuips:["*tugs K'Dee's shirt*","'Mom? Mom? Mom?'","*shows crayon drawing*","'Guess what!'"],
     attacks:[
-      {name:"CHATTER",dmg:0,msg:"Milo talks about his day at school. It's... VERY detailed."},
-      {name:"SHOW DRAWING",dmg:1,msg:"Milo shows K'Dee a drawing. It's beautiful. She loses focus."},
-      {name:"HUG LEGS",dmg:1,msg:"Milo hugs K'Dee's legs. She can't move!"},
-      {name:"'BUT MOM...'",dmg:2,msg:"Milo says 'But MOM' in that tone. Critical emotional damage!"}
+      {name:"CHATTER",dmg:0,quips:["Milo talks about his day. ALL of it.","'And THEN Jayden said—' It's a saga.","Milo describes lunch in forensic detail.","'Did you know caterpillars have 16 legs?'"]},
+      {name:"SHOW DRAWING",dmg:1,quips:["Milo shows a drawing. 'It's you!' It's a blob.","'LOOK WHAT I MADE!' It's actually beautiful.","The drawing is... a dinosaur eating keys?"]},
+      {name:"HUG LEGS",dmg:1,quips:["Milo bear-hugs K'Dee's legs. She's rooted!","*CLAMP* Milo is now a leg accessory.","'I love you THIS much!' Legs: immobilized."]},
+      {name:"BUT MOM",dmg:2,quips:["'But MOOOOOM.' Critical emotional damage!","Milo deploys the puppy eyes. It's super effective!","'But you PROMISED.' K'Dee doesn't remember promising.","'BUT MOM WHY.' Three words. Maximum devastation."]}
     ],
-    intro:"Milo blocks the doorway!\n'MOM! Mom. Mom. Mommy. MOMMM!'",
-    defeat:"Milo finishes his story about a caterpillar he saw at recess.\n'OK bye mom!' He runs off.",
-    itemEffects:{banana:{dmg:3,msg:"K'Dee hands Milo the banana. He's THRILLED. Distracted!"},duck:{dmg:4,msg:"K'Dee gives Milo Gen. Quackers. He immediately starts playing!"}}
+    intro:["Milo blocks the doorway!","'MOM! Mom. Mom. Mommy. MOMMM!'","He has something VERY important to say."],
+    defeat:["Milo finishes his caterpillar story.","'OK bye mom!' He sprints away.","...blissful silence."],
+    itemEffects:{
+      banana:{dmg:5,msg:["K'Dee hands Milo the banana.","His eyes go WIDE. 'FOR ME?!'","He peels it and runs off, narrating his banana adventure."],super:true},
+      duck:{dmg:6,msg:["K'Dee deploys General Quackers.","Milo GASPS. 'A DUCK!'","He immediately starts a duck army campaign. Battle over."],super:true},
+      phone:{dmg:3,msg:["K'Dee shows Milo a game on her phone.","He's hypnotized. Blessed silence."]}
+    }
   },
   holly:{
-    name:"HOLLY",emoji:"\uD83E\uDD17",hp:10,maxHp:10,
-    hair:"#654321",hairStyle:"long",skin:P.skin,shirt:"#DDA0DD",tall:true,
+    name:"HOLLY",title:"THE HUMAN MISSILE",hp:10,maxHp:10,color:"#DDA0DD",
+    hair:"#654321",hairStyle:"long",skin:P.skin,shirt:"#DDA0DD",pants:"#8B668B",tall:true,
+    idleQuips:["*stretches arms wide*","'Incoming!'","*bounces excitedly*","'MOMMYYY!'"],
     attacks:[
-      {name:"FLYING HUG",dmg:3,msg:"Holly launches for a hug and COMPLETELY flattens K'Dee."},
-      {name:"TRIP & FALL",dmg:2,msg:"Holly trips over her own feet and lands on K'Dee. Again."},
-      {name:"SQUEEZE",dmg:1,msg:"Holly hugs so tight K'Dee's ribs creak."},
-      {name:"TACKLE LOVE",dmg:2,msg:"Holly runs at K'Dee with arms wide open. Nowhere to hide!"}
+      {name:"FLYING HUG",dmg:3,quips:["Holly LAUNCHES herself. K'Dee is FLATTENED.","Running hug! K'Dee goes down like a domino!","Holly achieves LIFTOFF. Impact imminent!","INCOMING! Holly hits like a loving freight train."]},
+      {name:"TRIP & FALL",dmg:2,quips:["Holly trips and falls ON K'Dee. Again.","Gravity and Holly have an arrangement.","She trips on NOTHING and lands on K'Dee."]},
+      {name:"SQUEEZE",dmg:1,quips:["Holly hugs so tight K'Dee's ribs file a complaint.","'I love you!' *CRACK* 'Was that a rib?'","The hug-to-pain ratio is concerning."]},
+      {name:"TACKLE LOVE",dmg:2,quips:["Holly charges! Arms wide! No escape!","She runs at K'Dee like a linebacker with feelings.","TACKLE HUG! K'Dee sees her life flash by."]}
     ],
-    intro:"Holly spots K'Dee from across the room.\n'MOMMYYYY!' She starts running. Oh no.",
-    defeat:"Holly finally lands a hug that doesn't cause injury.\n'Love you mom!' She cartwheels away.",
-    itemEffects:{towel:{dmg:4,msg:"K'Dee throws towel like a matador. Holly hugs the towel instead!"},book:{dmg:3,msg:"K'Dee reads aloud. Holly sits down to listen. Crisis averted!"}}
+    intro:["Holly spots K'Dee across the room.","Her eyes light up. She starts RUNNING.","'MOMMYYYY!'","Oh no. OH NO."],
+    defeat:["Holly finally lands a gentle hug.","'Love you mom!' She cartwheels away.","K'Dee checks for broken bones. All clear. Barely."],
+    itemEffects:{
+      towel:{dmg:5,msg:["K'Dee whips out the towel like a matador!","'OLE!' Holly hugs the towel instead!","She wraps herself in it. 'I'm a burrito!'"],super:true},
+      book:{dmg:4,msg:["K'Dee reads aloud from the parenting book.","Holly sits down cross-legged. 'Story time!'","Crisis. Averted."],super:true}
+    }
   },
   greyson:{
-    name:"GREYSON",emoji:"\uD83E\uDDD4",hp:12,maxHp:12,
-    hair:"#1a1a1a",hairStyle:"dark",moustache:true,skin:P.skin,shirt:"#111",
+    name:"GREYSON",title:"THE PHILOSOPHER KING",hp:12,maxHp:12,color:"#8a2be2",
+    hair:"#1a1a1a",hairStyle:"dark",moustache:true,skin:P.skin,shirt:"#111",pants:"#1a1a1a",
+    idleQuips:["*strokes moustache*","'Hmm, interesting.'","*adjusts in gaming chair*","'You see, mother...'"],
     attacks:[
-      {name:"PHILOSOPHIZE",dmg:1,msg:"'Mom, do we really CHOOSE to find keys, or do keys find US?'"},
-      {name:"EXISTENTIAL Q",dmg:2,msg:"'What if the keys don't WANT to be found?' K'Dee's brain hurts."},
-      {name:"DEEP STARE",dmg:1,msg:"Greyson stares meaningfully into the middle distance. Unsettling."},
-      {name:"NIETZSCHE",dmg:2,msg:"'Mom. God is dead.' 'Greyson it's 8 AM.' 'Time is a construct.'"}
+      {name:"PHILOSOPHIZE",dmg:1,quips:["'Do we really CHOOSE to find keys, or do keys find US?'","'What IS a key, fundamentally?'","'Mom. Is cereal a soup?' K'Dee's brain glitches.","'If a key falls in a house and nobody finds it...'"]},
+      {name:"EXISTENTIAL Q",dmg:2,quips:["'What if the keys don't WANT to be found?'","'Are we searching for keys, or searching for meaning?'","'Mom, what if we're all just NPCs?'","'Time is a flat circle, mother.' K'Dee's migraine: activated."]},
+      {name:"DEEP STARE",dmg:1,quips:["Greyson stares into the middle distance. Unsettling.","He gazes at nothing for 30 seconds. K'Dee is disturbed.","The thousand-yard stare. He's seen things. On Reddit."]},
+      {name:"NIETZSCHE",dmg:2,quips:["'God is dead, mother.' 'Greyson, it's 8 AM.'","'Time is a construct.' 'So is being grounded.'","'We are all trapped in Plato's cave.' 'You're trapped in your ROOM.'","'I think, therefore—' 'GREYSON.'"]}
     ],
-    intro:"Greyson is sitting in his gaming chair, illuminated by RGB.\n'Ah, Mother. We need to talk about the nature of existence.'",
-    defeat:"Greyson nods sagely.\n'You've passed the test. The keys are within you.'\n'...Greyson.' 'OK fine. Try the garage.'",
-    itemEffects:{necronomicon:{dmg:5,msg:"K'Dee shows the Necronomicon. Greyson is IMPRESSED. 'Finally, some culture.'"},bible:{dmg:4,msg:"'Have you considered... faith?' Greyson short-circuits."}}
+    intro:["Greyson sits in his RGB gaming throne.","The monitors cast an ethereal glow.","'Ah, Mother. Sit. We must discuss...'","'...the nature of existence.'","'Greyson I need my keys.' 'Keys are a metaphor.'"],
+    defeat:["Greyson nods sagely.","'You've passed the test, Mother.'","'The keys were inside you all along.'","'...GREYSON.' 'Fine. Try the garage.'"],
+    itemEffects:{
+      necronomicon:{dmg:6,msg:["K'Dee holds up the Necronomicon.","Greyson's eyes go WIDE.","'FINALLY. Some CULTURE in this house.'","He grabs it and starts reading. Battle over."],super:true},
+      bible:{dmg:5,msg:["'Have you considered... faith?'","Greyson.exe has stopped working.","He sits in stunned silence. A first."],super:true},
+      drinks:{dmg:3,msg:["K'Dee holds up confiscated energy drinks.","'Give those BACK!' 'After you let me leave.'"]}
+    }
   },
   gwyneth:{
-    name:"GWYNETH",emoji:"\uD83D\uDE34",hp:6,maxHp:6,
-    hair:"#654321",hairStyle:"long",skin:P.skin,shirt:P.sky,narcolepsy:true,
+    name:"GWYNETH",title:"THE NARCOLEPTIC",hp:6,maxHp:6,color:P.sky,
+    hair:"#654321",hairStyle:"long",skin:P.skin,shirt:P.sky,pants:"#5F9EA0",narcolepsy:true,
+    idleQuips:["*zzzzzzz*","*snore*","*mumbles about unicorns*","*sleep-smiles*"],
     attacks:[
-      {name:"*SNORE*",dmg:0,msg:"Gwyneth is asleep. She does nothing. Somehow this is still stressful."},
-      {name:"SLEEP TALK",dmg:1,msg:"'The unicorns...' Gwyneth mutters in her sleep. K'Dee is confused."},
-      {name:"ROLL OVER",dmg:2,msg:"Gwyneth rolls over in her sleep and lands on K'Dee's foot."},
-      {name:"*zzzzz*",dmg:0,msg:"Gwyneth sleeps harder. This is honestly impressive."}
+      {name:"*SNORE*",dmg:0,quips:["Gwyneth snores. Somehow this is still stressful.","The snoring intensifies. K'Dee can't focus.","She snores so loud the room vibrates."]},
+      {name:"SLEEP TALK",dmg:1,quips:["'The unicorns... need more glitter...'","'No, MR. BUN-BUN, that's MY tiara...'","'Five more minutes...' She's been saying that for 2 hours.","'*mumble* ...the PRINCESS needs her KEYS...' Wait, what?"]},
+      {name:"ROLL OVER",dmg:2,quips:["Gwyneth rolls over and lands ON K'Dee's foot.","*THUD* She rolls like a sleepy bowling ball.","She unconsciously rolls toward K'Dee. Homing nap."]},
+      {name:"*zzzzz*",dmg:0,quips:["Gwyneth sleeps HARDER. This is honestly impressive.","She achieves a new level of sleep. Transcendent.","The sleeping is aggressive somehow."]}
     ],
-    intro:"Gwyneth is lying on the floor.\n'Gwyneth? ...Gwyneth?'\n*snoring sounds*\nOh. Narcolepsy nap.",
-    defeat:"Gwyneth wakes up suddenly.\n'Oh hi mom! Was I asleep?' 'For the whole battle.' 'What battle?'",
-    itemEffects:{phone:{dmg:5,msg:"K'Dee plays an alarm on her phone. Gwyneth JOLTS awake. 'I'M UP!'"},banana:{dmg:3,msg:"K'Dee waves banana under Gwyneth's nose. She stirs slightly."}}
+    intro:["Gwyneth is lying face-down on the floor.","'Gwyneth? ...Gwyneth?'","*magnificent snoring*","Oh. Narcolepsy nap. Classic Gwyneth."],
+    defeat:["Gwyneth wakes up suddenly.","'Oh hi mom! Was I asleep?'","'For the whole battle.' 'What battle?'","'...never mind. Love you, baby.'"],
+    itemEffects:{
+      phone:{dmg:6,msg:["K'Dee plays an alarm at MAX VOLUME.","Gwyneth LEVITATES off the ground.","'I'M UP! I'M UP! WHAT YEAR IS IT?!'"],super:true},
+      banana:{dmg:3,msg:["K'Dee waves banana near Gwyneth's nose.","*sniff sniff* Her eyes flutter.","'Is that... a banana?' Still mostly asleep."]}
+    }
   },
   forest:{
-    name:"FOREST",emoji:"\uD83E\uDD12",hp:5,maxHp:5,
-    hair:"#F0E68C",hairStyle:"shock",beard:"#CD5C5C",skin:P.skin,shirt:"#556b2f",
+    name:"FOREST",title:"PATIENT ZERO",hp:5,maxHp:5,color:"#556b2f",
+    hair:"#F0E68C",hairStyle:"shock",beard:"#CD5C5C",skin:P.skin,shirt:"#556b2f",pants:"#333",
+    idleQuips:["*wheeze*","*sniffle*","*groan*","*reaches for tissues*"],
     attacks:[
-      {name:"*WHEEZE*",dmg:1,msg:"Forest wheezes so hard the room shakes. K'Dee is concerned."},
-      {name:"COUGH",dmg:1,msg:"Forest coughs directly at K'Dee. She cringes. Bio-warfare!"},
-      {name:"SNEEZE",dmg:2,msg:"ACHOO! Forest sneezes and K'Dee gets blown back!"},
-      {name:"GROAN",dmg:0,msg:"Forest groans pathetically. K'Dee loses morale."}
+      {name:"*WHEEZE*",dmg:1,quips:["Forest wheezes so hard the WALLS shake.","*WHEEEEZE* K'Dee is genuinely concerned.","He wheezes AND coughs. Combo move!","The wheeze echoes through the house."]},
+      {name:"COUGH",dmg:1,quips:["Forest coughs directly at K'Dee. BIO-WARFARE!","*COUGH COUGH* K'Dee dodges! Mostly.","He coughs like a Victorian gentleman. With more phlegm."]},
+      {name:"SNEEZE",dmg:2,quips:["ACHOO! K'Dee gets blown back three feet!","Forest sneezes with the force of a small hurricane!","The sneeze sets off a car alarm outside. Somehow.","ACHOO! Tissues go flying. K'Dee takes splash damage!"]},
+      {name:"GROAN",dmg:0,quips:["Forest groans pathetically. K'Dee's morale drops.","'...I think I'm dying, mom.' 'You have a cold.'","*groan* He's so pitiful K'Dee just stands there."]}
     ],
-    intro:"Forest is lying in bed, a mess of tissues and misery.\n'...mom? *wheeze* I think I'm dying.'\n'You have a cold, Forest.' '*wheeze* ...still dying.'",
-    defeat:"Forest blows his nose triumphantly.\n'I feel 2% better. Thanks mom.' He immediately falls back asleep.",
-    itemEffects:{towel:{dmg:3,msg:"K'Dee drapes the towel over Forest. He feels CARED FOR."},flashlight:{dmg:2,msg:"K'Dee checks Forest's throat with the flashlight. 'Say ahh.' 'BLEH.'"}}
+    intro:["Forest is buried in a mountain of tissues.","His red beard pokes out from the blankets.","'...mom? *wheeze* I think I'm dying.'","'You have a cold, Forest.'","'*wheeze* ...still dying.'"],
+    defeat:["Forest blows his nose TRIUMPHANTLY.","'I feel... 2% better. Thanks mom.'","He immediately falls back asleep.","K'Dee tucks him in. Even mid-key-crisis."],
+    itemEffects:{
+      towel:{dmg:4,msg:["K'Dee drapes the towel over Forest.","He feels SO CARED FOR.","'*sniffle* You're the best mom.'","His fever drops 0.1 degrees. Victory."],super:true},
+      flashlight:{dmg:3,msg:["K'Dee checks Forest's throat.","'Say ahh.' 'BLEEEH.'","'Yep. That's a throat alright.'"]},
+      bible:{dmg:2,msg:["K'Dee reads healing prayers.","Forest feels spiritually better.","Physically? Still a mess."]}
+    }
   },
   daed:{
-    name:"DAED",emoji:"\uD83E\uDDD4",hp:1,maxHp:1,
-    hair:"#654321",hairStyle:"mullet",truckerHat:true,oily:true,skin:P.skin,shirt:"#555",
+    name:"DAED",title:"THE ESCAPE ARTIST",hp:1,maxHp:1,color:"#cc0000",
+    hair:"#654321",hairStyle:"mullet",truckerHat:true,oily:true,skin:P.skin,shirt:"#555",pants:"#333",
+    idleQuips:["*looks at door*","*jingles car keys*","'Well, I should—'","*edges toward exit*"],
     attacks:[
-      {name:"ESCAPE!",dmg:0,msg:"Daed is already halfway out the door. 'Gotta check on the Corvette!'"}
+      {name:"ESCAPE!",dmg:0,quips:["Daed is already halfway out the door!","'Gotta check on the Corvette!' *ZOOM*","He moves faster than K'Dee has ever seen him move.","Daed activates dad-escape velocity."]}
     ],
-    intro:"Daed appears, covered in car oil as usual.\n'Oh hey babe, I was just—'\n'DAED.'",
-    defeat:"Daed escapes before combat even really starts.\n'Gotta go! Corvette needs me!' *door slams*\nClassic Daed.",
-    itemEffects:{wrench:{dmg:2,msg:"K'Dee brandishes the wrench. 'IS THIS YOURS?' Daed sweats."}}
+    intro:["Daed appears, covered in car oil.","His mullet flows majestically.","'Oh hey babe, I was just—'","'DAED. My keys.'","'Keys? What keys? Gotta go!'"],
+    defeat:["Daed vanishes in a cloud of motor oil.","'GOTTA GO! CORVETTE NEEDS ME!'","*door slams* *engine revs* *tires screech*","Classic. Daed."],
+    itemEffects:{
+      wrench:{dmg:2,msg:["K'Dee brandishes the wrench.","'IS. THIS. YOURS.'","Daed sweats through the oil. Impressive.","'I can explain—' *POOF* He's gone."],super:true}
+    }
   }
 };
 
 var battleRoomMap={3:"milo",5:"daed",19:"greyson",20:"holly",21:"forest"};
-// Gwyneth triggers second visit to room 20
 var gwynBattle=false;
 
 function checkBattle(roomIdx){
-  // Holly & Gwyn room: first visit=Holly, second=Gwyneth
   if(roomIdx===20&&battleDone["holly"]&&!battleDone["gwyneth"]&&!gwynBattle){
     gwynBattle=true;
     setTimeout(function(){startBattle("gwyneth");},600);
@@ -830,376 +870,687 @@ function checkBattle(roomIdx){
 
 function startBattle(fighterId){
   var f=FIGHTERS[fighterId];if(!f)return;
-  battleActive=true;paused=true;
+  battleActive=true;paused=true;dmgFloats=[];
   battleState={
-    id:fighterId,
-    fighter:f,
-    enemyHP:f.hp,
-    turn:"intro",
-    msg:f.intro,
-    turnCount:0,
-    shakeTimer:0,
-    flashTimer:0,
-    flashColor:"",
-    selectedItem:null,
-    kdeeAnim:0,
-    enemyAnim:0,
-    msgQueue:[],
-    phase:"intro" // intro, player, enemy, enemyAct, victory
+    id:fighterId,fighter:f,enemyHP:f.hp,
+    turnCount:0,shakeTimer:0,shakeX:0,
+    flashTimer:0,flashColor:"",
+    kdeeAnim:0,enemyAnim:0,
+    phase:"vsIntro",vsTimer:90,// VS splash
+    introLine:0,introTimer:0,
+    msg:"",msgLines:[],
+    kdeePose:"idle",kdeeActionTimer:0,
+    enemyPose:"idle",enemyActionTimer:0,
+    quipIdx:0
   };
 }
 
-function drawBattleFighter(c,f,x,y,anim,isEnemy){
-  var bob=Math.sin(anim*0.05)*2;
-  var shake=battleState.shakeTimer>0&&isEnemy?Math.sin(battleState.shakeTimer*2)*3:0;
-  x+=shake;
-  // Shadow
-  c.save();c.globalAlpha=0.15;c.fillStyle="#000";
-  c.beginPath();c.ellipse(x,y+2,14,4,0,0,Math.PI*2);c.fill();c.restore();
+function rPick(arr){return arr[Math.floor(Math.random()*arr.length)];}
 
-  var h=f.short?-2:f.tall?4:0;
+/* ===== BIG CHARACTER SPRITES FOR BATTLE ===== */
+function drawBattleKdee(c,x,y,pose,timer){
+  var t=timer||0;
+  var bob=Math.sin(frameTick*0.05)*1.5;
+  var sc=1.8;// battle scale
+  c.save();c.translate(x,y);c.scale(sc,sc);
+  var ax=0,ay=0;
+
+  // Action offsets
+  if(pose==="slap"){ax=Math.min(t*2,12);var sw=Math.sin(t*0.8)*8;}
+  if(pose==="nag"){var nag=Math.sin(t*0.5)*3;}
+  if(pose==="purse"){ax=Math.min(t*1.5,8);var pw=Math.sin(t*0.6)*15;}
+  if(pose==="item"){var glow=0.3+0.3*Math.sin(t*0.3);}
+  if(pose==="hurt"){ax=Math.sin(t*2)*4;bob+=2;}
+
+  // Shadow
+  c.save();c.globalAlpha=0.18;c.fillStyle="#000";
+  c.beginPath();c.ellipse(ax,2,10,3,0,0,Math.PI*2);c.fill();c.restore();
 
   // Legs
-  D(c,x-5,y-4+bob,5,6+h,"#4169E1");D(c,x+1,y-4+bob,5,6+h,"#4169E1");
-  D(c,x-6,y+1+h+bob,6,3,"#333");D(c,x+1,y+1+h+bob,6,3,"#333");
+  var lk=pose==="hurt"?Math.sin(t)*2:0;
+  D(c,ax-4+lk,-3+bob,4,6,"#4169E1");D(c,ax+1-lk,-3+bob,4,6,"#4169E1");
+  D(c,ax-5+lk,2+bob,5,3,"#333");D(c,ax+1-lk,2+bob,5,3,"#333");
+
   // Body
-  c.fillStyle=f.shirt;
-  c.beginPath();c.moveTo(x-9,y-16+bob-h);c.lineTo(x-10,y-4+bob);c.lineTo(x+10,y-4+bob);c.lineTo(x+9,y-16+bob-h);c.closePath();c.fill();
+  c.fillStyle=P.pink;c.beginPath();
+  c.moveTo(ax-7,-12+bob);c.lineTo(ax-8,-3+bob);c.lineTo(ax+8,-3+bob);c.lineTo(ax+7,-12+bob);
+  c.closePath();c.fill();
+  D(c,ax-1,-10+bob,2,7,"#FF85C8");
+  D(c,ax-7,-5+bob,14,4,"#4169E1");
+
+  // Arms
+  if(pose==="slap"&&t>0){
+    // Slap arm extended
+    c.save();c.translate(ax+7,-12+bob);c.rotate(-0.5+sw*0.05);
+    D(c,0,0,4,12,P.pink);c.fillStyle=P.skin;c.beginPath();c.arc(2,13,2.5,0,Math.PI*2);c.fill();
+    c.restore();
+    D(c,ax-10,-12+bob,4,10,P.pink);
+  }else if(pose==="purse"&&t>0){
+    // Purse swing
+    c.save();c.translate(ax+7,-12+bob);c.rotate(-0.8+(pw||0)*0.03);
+    D(c,0,0,4,14,P.pink);
+    // Purse
+    RR(c,-2,12,10,8,2,"#8B4513");D(c,-1,10,8,2,P.gold);
+    c.restore();
+    D(c,ax-10,-12+bob,4,10,P.pink);
+  }else if(pose==="nag"&&t>0){
+    // Wagging finger
+    c.save();c.translate(ax+7,-12+bob);c.rotate(-0.3);
+    D(c,0,0,4,10,P.pink);c.fillStyle=P.skin;c.beginPath();c.arc(2,11,2.5,0,Math.PI*2);c.fill();
+    // Finger up
+    D(c,1,7,2,5,P.skin);
+    c.restore();
+    D(c,ax-10,-12+bob+(nag||0),4,10,P.pink);
+  }else if(pose==="item"&&t>0){
+    D(c,ax-10,-12+bob,4,10,P.pink);
+    c.save();c.translate(ax+7,-14+bob);
+    D(c,0,0,4,10,P.pink);
+    // Glowing item
+    c.fillStyle="rgba(0,206,209,"+(glow||0.3)+")";
+    c.beginPath();c.arc(3,0,6,0,Math.PI*2);c.fill();
+    c.restore();
+  }else{
+    D(c,ax-10,-12+bob,4,10,P.pink);D(c,ax+6,-12+bob,4,10,P.pink);
+    c.fillStyle=P.skin;
+    c.beginPath();c.arc(ax-8,-2+bob,2.5,0,Math.PI*2);c.fill();
+    c.beginPath();c.arc(ax+8,-2+bob,2.5,0,Math.PI*2);c.fill();
+  }
+
+  // Head
+  c.fillStyle=P.skin;c.beginPath();c.arc(ax,-20+bob,9,0,Math.PI*2);c.fill();
+  // Hair
+  c.fillStyle=P.hair;c.beginPath();c.arc(ax,-24+bob,9,Math.PI,2*Math.PI);c.fill();
+  D(c,ax-9,-23+bob,4,9,P.hair);D(c,ax+5,-23+bob,4,9,P.hair);
+  c.fillStyle="rgba(255,255,200,0.25)";c.beginPath();c.arc(ax+3,-26+bob,3,0,Math.PI*2);c.fill();
+  // Eyes
+  if(pose==="hurt"){
+    c.strokeStyle="#333";c.lineWidth=1;
+    c.beginPath();c.moveTo(ax-5,-21+bob);c.lineTo(ax-2,-19+bob);c.moveTo(ax-2,-21+bob);c.lineTo(ax-5,-19+bob);c.stroke();
+    c.beginPath();c.moveTo(ax+2,-21+bob);c.lineTo(ax+5,-19+bob);c.moveTo(ax+5,-21+bob);c.lineTo(ax+2,-19+bob);c.stroke();
+  }else if(pose==="nag"){
+    // Angry eyes
+    c.fillStyle="#fff";c.fillRect(ax-5,-21+bob,4,3);c.fillRect(ax+1,-21+bob,4,3);
+    c.fillStyle=P.eye;c.fillRect(ax-4,-20+bob,2,2);c.fillRect(ax+2,-20+bob,2,2);
+    // Angry brows
+    c.strokeStyle="#333";c.lineWidth=1;
+    c.beginPath();c.moveTo(ax-6,-23+bob);c.lineTo(ax-2,-22+bob);c.stroke();
+    c.beginPath();c.moveTo(ax+6,-23+bob);c.lineTo(ax+2,-22+bob);c.stroke();
+  }else{
+    c.fillStyle="#fff";c.fillRect(ax-5,-21+bob,4,3);c.fillRect(ax+1,-21+bob,4,3);
+    c.fillStyle=P.eye;c.fillRect(ax-4,-20+bob,2,2);c.fillRect(ax+2,-20+bob,2,2);
+    c.fillStyle="#fff";c.fillRect(ax-4,-21+bob,1,1);c.fillRect(ax+2,-21+bob,1,1);
+  }
+  // Mouth
+  if(pose==="nag"){
+    c.fillStyle="#333";c.beginPath();c.arc(ax,-15+bob,2,0,Math.PI*2);c.fill();
+  }else if(pose==="hurt"){
+    c.strokeStyle="#333";c.lineWidth=1;c.beginPath();c.arc(ax,-14+bob,2,Math.PI+0.3,2*Math.PI-0.3);c.stroke();
+  }else{
+    c.strokeStyle=P.pink;c.lineWidth=1;c.beginPath();c.arc(ax,-15+bob,3,0.1*Math.PI,0.9*Math.PI);c.stroke();
+  }
+
+  c.restore();
+}
+
+function drawBattleEnemy(c,f,x,y,pose,timer,anim){
+  var t=timer||0;
+  var bob=Math.sin(anim*0.04)*2;
+  var sc=1.8;
+  var h=f.short?-3:f.tall?5:0;
+  var shake=battleState&&battleState.shakeTimer>0?Math.sin(battleState.shakeTimer*2)*4:0;
+
+  c.save();c.translate(x+shake,y);c.scale(sc,sc);
+
+  if(f.narcolepsy){bob=0;} // sleeping = no bob
+
+  // Shadow
+  c.save();c.globalAlpha=0.15;c.fillStyle="#000";
+  c.beginPath();c.ellipse(0,2+h/2,10,3,0,0,Math.PI*2);c.fill();c.restore();
+
+  // --- SPECIAL: Gwyneth lying down ---
+  if(f.narcolepsy){
+    // Horizontal body
+    c.save();c.rotate(Math.PI/2*0.15);// slight angle
+    D(c,-14,-2,28,7,f.shirt);// body
+    D(c,-16,-2,5,6,f.pants);D(c,11,-2,5,6,f.pants);// legs
+    D(c,-17,3,4,3,"#333");D(c,12,3,4,3,"#333");// shoes
+    // Head
+    c.fillStyle=f.skin;c.beginPath();c.arc(-6,-10,8,0,Math.PI*2);c.fill();
+    c.fillStyle=f.hair;c.beginPath();c.arc(-6,-14,8,Math.PI,2*Math.PI);c.fill();
+    D(c,-14,-14,4,12,f.hair);D(c,0,-14,4,10,f.hair);
+    // Closed eyes
+    c.strokeStyle="#333";c.lineWidth=0.8;
+    c.beginPath();c.arc(-9,-10,2,0,Math.PI);c.stroke();
+    c.beginPath();c.arc(-3,-10,2,0,Math.PI);c.stroke();
+    c.restore();
+    // Zzz
+    c.fillStyle="rgba(100,150,255,0.6)";c.font="bold 7px monospace";
+    var zb=Math.sin(anim*0.03)*3;
+    c.fillText("z",8,-16+zb);c.font="bold 5px monospace";c.fillText("z",14,-22+zb);c.font="bold 3px monospace";c.fillText("z",18,-26+zb);
+    c.restore();
+    return;
+  }
+
+  // --- SPECIAL: Forest in bed ---
+  if(f.beard&&f.hairStyle==="shock"){
+    // Blanket/bed
+    RR(c,-16,-2,32,10,3,"#8a8a70");
+    // Pillow
+    RR(c,-14,-7,12,6,2,"#ddd");
+    // Head poking out
+    c.fillStyle=f.skin;c.beginPath();c.arc(-4,-14,8,0,Math.PI*2);c.fill();
+    // Shock of blonde hair
+    c.fillStyle=f.hair;
+    c.beginPath();c.arc(-4,-18,8,Math.PI,2*Math.PI);c.fill();
+    for(var sp=0;sp<5;sp++){c.beginPath();c.moveTo(-11+sp*3.5,-21);c.lineTo(-9.5+sp*3.5,-27-sp%2*2);c.lineTo(-8+sp*3.5,-21);c.closePath();c.fill();}
+    // Red beard
+    c.fillStyle=f.beard;c.beginPath();c.moveTo(-9,-9);c.quadraticCurveTo(-4,-2,1,-9);c.fill();
+    // Sick eyes (droopy)
+    c.fillStyle="#fff";c.fillRect(-7,-15,3,2);c.fillRect(-1,-15,3,2);
+    c.fillStyle="#333";c.fillRect(-6,-15,2,2);c.fillRect(0,-15,2,2);
+    // Red nose
+    c.fillStyle="#e74c3c";c.beginPath();c.arc(-3,-12,2,0,Math.PI*2);c.fill();
+    // Tissues around
+    c.fillStyle="#fff";
+    c.fillRect(6,-4,5,3);c.fillRect(10,-6,4,3);c.fillRect(14,-2,4,3);
+    // Thermometer
+    D(c,-14,-9,2,8,"#ccc");c.fillStyle="#e74c3c";c.beginPath();c.arc(-13,-10,1.5,0,Math.PI*2);c.fill();
+    c.restore();
+    return;
+  }
+
+  // --- REGULAR CHARACTER ---
+  var atk=(pose==="attack"&&t>0);
+  var ax=atk?-Math.min(t*1.5,8):0;
+
+  // Legs
+  var lk=atk?Math.sin(t*0.6)*2:0;
+  D(c,ax-4+lk,-3+bob+h/2,4,6+h/2,f.pants||"#4169E1");
+  D(c,ax+1-lk,-3+bob+h/2,4,6+h/2,f.pants||"#4169E1");
+  D(c,ax-5+lk,2+h+bob,5,3,"#333");D(c,ax+1-lk,2+h+bob,5,3,"#333");
+
+  // Body
+  c.fillStyle=f.shirt;c.beginPath();
+  c.moveTo(ax-7,-12+bob-h/2);c.lineTo(ax-8,-3+bob);c.lineTo(ax+8,-3+bob);c.lineTo(ax+7,-12+bob-h/2);
+  c.closePath();c.fill();
+
   // Oil stains for Daed
   if(f.oily){
-    c.fillStyle="rgba(40,30,10,0.4)";
-    c.beginPath();c.arc(x-4,y-10+bob,2,0,Math.PI*2);c.fill();
-    c.beginPath();c.arc(x+3,y-12+bob,3,0,Math.PI*2);c.fill();
-    c.beginPath();c.arc(x+1,y-6+bob,2,0,Math.PI*2);c.fill();
+    c.fillStyle="rgba(40,30,10,0.5)";
+    [[ax-3,-9],[ax+3,-11],[ax+1,-5],[ax-5,-6],[ax+5,-8]].forEach(function(p){
+      c.beginPath();c.arc(p[0],p[1]+bob,1.5+Math.random(),0,Math.PI*2);c.fill();
+    });
+    // Oil drip animation
+    var drip=(anim*0.05)%1;
+    c.fillStyle="rgba(40,30,10,0.3)";c.beginPath();c.arc(ax+4,-3+bob+drip*6,1,0,Math.PI*2);c.fill();
   }
+
   // Arms
-  D(c,x-12,y-16+bob-h,4,12,f.shirt);D(c,x+8,y-16+bob-h,4,12,f.shirt);
-  c.fillStyle=f.skin;
-  c.beginPath();c.arc(x-10,y-4+bob,2.5,0,Math.PI*2);c.fill();
-  c.beginPath();c.arc(x+10,y-4+bob,2.5,0,Math.PI*2);c.fill();
+  if(atk){
+    // Attack arm
+    c.save();c.translate(ax-8,-12+bob-h/2);c.rotate(0.5-t*0.08);
+    D(c,0,0,4,12,f.shirt);c.fillStyle=f.skin;c.beginPath();c.arc(2,13,2.5,0,Math.PI*2);c.fill();
+    c.restore();
+  }else{
+    D(c,ax-10,-12+bob-h/2,4,11,f.shirt);
+    c.fillStyle=f.skin;c.beginPath();c.arc(ax-8,-1+bob,2.5,0,Math.PI*2);c.fill();
+  }
+  D(c,ax+6,-12+bob-h/2,4,11,f.shirt);
+  c.fillStyle=f.skin;c.beginPath();c.arc(ax+8,-1+bob,2.5,0,Math.PI*2);c.fill();
+  if(f.oily){
+    c.fillStyle="rgba(40,30,10,0.35)";
+    c.beginPath();c.arc(ax-8,-1+bob,3,0,Math.PI*2);c.fill();
+    c.beginPath();c.arc(ax+8,-1+bob,3,0,Math.PI*2);c.fill();
+  }
+
   // Head
-  c.fillStyle=f.skin;c.beginPath();c.arc(x,y-24+bob-h,10,0,Math.PI*2);c.fill();
+  c.fillStyle=f.skin;c.beginPath();c.arc(ax,-20+bob-h/2,9,0,Math.PI*2);c.fill();
+
   // Hair
   c.fillStyle=f.hair;
   if(f.hairStyle==="shaggy"){
-    c.beginPath();c.arc(x,y-29+bob-h,10,Math.PI,2*Math.PI);c.fill();
-    D(c,x-10,y-28+bob-h,6,8,f.hair);D(c,x+5,y-28+bob-h,6,8,f.hair);
-    D(c,x-8,y-26+bob-h,4,6,f.hair);D(c,x+6,y-26+bob-h,4,6,f.hair);
+    c.beginPath();c.arc(ax,-24+bob-h/2,9,Math.PI,2*Math.PI);c.fill();
+    D(c,ax-9,-23+bob-h/2,5,8,f.hair);D(c,ax+5,-23+bob-h/2,5,8,f.hair);
+    D(c,ax-7,-21+bob-h/2,3,5,f.hair);D(c,ax+5,-21+bob-h/2,3,5,f.hair);
   }else if(f.hairStyle==="long"){
-    c.beginPath();c.arc(x,y-29+bob-h,10,Math.PI,2*Math.PI);c.fill();
-    D(c,x-10,y-28+bob-h,5,16,f.hair);D(c,x+5,y-28+bob-h,5,16,f.hair);
+    c.beginPath();c.arc(ax,-24+bob-h/2,9,Math.PI,2*Math.PI);c.fill();
+    D(c,ax-9,-23+bob-h/2,4,15,f.hair);D(c,ax+5,-23+bob-h/2,4,15,f.hair);
   }else if(f.hairStyle==="dark"){
-    c.beginPath();c.arc(x,y-29+bob-h,10,Math.PI,2*Math.PI);c.fill();
-    D(c,x-9,y-28+bob-h,18,5,f.hair);
-  }else if(f.hairStyle==="shock"){
-    c.beginPath();c.arc(x,y-29+bob-h,10,Math.PI,2*Math.PI);c.fill();
-    // Spiky shock of blonde hair
-    for(var sp=0;sp<5;sp++){
-      c.beginPath();c.moveTo(x-8+sp*4,y-33+bob-h);c.lineTo(x-6+sp*4,y-40+bob-h-sp%2*3);c.lineTo(x-4+sp*4,y-33+bob-h);c.closePath();c.fill();
-    }
+    c.beginPath();c.arc(ax,-24+bob-h/2,9,Math.PI,2*Math.PI);c.fill();
+    D(c,ax-8,-24+bob-h/2,16,4,f.hair);
   }else if(f.hairStyle==="mullet"){
-    c.beginPath();c.arc(x,y-29+bob-h,10,Math.PI,2*Math.PI);c.fill();
-    D(c,x-8,y-28+bob-h,16,4,f.hair);
-    // Mullet: party in the back
-    D(c,x-6,y-20+bob-h,12,14,f.hair);
+    c.beginPath();c.arc(ax,-24+bob-h/2,9,Math.PI,2*Math.PI);c.fill();
+    D(c,ax-7,-24+bob-h/2,14,4,f.hair);
+    // Party in the back - flowing mullet
+    c.beginPath();c.moveTo(ax+5,-18+bob-h/2);
+    c.quadraticCurveTo(ax+10,-12+bob-h/2+Math.sin(anim*0.04)*2,ax+6,-6+bob-h/2);
+    c.quadraticCurveTo(ax+3,-10+bob-h/2,ax-5,-18+bob-h/2);
+    c.fill();
   }
-  // Trucker hat for Daed
+
+  // Trucker hat
   if(f.truckerHat){
-    RR(c,x-12,y-36+bob-h,24,8,3,"#cc0000");
-    D(c,x-14,y-29+bob-h,28,4,"#cc0000");
+    RR(c,ax-10,-31+bob-h/2,20,8,3,"#cc0000");
+    D(c,ax-12,-24+bob-h/2,24,4,"#cc0000");
+    // Hat text
+    c.fillStyle="#fff";c.font="bold 3px monospace";c.fillText("CAR",ax-6,-27+bob-h/2);
   }
-  // Moustache for Greyson
+
+  // Moustache
   if(f.moustache){
     c.fillStyle="#1a1a1a";
-    c.beginPath();c.moveTo(x-5,y-18+bob-h);c.quadraticCurveTo(x,y-15+bob-h,x+5,y-18+bob-h);c.quadraticCurveTo(x,y-16+bob-h,x-5,y-18+bob-h);c.fill();
+    c.beginPath();
+    c.moveTo(ax-5,-14+bob-h/2);
+    c.quadraticCurveTo(ax-7,-12+bob-h/2,ax-6,-11+bob-h/2);
+    c.quadraticCurveTo(ax,-13+bob-h/2,ax+6,-11+bob-h/2);
+    c.quadraticCurveTo(ax+7,-12+bob-h/2,ax+5,-14+bob-h/2);
+    c.quadraticCurveTo(ax,-12+bob-h/2,ax-5,-14+bob-h/2);
+    c.fill();
   }
-  // Beard for Forest
-  if(f.beard){
-    c.fillStyle=f.beard;
-    c.beginPath();c.moveTo(x-6,y-18+bob-h);c.quadraticCurveTo(x,y-10+bob-h,x+6,y-18+bob-h);c.fill();
-  }
+
+  // Beard for Forest (handled in special case above)
+
   // Eyes
-  if(f.narcolepsy){
-    // Closed eyes (sleeping)
-    c.strokeStyle="#333";c.lineWidth=1;
-    c.beginPath();c.arc(x-4,y-24+bob-h,2,0,Math.PI);c.stroke();
-    c.beginPath();c.arc(x+4,y-24+bob-h,2,0,Math.PI);c.stroke();
-    // Zzz
-    c.fillStyle="rgba(100,150,255,0.5)";c.font="bold 8px monospace";
-    c.fillText("z",x+12,y-32+bob-h+Math.sin(anim*0.03)*3);
-    c.font="bold 6px monospace";c.fillText("z",x+18,y-38+bob-h+Math.sin(anim*0.03+1)*3);
-  }else{
-    c.fillStyle="#fff";c.fillRect(x-6,y-26+bob-h,5,4);c.fillRect(x+1,y-26+bob-h,5,4);
-    c.fillStyle="#333";c.fillRect(x-5,y-25+bob-h,3,3);c.fillRect(x+2,y-25+bob-h,3,3);
-  }
+  c.fillStyle="#fff";c.fillRect(ax-5,-21+bob-h/2,4,3);c.fillRect(ax+1,-21+bob-h/2,4,3);
+  c.fillStyle="#333";c.fillRect(ax-4,-20+bob-h/2,2,2);c.fillRect(ax+2,-20+bob-h/2,2,2);
+  c.fillStyle="#fff";c.fillRect(ax-4,-21+bob-h/2,1,1);c.fillRect(ax+2,-21+bob-h/2,1,1);
+
   // Mouth
-  if(!f.narcolepsy){
-    c.strokeStyle="#333";c.lineWidth=1;
-    c.beginPath();c.arc(x,y-18+bob-h,3,0.1*Math.PI,0.9*Math.PI);c.stroke();
+  c.strokeStyle="#333";c.lineWidth=0.8;
+  if(atk){
+    c.fillStyle="#333";c.beginPath();c.arc(ax,-14+bob-h/2,2,0,Math.PI*2);c.fill();
+  }else{
+    c.beginPath();c.arc(ax,-14+bob-h/2,2.5,0.1*Math.PI,0.9*Math.PI);c.stroke();
   }
-  // Oily hands for Daed
-  if(f.oily){
-    c.fillStyle="rgba(40,30,10,0.3)";
-    c.beginPath();c.arc(x-10,y-4+bob,3,0,Math.PI*2);c.fill();
-    c.beginPath();c.arc(x+10,y-4+bob,3,0,Math.PI*2);c.fill();
-  }
+
+  c.restore();
 }
 
+/* ===== DRAW BATTLE SCENE ===== */
 function drawBattle(c){
-  // BG
-  c.fillStyle="#1a0a2e";c.fillRect(0,0,CW,CH);
-  // Battle arena floor
-  var fg=c.createLinearGradient(0,400,0,CH);fg.addColorStop(0,"#2a1a3e");fg.addColorStop(1,"#0a0a1a");c.fillStyle=fg;c.fillRect(0,400,CW,CH-400);
-  // Floor pattern
-  for(var i=0;i<CW;i+=30){c.strokeStyle="rgba(255,255,255,0.03)";c.lineWidth=1;c.beginPath();c.moveTo(i,400);c.lineTo(i-40,CH);c.stroke();}
-  // VS glow
-  c.fillStyle="rgba(255,69,180,0.04)";c.beginPath();c.arc(CW/2,300,120,0,Math.PI*2);c.fill();
-
   var bs=battleState;if(!bs)return;
   var f=bs.fighter;
 
-  // Enemy fighter (right side, top)
-  drawBattleFighter(c,f,250,340,bs.enemyAnim,true);
-  // K'Dee (left side, bottom)
-  drawKdee(c,110,500);
+  // === VS INTRO SPLASH ===
+  if(bs.phase==="vsIntro"){
+    c.fillStyle="#0a0a1a";c.fillRect(0,0,CW,CH);
+    var p=bs.vsTimer/90;// 1→0
 
-  // HP bars
-  // Enemy HP
-  c.fillStyle="#333";c.fillRect(185,230,130,12);
-  var ehpW=Math.max(0,bs.enemyHP/f.maxHp)*126;
-  c.fillStyle=bs.enemyHP>f.maxHp*0.5?"#2ecc71":bs.enemyHP>f.maxHp*0.25?"#FFD700":"#e74c3c";
-  c.fillRect(187,232,ehpW,8);
-  c.fillStyle="#fff";c.font="bold 8px monospace";c.fillText(f.name+" HP:"+bs.enemyHP+"/"+f.maxHp,188,228);
+    // Diagonal split
+    c.save();
+    c.beginPath();c.moveTo(0,0);c.lineTo(CW*p*2,0);c.lineTo(0,CH);c.closePath();c.clip();
+    c.fillStyle="rgba(255,105,180,0.15)";c.fillRect(0,0,CW,CH);
+    drawBattleKdee(c,100,380,"idle",0);
+    c.restore();
 
-  // K'Dee HP
-  c.fillStyle="#333";c.fillRect(45,420,130,12);
-  var khpW=Math.max(0,kdeeHP/kdeeMaxHP)*126;
-  c.fillStyle=kdeeHP>10?"#2ecc71":kdeeHP>5?"#FFD700":"#e74c3c";
-  if(kdeeHP<=0)c.fillStyle="#8B0000";
-  c.fillRect(47,422,Math.max(0,khpW),8);
-  c.fillStyle="#fff";c.font="bold 8px monospace";c.fillText("K'DEE HP:"+kdeeHP+"/"+kdeeMaxHP,48,418);
+    c.save();
+    c.beginPath();c.moveTo(CW,CH);c.lineTo(CW-CW*p*2,CH);c.lineTo(CW,0);c.closePath();c.clip();
+    c.fillStyle="rgba("+((f.color||"#fff").indexOf("#8a")>=0?"138,43,226":"0,150,200")+",0.15)";c.fillRect(0,0,CW,CH);
+    drawBattleEnemy(c,f,260,350,"idle",0,bs.enemyAnim);
+    c.restore();
 
-  // Shake flash
-  if(bs.flashTimer>0){
-    c.fillStyle=bs.flashColor;c.globalAlpha=bs.flashTimer/10*0.3;
-    c.fillRect(0,0,CW,CH);c.globalAlpha=1;
+    // VS text
+    if(bs.vsTimer<70){
+      var vs=Math.min(1,(70-bs.vsTimer)/15);
+      c.save();c.globalAlpha=vs;
+      c.fillStyle=P.gold;c.font="bold 48px monospace";c.textAlign="center";
+      c.fillText("VS",CW/2,CH/2-10);
+      c.font="bold 10px monospace";c.fillStyle="#fff";
+      c.fillText("K'DEE",CW/4,CH/2+20);
+      c.fillText(f.name,CW*3/4,CH/2+20);
+      c.font="8px monospace";c.fillStyle=f.color||"#aaa";
+      c.fillText(f.title||"",CW*3/4,CH/2+34);
+      c.textAlign="left";
+      c.restore();
+    }
+
+    // Lightning line down center
+    c.strokeStyle="rgba(255,215,0,"+(0.3+0.3*Math.sin(bs.vsTimer*0.3))+")";
+    c.lineWidth=2;c.beginPath();
+    c.moveTo(CW/2,0);
+    for(var i=0;i<CH;i+=20){c.lineTo(CW/2+Math.sin(i*0.1+bs.vsTimer*0.2)*8,i);}
+    c.stroke();
+
+    return;
   }
 
+  // === MAIN BATTLE SCREEN ===
+  // Background
+  var bg=c.createLinearGradient(0,0,0,CH);bg.addColorStop(0,"#0a0a2a");bg.addColorStop(0.5,"#1a0a3e");bg.addColorStop(1,"#0a0a1a");
+  c.fillStyle=bg;c.fillRect(0,0,CW,CH);
+
+  // Arena floor with perspective lines
+  var fg=c.createLinearGradient(0,370,0,CH);fg.addColorStop(0,"#2a1a3e");fg.addColorStop(1,"#0a0a1a");
+  c.fillStyle=fg;c.fillRect(0,370,CW,CH-370);
+  for(var i=0;i<CW;i+=25){c.strokeStyle="rgba(255,255,255,0.02)";c.lineWidth=1;c.beginPath();c.moveTo(i,370);c.lineTo(CW/2+(i-CW/2)*2,CH);c.stroke();}
+  // Horizontal lines
+  for(var j=380;j<CH;j+=30){c.strokeStyle="rgba(255,255,255,0.015)";c.beginPath();c.moveTo(0,j);c.lineTo(CW,j);c.stroke();}
+
+  // Ambient glow behind fighters
+  var pulse=0.5+0.5*Math.sin(frameTick*0.04);
+  c.fillStyle="rgba(255,105,180,"+(0.03+0.02*pulse)+")";c.beginPath();c.arc(90,470,70,0,Math.PI*2);c.fill();
+  c.fillStyle="rgba("+(f.color?parseInt(f.color.slice(1,3),16)+","+parseInt(f.color.slice(3,5),16)+","+parseInt(f.color.slice(5,7),16):"150,150,255")+","+(0.03+0.02*pulse)+")";
+  c.beginPath();c.arc(265,330,70,0,Math.PI*2);c.fill();
+
+  // Enemy (top right, facing left)
+  drawBattleEnemy(c,f,265,340,bs.enemyPose,bs.enemyActionTimer,bs.enemyAnim);
+  // K'Dee (bottom left, facing right)
+  drawBattleKdee(c,90,500,bs.kdeePose,bs.kdeeActionTimer);
+
+  // HP Bars
+  // Enemy HP bar
+  var ebx=170,eby=222;
+  c.fillStyle="#222";RR(c,ebx-2,eby-2,148,16,4,"#222");
+  var ehpW=Math.max(0,bs.enemyHP/f.maxHp)*140;
+  var ehCol=bs.enemyHP>f.maxHp*0.5?"#2ecc71":bs.enemyHP>f.maxHp*0.25?"#e8a820":"#e74c3c";
+  if(ehpW>0)RR(c,ebx+2,eby+2,ehpW,8,3,ehCol);
+  c.fillStyle="#fff";c.font="bold 9px monospace";c.fillText(f.name,ebx+2,eby-4);
+  c.fillStyle="#ccc";c.font="8px monospace";c.fillText(bs.enemyHP+"/"+f.maxHp,ebx+100,eby-4);
+
+  // K'Dee HP bar
+  var kbx=20,kby=400;
+  RR(c,kbx-2,kby-2,148,16,4,"#222");
+  var khpW=Math.max(0,kdeeHP/kdeeMaxHP)*140;
+  var khCol=kdeeHP>10?"#2ecc71":kdeeHP>5?"#e8a820":"#e74c3c";
+  if(kdeeHP<=0)khCol="#8B0000";
+  if(khpW>0)RR(c,kbx+2,kby+2,Math.max(0,khpW),8,3,khCol);
+  c.fillStyle="#fff";c.font="bold 9px monospace";c.fillText("K'DEE",kbx+2,kby-4);
+  c.fillStyle="#ccc";c.font="8px monospace";c.fillText(kdeeHP+"/"+kdeeMaxHP,kbx+100,kby-4);
+  // Exhaustion indicator
+  if(kdeeHP<=5&&kdeeHP>0){c.fillStyle="rgba(255,0,0,0.4)";c.font="bold 7px monospace";c.fillText("EXHAUSTED",kbx+2,kby+24);}
+  if(kdeeHP<=0){c.fillStyle="rgba(139,0,0,0.6)";c.font="bold 7px monospace";c.fillText("RUNNING ON FUMES",kbx+2,kby+24);}
+
+  // Screen flash
+  if(bs.flashTimer>0){c.save();c.globalAlpha=bs.flashTimer/12*0.4;c.fillStyle=bs.flashColor;c.fillRect(0,0,CW,CH);c.restore();}
+
+  // Floating damage numbers
+  dmgFloats.forEach(function(df){
+    if(df.life<=0)return;
+    c.save();c.globalAlpha=Math.min(1,df.life/15);
+    c.fillStyle=df.color;c.font="bold "+(14+Math.max(0,20-df.life)*0.5)+"px monospace";
+    c.textAlign="center";c.fillText(df.txt,df.x,df.y);c.textAlign="left";
+    c.restore();
+    df.y-=1.2;df.life--;
+  });
+
   // Message box
-  RR(c,15,530,CW-30,95,6,"rgba(0,0,0,0.85)");
-  c.strokeStyle="rgba(255,215,0,0.3)";c.lineWidth=1;c.strokeRect(17,532,CW-34,91);
-  // Message text (word wrap with newline support)
-  c.fillStyle="#eee";c.font="11px monospace";
-  var msgLines=(bs.msg||"").split("\n"),allLines=[];
-  for(var ml=0;ml<msgLines.length;ml++){
-    var words=msgLines[ml].split(" "),line="";
+  RR(c,10,525,CW-20,105,8,"rgba(0,0,0,0.88)");
+  c.strokeStyle="rgba(255,215,0,0.2)";c.lineWidth=1;
+  c.beginPath();
+  var mbr=8,mbx=12,mby=527,mbw=CW-24,mbh=101;
+  c.moveTo(mbx+mbr,mby);c.lineTo(mbx+mbw-mbr,mby);c.quadraticCurveTo(mbx+mbw,mby,mbx+mbw,mby+mbr);
+  c.lineTo(mbx+mbw,mby+mbh-mbr);c.quadraticCurveTo(mbx+mbw,mby+mbh,mbx+mbw-mbr,mby+mbh);
+  c.lineTo(mbx+mbr,mby+mbh);c.quadraticCurveTo(mbx,mby+mbh,mbx,mby+mbh-mbr);
+  c.lineTo(mbx,mby+mbr);c.quadraticCurveTo(mbx,mby,mbx+mbr,mby);c.stroke();
+
+  // Message text (word wrap with \n support)
+  c.fillStyle="#eee";c.font="10px monospace";
+  var rawLines=(bs.msg||"").split("\n"),allLines=[];
+  for(var ml=0;ml<rawLines.length;ml++){
+    var words=rawLines[ml].split(" "),line="";
     for(var w=0;w<words.length;w++){
       var test=line+(line?" ":"")+words[w];
-      if(c.measureText(test).width>CW-60){allLines.push(line);line=words[w];}else{line=test;}
+      if(c.measureText(test).width>CW-50){allLines.push(line);line=words[w];}else{line=test;}
     }
     if(line)allLines.push(line);else allLines.push("");
   }
-  for(var l=0;l<Math.min(allLines.length,6);l++){c.fillText(allLines[l],28,548+l*13);}
+  for(var l=0;l<Math.min(allLines.length,7);l++){c.fillText(allLines[l],24,544+l*13);}
 
-  // Action buttons (player turn)
+  // Action buttons
   if(bs.phase==="player"){
-    // Attack options
-    var btnY=440;
-    var actions=[{label:"\u270B SLAP",color:"#e74c3c"},{label:"\uD83D\uDCAC NAG",color:"#FF69B4"},{label:"\uD83D\uDC5C PURSE",color:"#FFD700"}];
-    for(var a=0;a<actions.length;a++){
-      var bx=15+a*80;
-      RR(c,bx,btnY,72,26,4,actions[a].color);
-      c.fillStyle="#fff";c.font="bold 8px monospace";
-      c.fillText(actions[a].label,bx+6,btnY+17);
-    }
-    // Item button (if has items)
+    var btnY=440;var btnH=28;
+    var actions=[
+      {label:"\u270B SLAP",color:"#e74c3c",x:12,w:76},
+      {label:"\uD83D\uDCAC NAG",color:"#FF69B4",x:94,w:72},
+      {label:"\uD83D\uDC5C PURSE",color:"#FFD700",x:172,w:80}
+    ];
+    actions.forEach(function(a){
+      RR(c,a.x,btnY,a.w,btnH,6,a.color);
+      c.fillStyle="#fff";c.font="bold 9px monospace";c.fillText(a.label,a.x+8,btnY+18);
+    });
     if(inv.length>0){
-      RR(c,255,btnY,90,26,4,"#00CED1");
-      c.fillStyle="#fff";c.font="bold 8px monospace";c.fillText("\uD83C\uDF81 USE ITEM",260,btnY+17);
+      RR(c,258,btnY,92,btnH,6,"#00CED1");
+      c.fillStyle="#fff";c.font="bold 9px monospace";c.fillText("\uD83C\uDF81 USE ITEM",264,btnY+18);
     }
   }
 
-  // Item selection UI
+  // Item selection overlay
   if(bs.phase==="items"){
-    c.fillStyle="rgba(0,0,0,0.7)";c.fillRect(0,0,CW,CH);
-    RR(c,20,150,CW-40,340,8,"#1a0a2e");
-    c.strokeStyle=P.gold;c.lineWidth=2;c.strokeRect(22,152,CW-44,336);
-    c.fillStyle=P.gold;c.font="bold 12px monospace";c.fillText("USE WHICH ITEM?",90,180);
-    // Item grid
+    c.fillStyle="rgba(0,0,0,0.75)";c.fillRect(0,0,CW,CH);
+    RR(c,15,130,CW-30,370,10,"#1a0a2e");
+    c.strokeStyle=P.gold;c.lineWidth=2;
+    c.strokeRect(17,132,CW-34,366);
+    c.fillStyle=P.gold;c.font="bold 14px monospace";c.textAlign="center";
+    c.fillText("USE WHICH ITEM?",CW/2,165);c.textAlign="left";
     for(var i=0;i<inv.length&&i<8;i++){
-      var ix=35+(i%4)*78,iy=200+Math.floor(i/4)*75;
+      var ix=30+(i%4)*80,iy=185+Math.floor(i/4)*85;
       var info=invDetails[inv[i]]||{emoji:invEmoji[inv[i]]||"\u2753",name:inv[i]};
-      RR(c,ix,iy,68,65,5,"rgba(255,255,255,0.05)");
-      c.strokeStyle="rgba(255,215,0,0.3)";c.strokeRect(ix+1,iy+1,66,63);
-      c.font="24px monospace";c.fillText(info.emoji,ix+20,iy+32);
+      var isSE=f.itemEffects&&f.itemEffects[inv[i]]&&f.itemEffects[inv[i]].super;
+      RR(c,ix,iy,70,72,6,isSE?"rgba(0,206,209,0.12)":"rgba(255,255,255,0.04)");
+      c.strokeStyle=isSE?"#00CED1":"rgba(255,215,0,0.2)";c.lineWidth=isSE?2:1;c.strokeRect(ix+1,iy+1,68,70);
+      if(isSE){
+        c.fillStyle="rgba(0,206,209,0.08)";c.fillRect(ix+2,iy+2,66,68);
+        c.fillStyle="#00CED1";c.font="bold 6px monospace";c.fillText("SUPER",ix+22,iy+68);
+      }
+      c.font="26px monospace";c.textAlign="center";c.fillText(info.emoji,ix+35,iy+35);c.textAlign="left";
       c.fillStyle="#ccc";c.font="7px monospace";
-      var nm=info.name||inv[i];if(nm.length>10)nm=nm.substring(0,9)+"..";
-      c.fillText(nm,ix+4,iy+52);
-      c.fillStyle=P.gold;
+      var nm=(info.name||inv[i]);if(nm.length>10)nm=nm.substring(0,9)+"..";
+      c.textAlign="center";c.fillText(nm,ix+35,iy+52);c.textAlign="left";
     }
-    // Back button
-    RR(c,130,450,100,28,4,"#CD5C5C");
-    c.fillStyle="#fff";c.font="bold 10px monospace";c.fillText("\u2190 BACK",155,468);
+    RR(c,125,460,110,30,6,"#CD5C5C");
+    c.fillStyle="#fff";c.font="bold 10px monospace";c.textAlign="center";c.fillText("\u2190 BACK",CW/2,480);c.textAlign="left";
   }
 
-  // Continue prompt
-  if(bs.phase==="intro"||bs.phase==="enemyAct"||bs.phase==="victory"){
-    c.fillStyle="rgba(255,255,255,0.3)";c.font="9px monospace";
-    c.fillText("[ TAP TO CONTINUE ]",110,622);
+  // Continue prompt (pulsing)
+  if(bs.phase==="intro"||bs.phase==="enemyAct"||bs.phase==="victory"||bs.phase==="superCut"){
+    var pp=0.3+0.3*Math.sin(frameTick*0.1);
+    c.fillStyle="rgba(255,255,255,"+pp+")";c.font="9px monospace";c.textAlign="center";
+    c.fillText("[ TAP TO CONTINUE ]",CW/2,628);c.textAlign="left";
+  }
+
+  // === SUPER EFFECTIVE CUT-IN ===
+  if(bs.phase==="superCut"){
+    var sp=bs.superTimer||0;
+    if(sp<20){
+      // Dramatic black bars
+      var barH=Math.min(80,sp*8);
+      c.fillStyle="#000";c.fillRect(0,0,CW,barH);c.fillRect(0,CH-barH,CW,barH);
+      // "SUPER EFFECTIVE!" text zooming in
+      c.save();c.globalAlpha=Math.min(1,sp/8);
+      var sz=20+sp*0.8;
+      c.fillStyle="#00CED1";c.font="bold "+Math.floor(sz)+"px monospace";
+      c.textAlign="center";c.fillText("SUPER",CW/2,CH/2-10);
+      c.fillStyle=P.gold;c.fillText("EFFECTIVE!",CW/2,CH/2+20);
+      c.textAlign="left";c.restore();
+      // Sparkle particles
+      for(var s=0;s<6;s++){
+        var sa=s*Math.PI/3+sp*0.1;
+        var sr=40+sp*2;
+        c.fillStyle="rgba(0,206,209,"+(0.6-sp*0.02)+")";
+        c.beginPath();c.arc(CW/2+Math.cos(sa)*sr,CH/2+Math.sin(sa)*sr,3,0,Math.PI*2);c.fill();
+      }
+    }
   }
 }
 
+/* ===== BATTLE CLICK HANDLER ===== */
 function battleClick(mx,my){
   var bs=battleState;if(!bs)return;
 
+  // VS intro — skip on tap
+  if(bs.phase==="vsIntro"){bs.vsTimer=0;return;}
+
+  // Intro text — advance lines
   if(bs.phase==="intro"){
-    bs.phase="player";
-    bs.msg="What will K'Dee do?";
+    bs.introLine++;
+    var lines=bs.fighter.intro;
+    if(bs.introLine>=lines.length){
+      bs.phase="player";bs.msg="What will K'Dee do?";
+    }else{
+      bs.msg=lines[bs.introLine];
+    }
     return;
   }
 
+  // Victory
   if(bs.phase==="victory"){
     battleActive=false;paused=false;battleDone[bs.id]=true;
-    battleState=null;
-    updateHUD();
-    return;
+    battleState=null;updateHUD();return;
   }
 
+  // Super effective cut-in
+  if(bs.phase==="superCut"){
+    bs.phase="victory";bs.msg=bs.victoryMsg||"";return;
+  }
+
+  // After enemy attack
   if(bs.phase==="enemyAct"){
-    // After seeing enemy attack, go to player turn
-    bs.phase="player";
-    bs.msg="What will K'Dee do?";
+    bs.phase="player";bs.msg="What will K'Dee do?";
+    bs.kdeePose="idle";bs.kdeeActionTimer=0;
+    bs.enemyPose="idle";bs.enemyActionTimer=0;
     return;
   }
 
+  // Item selection
   if(bs.phase==="items"){
-    // Check back button
-    if(mx>=130&&mx<=230&&my>=450&&my<=478){
-      bs.phase="player";bs.msg="What will K'Dee do?";return;
-    }
-    // Check item clicks
+    if(mx>=125&&mx<=235&&my>=460&&my<=490){bs.phase="player";bs.msg="What will K'Dee do?";return;}
     for(var i=0;i<inv.length&&i<8;i++){
-      var ix=35+(i%4)*78,iy=200+Math.floor(i/4)*75;
-      if(mx>=ix&&mx<=ix+68&&my>=iy&&my<=iy+65){
-        useItemInBattle(inv[i]);
-        return;
-      }
+      var ix=30+(i%4)*80,iy=185+Math.floor(i/4)*85;
+      if(mx>=ix&&mx<=ix+70&&my>=iy&&my<=iy+72){useItemInBattle(inv[i]);return;}
     }
     return;
   }
 
+  // Player turn
   if(bs.phase==="player"){
-    var btnY=440;
-    // SLAP
-    if(mx>=15&&mx<=87&&my>=btnY&&my<=btnY+26){
-      playerAttack("SLAP",3+Math.floor(Math.random()*2),"K'Dee slaps "+bs.fighter.name+"! Mom-strength activated!");
-      return;
+    var btnY=440,btnH=28;
+    if(mx>=12&&mx<=88&&my>=btnY&&my<=btnY+btnH){
+      var dmg=3+Math.floor(Math.random()*2);
+      var quips=["K'Dee slaps "+bs.fighter.name+"! MOM POWER!","*SLAP* The mom hand is MIGHTY.","K'Dee's slap echoes through the house!","SLAP! "+bs.fighter.name+" didn't see that coming!"];
+      doPlayerAttack("SLAP",dmg,rPick(quips),"slap");return;
     }
-    // NAG
-    if(mx>=95&&mx<=167&&my>=btnY&&my<=btnY+26){
-      playerAttack("NAG",2+Math.floor(Math.random()*2),"K'Dee unleashes a legendary mom-nag! '...and ANOTHER thing!'");
-      return;
+    if(mx>=94&&mx<=166&&my>=btnY&&my<=btnY+btnH){
+      var dmg=2+Math.floor(Math.random()*2);
+      var quips=["'...and ANOTHER thing!' Legendary mom-nag!","K'Dee deploys The Lecture. It's devastating.","'When I was YOUR age...' Critical hit!","'Do you think keys grow on TREES?!'"];
+      doPlayerAttack("NAG",dmg,rPick(quips),"nag");return;
     }
-    // PURSE
-    if(mx>=175&&mx<=247&&my>=btnY&&my<=btnY+26){
-      playerAttack("PURSE",4,"K'Dee swings her purse! It weighs 47 pounds somehow!");
-      return;
+    if(mx>=172&&mx<=252&&my>=btnY&&my<=btnY+btnH){
+      var quips=["K'Dee swings her purse! It weighs 47 pounds!","PURSE STRIKE! Contains: everything. Weighs: too much.","The purse connects! It has bricks in it somehow!","*WHAM* That purse is a weapon of mass destruction."];
+      doPlayerAttack("PURSE",4,rPick(quips),"purse");return;
     }
-    // USE ITEM
-    if(inv.length>0&&mx>=255&&mx<=345&&my>=btnY&&my<=btnY+26){
-      bs.phase="items";bs.msg="Choose an item to use...";
-      return;
+    if(inv.length>0&&mx>=258&&mx<=350&&my>=btnY&&my<=btnY+btnH){
+      bs.phase="items";bs.msg="Choose an item to use...";return;
     }
   }
 }
 
-function playerAttack(name,dmg,msg){
+function doPlayerAttack(name,dmg,msg,pose){
   var bs=battleState;
-  // Daed special: escapes immediately
+  // Daed special
   if(bs.id==="daed"){
+    bs.kdeePose=pose;bs.kdeeActionTimer=1;
     bs.enemyHP=0;
-    bs.msg=bs.fighter.defeat;
-    bs.phase="victory";
-    bs.flashTimer=8;bs.flashColor="rgba(255,215,0,0.3)";
+    var lines=bs.fighter.defeat;
+    bs.msg=lines.join("\n");bs.phase="victory";
+    bs.flashTimer=10;bs.flashColor="rgba(255,215,0,0.3)";
     return;
   }
-  // Gwyneth special: attacks don't work well
+  // Gwyneth reduced damage
   if(bs.id==="gwyneth"){
     dmg=Math.max(0,dmg-1);
     msg+="\n...Gwyneth doesn't notice. She's asleep.";
   }
-  bs.enemyHP-=dmg;
-  bs.shakeTimer=10;
-  bs.flashTimer=6;bs.flashColor="rgba(255,100,100,0.2)";
+  bs.kdeePose=pose;bs.kdeeActionTimer=1;
+  bs.enemyHP=Math.max(0,bs.enemyHP-dmg);
+  bs.shakeTimer=12;
+  bs.flashTimer=8;bs.flashColor="rgba(255,100,100,0.25)";
+  addDmgFloat(265,290,dmg>0?"-"+dmg:"MISS",dmg>0?"#e74c3c":"#888");
   if(bs.enemyHP<=0){
-    bs.enemyHP=0;
-    bs.msg=msg+"\n\n"+bs.fighter.defeat;
+    bs.msg=msg+"\n\n"+bs.fighter.defeat.join("\n");
     bs.phase="victory";
   }else{
-    bs.msg=msg;
-    bs.phase="enemyTurn";
-    setTimeout(function(){enemyTurn();},800);
+    bs.msg=msg;bs.phase="enemyTurn";
+    setTimeout(function(){enemyTurn();},900);
   }
 }
 
 function useItemInBattle(itemId){
-  var bs=battleState;
-  var f=bs.fighter;
-  var effect=f.itemEffects&&f.itemEffects[itemId];
-  if(effect){
-    bs.enemyHP-=effect.dmg;
-    bs.shakeTimer=12;
-    bs.flashTimer=8;bs.flashColor="rgba(0,206,209,0.3)";
+  var bs=battleState;var f=bs.fighter;
+  var eff=f.itemEffects&&f.itemEffects[itemId];
+  bs.kdeePose="item";bs.kdeeActionTimer=1;
+  if(eff){
+    var dmg=eff.dmg||3;
+    bs.enemyHP=Math.max(0,bs.enemyHP-dmg);
+    bs.shakeTimer=14;bs.flashTimer=10;bs.flashColor="rgba(0,206,209,0.3)";
+    addDmgFloat(265,280,"-"+dmg,eff.super?"#00CED1":"#FFD700");
+    var emsg=eff.msg.join("\n");
     if(bs.enemyHP<=0){
-      bs.enemyHP=0;
-      bs.msg=effect.msg+"\n\n"+f.defeat;
-      bs.phase="victory";
+      if(eff.super){
+        bs.msg=emsg;bs.victoryMsg=emsg+"\n\n"+f.defeat.join("\n");
+        bs.phase="superCut";bs.superTimer=0;
+      }else{
+        bs.msg=emsg+"\n\n"+f.defeat.join("\n");bs.phase="victory";
+      }
     }else{
-      bs.msg=effect.msg;
-      bs.phase="enemyTurn";
-      setTimeout(function(){enemyTurn();},800);
+      bs.msg=emsg;bs.phase="enemyTurn";
+      setTimeout(function(){enemyTurn();},900);
     }
   }else{
-    // Generic item use
-    var dmg=2;
-    var info=invDetails[itemId]||{name:itemId};
-    bs.enemyHP-=dmg;
-    bs.shakeTimer=8;
-    bs.flashTimer=6;bs.flashColor="rgba(255,215,0,0.2)";
-    var msg="K'Dee uses "+info.name+"! "+bs.fighter.name+" is mildly confused.";
-    if(bs.enemyHP<=0){
-      bs.enemyHP=0;
-      bs.msg=msg+"\n\n"+f.defeat;
-      bs.phase="victory";
-    }else{
-      bs.msg=msg;
-      bs.phase="enemyTurn";
-      setTimeout(function(){enemyTurn();},800);
-    }
+    var dmg=2;var info=invDetails[itemId]||{name:itemId};
+    bs.enemyHP=Math.max(0,bs.enemyHP-dmg);
+    bs.shakeTimer=8;bs.flashTimer=6;bs.flashColor="rgba(255,215,0,0.2)";
+    addDmgFloat(265,290,"-"+dmg,"#FFD700");
+    var msg="K'Dee uses "+info.name+"! "+f.name+" is confused.";
+    if(bs.enemyHP<=0){bs.msg=msg+"\n\n"+f.defeat.join("\n");bs.phase="victory";}
+    else{bs.msg=msg;bs.phase="enemyTurn";setTimeout(function(){enemyTurn();},900);}
   }
 }
 
 function enemyTurn(){
   var bs=battleState;if(!bs)return;
   var f=bs.fighter;
-  // Daed always escapes
-  if(bs.id==="daed"){bs.phase="victory";bs.msg=f.defeat;return;}
-  var atk=f.attacks[Math.floor(Math.random()*f.attacks.length)];
+  if(bs.id==="daed"){bs.phase="victory";bs.msg=f.defeat.join("\n");return;}
+  var atkIdx=Math.floor(Math.random()*f.attacks.length);
+  var atk=f.attacks[atkIdx];
   var dmg=atk.dmg;
+  var quip=rPick(atk.quips);
   kdeeHP-=dmg;
-  bs.msg=atk.msg;
-  if(dmg>0){bs.flashTimer=6;bs.flashColor="rgba(255,0,0,0.15)";}
-  bs.phase="enemyAct";
-  bs.turnCount++;
-  updateHUD();
+  bs.enemyPose="attack";bs.enemyActionTimer=1;
+  if(dmg>0){
+    bs.kdeePose="hurt";bs.kdeeActionTimer=1;
+    bs.flashTimer=8;bs.flashColor="rgba(255,0,0,0.2)";
+    addDmgFloat(90,440,"-"+dmg,"#e74c3c");
+  }
+  // Show attack name + quip
+  bs.msg="[ "+atk.name+" ]\n"+quip;
+  bs.phase="enemyAct";bs.turnCount++;updateHUD();
+}
+
+function addDmgFloat(x,y,txt,color){
+  dmgFloats.push({x:x+Math.random()*20-10,y:y,txt:txt,color:color,life:30});
 }
 
 function updateBattle(){
   if(!battleState)return;
-  battleState.kdeeAnim++;
-  battleState.enemyAnim++;
+  battleState.kdeeAnim++;battleState.enemyAnim++;
   if(battleState.shakeTimer>0)battleState.shakeTimer--;
   if(battleState.flashTimer>0)battleState.flashTimer--;
+  if(battleState.kdeeActionTimer>0){battleState.kdeeActionTimer++;if(battleState.kdeeActionTimer>20){battleState.kdeeActionTimer=0;if(battleState.kdeePose!=="hurt")battleState.kdeePose="idle";}}
+  if(battleState.enemyActionTimer>0){battleState.enemyActionTimer++;if(battleState.enemyActionTimer>20){battleState.enemyActionTimer=0;battleState.enemyPose="idle";}}
+  // VS intro timer
+  if(battleState.phase==="vsIntro"){
+    battleState.vsTimer--;
+    if(battleState.vsTimer<=0){
+      battleState.phase="intro";battleState.introLine=0;
+      battleState.msg=battleState.fighter.intro[0];
+    }
+  }
+  // Super cut timer
+  if(battleState.phase==="superCut"){
+    battleState.superTimer=(battleState.superTimer||0)+1;
+  }
+  // Clean up dead floats
+  dmgFloats=dmgFloats.filter(function(d){return d.life>0;});
 }
 
 function winGame(){
