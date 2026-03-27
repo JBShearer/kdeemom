@@ -804,6 +804,7 @@ var activeHS=null;
 var verbColors={use:"#00CED1",take:"#FFD700",talk:"#FF69B4",open:"#FF8C00",push:"#CD5C5C"};
 
 function showInteraction(h){
+  if(activeHS)return; // already showing a dialog — don't re-open
   activeHS=h;
   lintDialogActive=(h.id==="lint");
   var d=document.getElementById("dlg");
@@ -2144,10 +2145,10 @@ canvas.addEventListener("click",function(e){
 /* Touch: long-press shows tooltip, short tap interacts */
 var touchTimer=null,touchStart=null,tapFlash=null;
 canvas.addEventListener("touchstart",function(e){
+  if(battleActive){e.preventDefault();var p=getCanvasCoords(e);battleClick(p.x,p.y);return;}
+  if(miniActive){e.preventDefault();var p=getCanvasCoords(e);miniCatcher=Math.max(30,Math.min(CW-30,p.x));return;}
+  if(paused||gameOver)return; // don't preventDefault — let clicks reach the dialog overlay
   e.preventDefault();
-  if(battleActive){var p=getCanvasCoords(e);battleClick(p.x,p.y);return;}
-  if(miniActive){var p=getCanvasCoords(e);miniCatcher=Math.max(30,Math.min(CW-30,p.x));return;}
-  if(paused||gameOver)return;
   var p=getCanvasCoords(e);
   touchStart={x:p.x,y:p.y,time:Date.now()};
   // Long-press: after 300ms show tooltip
