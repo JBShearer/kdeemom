@@ -163,7 +163,7 @@ function paintLiving(c){
   c.fillStyle=P.yellow;c.beginPath();c.moveTo(248,290);c.lineTo(263,252);c.lineTo(278,290);c.closePath();c.fill();
   c.fillStyle="rgba(255,236,139,0.08)";c.beginPath();c.arc(263,290,40,0,Math.PI*2);c.fill();
   // Upstairs door — back wall left side, clear of TV and passages
-  var udx=14,udy=120,udw=42,udh=148;
+  var udx=20,udy=120,udw=36,udh=148;
   D(c,udx,udy,udw,udh,P.dbrown);
   RR(c,udx+2,udy+2,udw-4,udh-4,4,"#2a1a08");
   c.fillStyle="#2a1a08";c.beginPath();c.arc(udx+udw/2,udy+2,udw/2-2,Math.PI,0);c.fill();
@@ -344,11 +344,11 @@ function paintKids(c){
   c.fillStyle="#3498db";c.beginPath();c.arc(262,215,2,0,Math.PI*2);c.fill();
   // Game poster
   RR(c,178,58,68,57,3,"#fff");RR(c,182,62,60,49,2,"#222");c.fillStyle="#0f0";c.font="bold 8px monospace";c.fillText("GAME",196,88);c.fillText("OVER",196,100);
-  // Holly's room door — back wall between bunk bed and poster, clear wall space
-  D(c,122,80,52,120,P.dbrown);RR(c,125,83,46,114,4,"#4a2a10");
-  c.fillStyle="rgba(0,0,0,0.45)";c.fillRect(126,84,44,112);
-  c.fillStyle="#c0392b";c.font="bold 5px monospace";c.textAlign="center";c.fillText("DO NOT",148,112);c.fillText("ENTER",148,122);c.textAlign="left";
-  c.fillStyle=P.gold;c.beginPath();c.arc(163,148,3,0,Math.PI*2);c.fill();
+  // Holly's room door — back wall between bunk bed and poster, lower on wall
+  D(c,122,165,52,115,P.dbrown);RR(c,125,168,46,109,4,"#4a2a10");
+  c.fillStyle="rgba(0,0,0,0.45)";c.fillRect(126,169,44,107);
+  c.fillStyle="#c0392b";c.font="bold 5px monospace";c.textAlign="center";c.fillText("DO NOT",148,195);c.fillText("ENTER",148,205);c.textAlign="left";
+  c.fillStyle=P.gold;c.beginPath();c.arc(163,230,3,0,Math.PI*2);c.fill();
   // Mr. Rex
   D(c,305,400,28,38,P.green);D(c,296,394,14,14,P.green);D(c,320,432,14,10,P.green);
   c.fillStyle="#fff";c.fillRect(310,406,3,2);c.fillRect(316,406,3,2);
@@ -384,11 +384,11 @@ function paintBathroom(c){
   D(c,165,125,38,7,"#ccc");
   RR(c,165,130,38,75,3,P.pink);
   c.fillStyle="rgba(255,255,255,0.06)";c.fillRect(165,130,12,75);
-  // Greyson's room door — left back wall, clear space
-  D(c,50,60,65,130,P.dbrown);RR(c,53,63,59,124,4,"#4a2a10");
-  c.fillStyle="rgba(20,10,5,0.25)";c.fillRect(54,64,57,122);
-  c.fillStyle="#888";c.beginPath();c.arc(103,128,3,0,Math.PI*2);c.fill();
-  c.fillStyle="rgba(255,215,0,0.55)";c.font="bold 5px monospace";c.textAlign="center";c.fillText("GREYSON",82,95);c.textAlign="left";
+  // Greyson's room door — left back wall, mid-height clear space
+  D(c,50,165,65,120,P.dbrown);RR(c,53,168,59,114,4,"#4a2a10");
+  c.fillStyle="rgba(20,10,5,0.25)";c.fillRect(54,169,57,112);
+  c.fillStyle="#888";c.beginPath();c.arc(103,228,3,0,Math.PI*2);c.fill();
+  c.fillStyle="rgba(255,215,0,0.55)";c.font="bold 5px monospace";c.textAlign="center";c.fillText("GREYSON",82,200);c.textAlign="left";
 }
 function paintGarage(c){
   D(c,0,370,360,270,"#808080");for(var i=0;i<360;i+=50)D(c,i,370,1,270,"rgba(0,0,0,0.08)");
@@ -1603,11 +1603,11 @@ function makeHS(){return[
 // Room 1: Kitchen
 [{id:"stove",x:100,y:145,w:130,h:85,name:"Stove",look:"All burners on. Nothing cooking.",use:"Turns off burners. Safety first."},{id:"fridge",x:265,y:65,w:90,h:210,name:"Fridge",look:"Kids' drawings. Expired coupons.",open:"Mystery leftovers. One sad yogurt."},{id:"sink",x:5,y:230,w:100,h:80,name:"Sink",look:"Full of dishes. Always.",use:"Rubber duck floats up."},{id:"banana",x:215,y:245,w:60,h:50,name:"Banana",look:"Groundbreaking.",take:"Takes it. For scale.",quest:"banana"},{id:"cab",x:8,y:15,w:345,h:80,name:"Cabinets",look:"Mismatched Tupperware.",open:"Avalanche of containers!"},{id:"kdoorL",x:0,y:300,w:14,h:200,name:"Foyer",open:"goto:0"},{id:"kdoorR",x:346,y:300,w:14,h:200,name:"Laundry",open:"goto:6"},{id:"pantry",x:140,y:300,w:90,h:70,name:"Pantry",open:"goto:13"}],
 // Room 2: Living Room
-[{id:"tv",x:100,y:55,w:165,h:125,name:"TV",look:"Nobody watching. Remote MIA.",use:"Volume to 100. Neighbor's cat yowls in response."},{id:"couch",x:16,y:345,w:232,h:85,name:"Couch",look:"More pillow than couch.",push:"ALL pillows moved. Remote AND a KEY!",hasKey:true},{id:"bookshelf",x:262,y:85,w:92,h:175,name:"Bookshelf",look:"Unread since 2018.",take:"'Parenting Without Losing Your Mind.'"},{id:"lamp",x:232,y:265,w:55,h:75,name:"Lamp",look:"Only approved light.",push:"LEGO rolls out."},{id:"rug",x:60,y:430,w:200,h:65,name:"Rug",look:"Hides crumbs.",push:"Cheerios, crayon, Monopoly house."},{id:"ustairsL",x:14,y:120,w:42,h:148,name:"Upstairs",look:"Stairs going up to the bedroom.",open:"goto:9"},{id:"ldoorL",x:0,y:260,w:14,h:200,name:"Foyer",open:"goto:0"},{id:"ldoorR",x:346,y:260,w:14,h:200,name:"Kids' Room",open:"goto:3"}],
+[{id:"tv",x:100,y:60,w:160,h:100,name:"TV",look:"Nobody watching. Remote MIA.",use:"Volume to 100. Neighbor's cat yowls in response."},{id:"couch",x:16,y:345,w:232,h:85,name:"Couch",look:"More pillow than couch.",push:"ALL pillows moved. Remote AND a KEY!",hasKey:true},{id:"bookshelf",x:268,y:100,w:82,h:220,name:"Bookshelf",look:"Unread since 2018.",take:"'Parenting Without Losing Your Mind.'"},{id:"lamp",x:248,y:252,w:32,h:108,name:"Lamp",look:"Only approved light.",push:"LEGO rolls out."},{id:"rug",x:60,y:430,w:200,h:65,name:"Rug",look:"Hides crumbs.",push:"Cheerios, crayon, Monopoly house."},{id:"ustairsL",x:20,y:120,w:36,h:148,name:"Upstairs",look:"Stairs going up to the bedroom.",open:"goto:9"},{id:"ldoorL",x:0,y:260,w:14,h:200,name:"Foyer",open:"goto:0"},{id:"ldoorR",x:346,y:260,w:14,h:200,name:"Kids' Room",open:"goto:3"}],
 // Room 3: Kids' Room
-[{id:"bunk",x:8,y:125,w:120,h:245,name:"Bunk Bed",look:"Top: fort. Bottom: stuffed animals.",open:"Half-eaten granola bar."},{id:"toybox",x:128,y:400,w:90,h:52,name:"Toy Box",look:"90% random objects.",open:"Avalanche of action figures."},{id:"lego",x:160,y:455,w:195,h:65,name:"LEGO Minefield",look:"Colorful landmines.",push:"OW. OWWW."},{id:"dino",x:285,y:375,w:65,h:75,name:"Mr. Rex",look:"Kids say he's real.",talk:"'Keys are in the garage.'"},{id:"poster",x:170,y:45,w:85,h:80,name:"Poster",look:"GAME OVER. Ominous."},{id:"desk",x:215,y:205,w:42,h:120,name:"Desk",look:"Crayon drawings.",open:"'Mom But Cool.'"},{id:"hollyroom",x:122,y:80,w:52,h:120,name:"Holly's Room",look:"The door is closed. A sign: DO NOT.",open:"Knock knock..."},{id:"kdoorL",x:0,y:260,w:14,h:200,name:"Living Room",open:"goto:2"},{id:"kdoorR",x:346,y:260,w:14,h:200,name:"Bathroom",open:"goto:4"}],
+[{id:"bunk",x:8,y:140,w:120,h:220,name:"Bunk Bed",look:"Top: fort. Bottom: stuffed animals.",open:"Half-eaten granola bar."},{id:"toybox",x:128,y:400,w:90,h:52,name:"Toy Box",look:"90% random objects.",open:"Avalanche of action figures."},{id:"lego",x:160,y:455,w:195,h:65,name:"LEGO Minefield",look:"Colorful landmines.",push:"OW. OWWW."},{id:"dino",x:285,y:375,w:65,h:75,name:"Mr. Rex",look:"Kids say he's real.",talk:"'Keys are in the garage.'"},{id:"poster",x:170,y:45,w:85,h:80,name:"Poster",look:"GAME OVER. Ominous."},{id:"desk",x:218,y:218,w:130,h:112,name:"Desk",look:"Crayon drawings.",open:"'Mom But Cool.'"},{id:"hollyroom",x:122,y:165,w:52,h:115,name:"Holly's Room",look:"The door is closed. A sign: DO NOT.",open:"Knock knock..."},{id:"kdoorL",x:0,y:370,w:14,h:180,name:"Living Room",open:"goto:2"},{id:"kdoorR",x:346,y:260,w:14,h:200,name:"Bathroom",open:"goto:4"}],
 // Room 4: Bathroom
-[{id:"tub",x:5,y:275,w:200,h:100,name:"Bathtub",look:"Five ducks stare back.",talk:"'Where are my keys?' Silence."},{id:"ducks",x:15,y:280,w:165,h:55,name:"Duck Army",look:"General Quackers sees all.",take:"Takes General Quackers.",quest:"duck"},{id:"toilet",x:208,y:290,w:75,h:90,name:"Toilet",look:"Kids say haunted.",open:"Just a toilet."},{id:"bsink",x:265,y:250,w:90,h:65,name:"Sink",look:"Toothpaste EVERYWHERE.",use:"Toy boat surfaces."},{id:"towel",x:150,y:110,w:65,h:100,name:"Towel",look:"Seen better days.",take:"Grabs it."},{id:"bdoorL",x:0,y:260,w:14,h:200,name:"Kids' Room",open:"goto:3"},{id:"bdoorR",x:346,y:260,w:14,h:200,name:"Garage",open:"goto:5"},{id:"greysondoor",x:50,y:60,w:65,h:130,name:"Greyson's Room",open:"goto:19"}],
+[{id:"tub",x:5,y:290,w:185,h:80,name:"Bathtub",look:"Five ducks stare back.",talk:"'Where are my keys?' Silence."},{id:"ducks",x:15,y:295,w:155,h:50,name:"Duck Army",look:"General Quackers sees all.",take:"Takes General Quackers.",quest:"duck"},{id:"toilet",x:208,y:300,w:75,h:80,name:"Toilet",look:"Kids say haunted.",open:"Just a toilet."},{id:"bsink",x:270,y:260,w:80,h:55,name:"Sink",look:"Toothpaste EVERYWHERE.",use:"Toy boat surfaces."},{id:"towel",x:155,y:125,w:55,h:80,name:"Towel",look:"Seen better days.",take:"Grabs it."},{id:"bdoorL",x:0,y:380,w:14,h:180,name:"Kids' Room",open:"goto:3"},{id:"bdoorR",x:346,y:260,w:14,h:200,name:"Garage",open:"goto:5"},{id:"greysondoor",x:50,y:165,w:65,h:120,name:"Greyson's Room",open:"goto:19"}],
 // Room 5: Garage
 [{id:"gdoor",x:70,y:25,w:220,h:310,name:"Garage Door",look:"Stuck since 2022.",open:"Still stuck."},{id:"bench",x:5,y:145,w:80,h:85,name:"Workbench",look:"Tools and abandoned ambition.",use:"Finds a flashlight!",quest:"flashlight"},{id:"car",x:20,y:360,w:160,h:90,name:"'85 Corvette",look:"Golden beauty.",push:"Behind it: a KEY in a coffee can!",hasKey:true},{id:"boxes",x:295,y:120,w:65,h:70,name:"Boxes",look:"'STUFF.' 3 moves ago.",open:"Christmas decs from 2017."},{id:"tools",x:5,y:235,w:80,h:60,name:"Tools",look:"Hammers, wrenches.",take:"Takes the wrench."},{id:"gdoorL",x:0,y:380,w:14,h:150,name:"Bathroom",open:"goto:4"},{id:"gdoorR",x:346,y:380,w:14,h:150,name:"Backyard",open:"goto:7"}],
 // Room 6: Laundry
