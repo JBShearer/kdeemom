@@ -646,6 +646,32 @@ function paintBedroom(c){
   RR(c,230,265,25,14,2,"#FFD700");// off bed post area
   RR(c,290,215,18,22,2,"#3498db");// off vanity
 
+  // Back-wall doors: downstairs hall (left of window) and kids' rooms (right of window)
+  // Downstairs hallway door — left of window
+  D(c,5,55,72,115,P.dbrown);RR(c,8,58,66,109,4,"#2a1a08");
+  c.fillStyle="#2a1a08";c.beginPath();c.arc(41,58,33,Math.PI,0);c.fill();
+  // Stair treads visible through door frame
+  var stC2=["#6a5030","#5a4020","#4a3010","#3a2000"];
+  for(var ds=0;ds<4;ds++){var dw=56-ds*8,dy2=58+109-18-ds*20;D(c,8+4+ds*2,dy2,dw,8,stC2[ds]);}
+  c.strokeStyle="#8B6914";c.lineWidth=1.2;
+  c.beginPath();c.moveTo(11,58+109-5);c.lineTo(18,60);c.stroke();
+  c.beginPath();c.moveTo(73,58+109-5);c.lineTo(70,60);c.stroke();
+  c.fillStyle="rgba(255,215,0,0.55)";c.font="bold 4px monospace";c.textAlign="center";
+  c.fillText("DOWNSTAIRS",41,58+109+10);c.textAlign="left";
+  // Greyson's Room door — right of window
+  D(c,220,55,72,115,P.dbrown);RR(c,223,58,66,109,4,"#2a1a08");
+  c.fillStyle="rgba(0,0,0,0.25)";c.fillRect(224,59,64,107);
+  c.fillStyle="#666";c.beginPath();c.arc(254,113,3,0,Math.PI*2);c.fill();
+  c.fillStyle="rgba(255,215,0,0.5)";c.font="bold 4px monospace";c.textAlign="center";
+  c.fillText("GREYSON",256,58+109+10);c.textAlign="left";
+  // Gwyneth's Room door — just left of closet
+  D(c,298,55,12,115,P.dbrown);// door-frame sliver (closet takes most of right wall)
+  // Gwyneth label on closet door repurposed area — we put her door IN the hallway passage left wall
+  // Actually paint a small Gwyneth door sign on the attic door frame
+  // Gwyneth door is on the left side wall, above the attic passage
+  D(c,0,120,14,80,P.dbrown);RR(c,0,122,12,76,3,"#2a1a08");
+  c.fillStyle="rgba(255,215,0,0.45)";c.font="bold 4px monospace";c.save();c.translate(7,185);c.rotate(-Math.PI/2);c.fillText("GWYNETH",0,0);c.restore();
+
   // Closet (overflowing)
   RR(c,310,100,50,130,4,P.dbrown);RR(c,313,103,44,124,3,"#4a3a28");
   // Clothes falling out of closet
@@ -1599,7 +1625,7 @@ function makeHS(){return[
 // Room 8: Attic
 [{id:"xmas",x:5,y:298,w:85,h:70,name:"Xmas Box",look:"Tinsel entity.",open:"Tangled lights."},{id:"myst",x:70,y:290,w:80,h:75,name:"Mystery Box",look:"Nobody remembers this.",open:"Photo albums! VHS: DO NOT WATCH."},{id:"mirror2",x:118,y:140,w:80,h:105,name:"Old Mirror",look:"Spookier K'Dee.",talk:"Mirror-K'Dee winks."},{id:"trunk",x:242,y:318,w:110,h:60,name:"Trunk",look:"Locked. Treasure or taxes.",open:"Locked!",use:"Wrench opens it: old curtains."},{id:"crystal",x:298,y:282,w:60,h:65,name:"Crystal Ball",look:"Halloween 2022.",talk:"'Check the bedroom, dummy.'"},{id:"adoorR",x:346,y:370,w:14,h:150,name:"Bedroom",open:"goto:9"},{id:"gymdoor",x:188,y:352,w:75,h:55,name:"Gym",open:"goto:12"}],
 // Room 9: Master Bedroom
-[{id:"bed",x:10,y:248,w:222,h:110,name:"Bed",look:"Made this morning. Clothes pile using it as a base camp.",push:"More clothes. Not what you need."},{id:"clothespile",x:30,y:455,w:120,h:75,name:"Clothes Mountain",look:"Mt. Washmore's bedroom cousin. Phone is definitely in here.",push:"K'Dee digs in. The pile FIGHTS BACK. Clothes are flying!",take:"K'Dee reaches in. An avalanche starts. Stack them or be buried!"},{id:"nightstand",x:224,y:292,w:75,h:80,name:"Nightstand",look:"Book page 12 for 6 months.",open:"Charger #3, melatonin, and a KEY!",hasKey:true},{id:"vanity",x:228,y:195,w:125,h:80,name:"Vanity",look:"Lipstick, mascara, dry shampoo.",use:"Hair ties, bobby pins."},{id:"vmirror",x:248,y:118,w:90,h:82,name:"Mirror",look:"Survived another morning.",talk:"'Have fun, don't die.'"},{id:"window",x:88,y:20,w:130,h:115,name:"Window",look:"Neighbor's cat is staring in. Judging.",open:"'MOM!' from downstairs."},{id:"closet",x:296,y:82,w:65,h:155,name:"Closet",look:"Overflow situation. Two more piles fell out.",open:"An avalanche of shirts and regret."},{id:"flowers",x:228,y:172,w:60,h:55,name:"Flowers",look:"Self-care purchase.",take:"Smells nice."},{id:"bdoorL",x:0,y:270,w:14,h:200,name:"Attic",open:"goto:8"},{id:"forestdoor",x:346,y:270,w:14,h:200,name:"Forest's Den",open:"goto:21"},{id:"greysondoor",x:105,y:0,w:85,h:42,name:"Greyson's Room",open:"goto:19"},{id:"gwyndoor",x:205,y:0,w:85,h:42,name:"Gwyneth's Room",open:"goto:20"}],
+[{id:"bed",x:10,y:248,w:222,h:110,name:"Bed",look:"Made this morning. Clothes pile using it as a base camp.",push:"More clothes. Not what you need."},{id:"clothespile",x:30,y:455,w:120,h:75,name:"Clothes Mountain",look:"Mt. Washmore's bedroom cousin. Phone is definitely in here.",push:"K'Dee digs in. The pile FIGHTS BACK. Clothes are flying!",take:"K'Dee reaches in. An avalanche starts. Stack them or be buried!"},{id:"nightstand",x:224,y:292,w:75,h:80,name:"Nightstand",look:"Book page 12 for 6 months.",open:"Charger #3, melatonin, and a KEY!",hasKey:true},{id:"vanity",x:228,y:195,w:125,h:80,name:"Vanity",look:"Lipstick, mascara, dry shampoo.",use:"Hair ties, bobby pins."},{id:"vmirror",x:248,y:118,w:90,h:82,name:"Mirror",look:"Survived another morning.",talk:"'Have fun, don't die.'"},{id:"window",x:88,y:20,w:130,h:115,name:"Window",look:"Neighbor's cat is staring in. Judging.",open:"'MOM!' from downstairs."},{id:"closet",x:296,y:82,w:65,h:155,name:"Closet",look:"Overflow situation. Two more piles fell out.",open:"An avalanche of shirts and regret."},{id:"flowers",x:228,y:172,w:60,h:55,name:"Flowers",look:"Self-care purchase.",take:"Smells nice."},{id:"bdoorL",x:0,y:270,w:14,h:200,name:"Attic",open:"goto:8"},{id:"forestdoor",x:346,y:270,w:14,h:200,name:"Forest's Den",open:"goto:21"},{id:"stairsDown",x:5,y:55,w:72,h:115,name:"Downstairs",open:"goto:2"},{id:"greysondoor",x:220,y:55,w:72,h:115,name:"Greyson's Room",open:"goto:19"},{id:"gwyndoor",x:0,y:120,w:30,h:80,name:"Gwyneth's Room",open:"goto:20"}],
 // Room 10: Jesus Bathroom
 [{id:"jcross",x:28,y:35,w:80,h:105,name:"Cross",look:"Holy energy.",talk:"K'Dee prays. Warm light."},{id:"jbattle",x:10,y:35,w:105,h:125,name:"Space Jesus vs Devil",look:"A painting of Space Jesus locked in battle with the Devil. Among the stars. It's intense.",talk:"The figures in the painting seem to move. Space Jesus winks."},{id:"jpinup",x:245,y:35,w:105,h:125,name:"Rescued by Grace",look:"Jesus pulls a glamorous pinup girl out of the ocean. She looks delighted. Her red lipstick is perfect somehow.",talk:"The pinup girl waves from the painting. K'Dee waves back. This bathroom is a LOT."},{id:"jport",x:135,y:28,w:90,h:120,name:"Jesus Portrait",look:"Kind smile. Halo. He seems like he's about to step out.",talk:"'Seen my keys?' The smile widens."},{id:"jtub",x:5,y:275,w:188,h:95,name:"Golden Tub",look:"Pure gold. Holy water.",use:"Hand sparkles."},{id:"jbible",x:130,y:208,w:90,h:60,name:"Bible",look:"Proverbs 31.",take:"'Divine guidance.'",quest:"bible"},{id:"jtoilet",x:258,y:292,w:80,h:85,name:"Golden Toilet",look:"Jesus saves, bathroom SPENDS.",use:"Not that throne."},{id:"jcandles",x:300,y:188,w:58,h:65,name:"Candles",look:"Frankincense."},{id:"jdoorB",x:346,y:270,w:14,h:200,name:"Foyer",open:"goto:0"}],
 // Room 11: Basement
