@@ -658,17 +658,17 @@ function paintBedroom(c){
   RR(c,308,180,10,14,2,"#e74c3c");RR(c,305,194,12,10,2,"#9b59b6");
   c.fillStyle="#666";c.beginPath();c.arc(334,103,3,0,Math.PI*2);c.fill();// door handle
 
-  // Downstairs staircase — bottom-left corner, stairs descending into floor
-  var sx=0,sy=390;
-  c.fillStyle="#0a0a0a";c.fillRect(sx,sy+20,72,150);
-  c.fillStyle="#0a0a0a";c.beginPath();c.ellipse(sx+36,sy+22,28,8,0,0,Math.PI*2);c.fill();
+  // Downstairs staircase — bottom-left floor area, stairs descending into floor
+  var sx=18,sy=420;
+  c.fillStyle="#0a0a0a";c.fillRect(sx,sy+20,56,160);
+  c.fillStyle="#0a0a0a";c.beginPath();c.ellipse(sx+28,sy+22,22,7,0,0,Math.PI*2);c.fill();
   var stC3=["#6a5030","#5a4020","#4a3010","#3a2000"];
-  for(var ds2=0;ds2<4;ds2++){var dw2=64-ds2*10,dsy=sy+30+ds2*28;D(c,sx+4+ds2*3,dsy,dw2,10,stC3[ds2]);}
+  for(var ds2=0;ds2<4;ds2++){var dw2=50-ds2*8,dsy=sy+30+ds2*28;D(c,sx+4+ds2*3,dsy,dw2,10,stC3[ds2]);}
   c.strokeStyle="#8B6914";c.lineWidth=1.5;
-  c.beginPath();c.moveTo(sx+6,sy+145);c.lineTo(sx+14,sy+22);c.stroke();
-  c.beginPath();c.moveTo(sx+66,sy+145);c.lineTo(sx+60,sy+22);c.stroke();
+  c.beginPath();c.moveTo(sx+4,sy+140);c.lineTo(sx+12,sy+22);c.stroke();
+  c.beginPath();c.moveTo(sx+52,sy+140);c.lineTo(sx+46,sy+22);c.stroke();
   c.fillStyle="rgba(255,215,0,0.55)";c.font="bold 4px monospace";c.textAlign="center";
-  c.fillText("DOWNSTAIRS",sx+36,sy+155);c.textAlign="left";
+  c.fillText("DOWNSTAIRS",sx+28,sy+152);c.textAlign="left";
 
   // Fashion magazine stack
   for(var mg2=0;mg2<3;mg2++){RR(c,232+mg2*2,295+mg2*2,28,18,2,["#FF69B4","#FFD700","#00CED1"][mg2]);}
@@ -1617,7 +1617,7 @@ function makeHS(){return[
 // Room 8: Attic
 [{id:"xmas",x:5,y:298,w:85,h:70,name:"Xmas Box",look:"Tinsel entity.",open:"Tangled lights."},{id:"myst",x:70,y:290,w:80,h:75,name:"Mystery Box",look:"Nobody remembers this.",open:"Photo albums! VHS: DO NOT WATCH."},{id:"mirror2",x:118,y:140,w:80,h:105,name:"Old Mirror",look:"Spookier K'Dee.",talk:"Mirror-K'Dee winks."},{id:"trunk",x:242,y:318,w:110,h:60,name:"Trunk",look:"Locked. Treasure or taxes.",open:"Locked!",use:"Wrench opens it: old curtains."},{id:"crystal",x:298,y:282,w:60,h:65,name:"Crystal Ball",look:"Halloween 2022.",talk:"'Check the bedroom, dummy.'"},{id:"adoorR",x:346,y:370,w:14,h:150,name:"Bedroom",open:"goto:9"},{id:"gymdoor",x:188,y:352,w:75,h:55,name:"Gym",open:"goto:12"}],
 // Room 9: Master Bedroom
-[{id:"bed",x:10,y:248,w:222,h:110,name:"Bed",look:"Made this morning. Clothes pile using it as a base camp.",push:"More clothes. Not what you need."},{id:"clothespile",x:30,y:455,w:120,h:75,name:"Clothes Mountain",look:"Mt. Washmore's bedroom cousin. Phone is definitely in here.",push:"K'Dee digs in. The pile FIGHTS BACK. Clothes are flying!",take:"K'Dee reaches in. An avalanche starts. Stack them or be buried!"},{id:"nightstand",x:224,y:292,w:75,h:80,name:"Nightstand",look:"Book page 12 for 6 months.",open:"Charger #3, melatonin, and a KEY!",hasKey:true},{id:"vanity",x:228,y:195,w:125,h:80,name:"Vanity",look:"Lipstick, mascara, dry shampoo.",use:"Hair ties, bobby pins."},{id:"vmirror",x:248,y:118,w:90,h:82,name:"Mirror",look:"Survived another morning.",talk:"'Have fun, don't die.'"},{id:"window",x:88,y:20,w:130,h:115,name:"Window",look:"Neighbor's cat is staring in. Judging.",open:"'MOM!' from downstairs."},{id:"closet",x:296,y:82,w:65,h:155,name:"Closet",look:"Overflow situation. Two more piles fell out.",open:"An avalanche of shirts and regret."},{id:"flowers",x:228,y:172,w:60,h:55,name:"Flowers",look:"Self-care purchase.",take:"Smells nice."},{id:"bdoorL",x:0,y:160,w:14,h:210,name:"Attic",open:"goto:8"},{id:"forestdoor",x:346,y:270,w:14,h:200,name:"Forest's Den",open:"goto:21"},{id:"stairsDown",x:0,y:390,w:72,h:150,name:"Downstairs",open:"goto:2"}],
+[{id:"bed",x:10,y:248,w:222,h:110,name:"Bed",look:"Made this morning. Clothes pile using it as a base camp.",push:"More clothes. Not what you need."},{id:"clothespile",x:30,y:455,w:120,h:75,name:"Clothes Mountain",look:"Mt. Washmore's bedroom cousin. Phone is definitely in here.",push:"K'Dee digs in. The pile FIGHTS BACK. Clothes are flying!",take:"K'Dee reaches in. An avalanche starts. Stack them or be buried!"},{id:"nightstand",x:224,y:292,w:75,h:80,name:"Nightstand",look:"Book page 12 for 6 months.",open:"Charger #3, melatonin, and a KEY!",hasKey:true},{id:"vanity",x:228,y:195,w:125,h:80,name:"Vanity",look:"Lipstick, mascara, dry shampoo.",use:"Hair ties, bobby pins."},{id:"vmirror",x:248,y:118,w:90,h:82,name:"Mirror",look:"Survived another morning.",talk:"'Have fun, don't die.'"},{id:"window",x:88,y:20,w:130,h:115,name:"Window",look:"Neighbor's cat is staring in. Judging.",open:"'MOM!' from downstairs."},{id:"closet",x:296,y:82,w:65,h:155,name:"Closet",look:"Overflow situation. Two more piles fell out.",open:"An avalanche of shirts and regret."},{id:"flowers",x:228,y:172,w:60,h:55,name:"Flowers",look:"Self-care purchase.",take:"Smells nice."},{id:"bdoorL",x:0,y:160,w:14,h:210,name:"Attic",open:"goto:8"},{id:"forestdoor",x:346,y:270,w:14,h:200,name:"Forest's Den",open:"goto:21"},{id:"stairsDown",x:20,y:430,w:52,h:110,name:"Downstairs",open:"goto:2"}],
 // Room 10: Jesus Bathroom
 [{id:"jcross",x:28,y:35,w:80,h:105,name:"Cross",look:"Holy energy.",talk:"K'Dee prays. Warm light."},{id:"jbattle",x:10,y:35,w:105,h:125,name:"Space Jesus vs Devil",look:"A painting of Space Jesus locked in battle with the Devil. Among the stars. It's intense.",talk:"The figures in the painting seem to move. Space Jesus winks."},{id:"jpinup",x:245,y:35,w:105,h:125,name:"Rescued by Grace",look:"Jesus pulls a glamorous pinup girl out of the ocean. She looks delighted. Her red lipstick is perfect somehow.",talk:"The pinup girl waves from the painting. K'Dee waves back. This bathroom is a LOT."},{id:"jport",x:135,y:28,w:90,h:120,name:"Jesus Portrait",look:"Kind smile. Halo. He seems like he's about to step out.",talk:"'Seen my keys?' The smile widens."},{id:"jtub",x:5,y:275,w:188,h:95,name:"Golden Tub",look:"Pure gold. Holy water.",use:"Hand sparkles."},{id:"jbible",x:130,y:208,w:90,h:60,name:"Bible",look:"Proverbs 31.",take:"'Divine guidance.'",quest:"bible"},{id:"jtoilet",x:258,y:292,w:80,h:85,name:"Golden Toilet",look:"Jesus saves, bathroom SPENDS.",use:"Not that throne."},{id:"jcandles",x:300,y:188,w:58,h:65,name:"Candles",look:"Frankincense."},{id:"jdoorB",x:346,y:270,w:14,h:200,name:"Foyer",open:"goto:0"}],
 // Room 11: Basement
