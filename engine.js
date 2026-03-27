@@ -2497,9 +2497,9 @@ function drawLintAtmosphere(c){
 }
 
 function checkBattle(roomIdx){
+  if(roomIdx===19){if(!battleDone["greyson"]){setTimeout(function(){startGreysonDialog();},600);}return;}
   var fid=battleRoomMap[roomIdx];
   if(!fid||battleDone[fid])return;
-  if(roomIdx===19){setTimeout(function(){startGreysonDialog();},600);return;}
   setTimeout(function(){startBattle(fid);},600);
 }
 
