@@ -892,6 +892,13 @@ function performAction(h,v){
     return;
   }
 
+  // Mini-game trigger: clothes pile (starts Tetris) — must be before generic take handler
+  if(h.id==="clothespile"&&(v==="push"||v==="take")&&!usedHS[uid]){
+    hideDlg();
+    startTetris();
+    return;
+  }
+
   // Quest item pickup (take or push)
   if(h.quest&&(v==="take"||v==="push")){
     inv.push(h.quest);usedHS[uid]=true;
@@ -936,13 +943,6 @@ function performAction(h,v){
   if(h.id==="hole"&&(v==="push"||v==="use")){
     hideDlg();
     startDig();
-    return;
-  }
-
-  // Mini-game trigger: clothes pile (starts Tetris)
-  if(h.id==="clothespile"&&(v==="push"||v==="take")&&!usedHS[uid]){
-    hideDlg();
-    startTetris();
     return;
   }
 
@@ -2145,6 +2145,8 @@ var touchTimer=null,touchStart=null,tapFlash=null;
 canvas.addEventListener("touchstart",function(e){
   if(battleActive){e.preventDefault();var p=getCanvasCoords(e);battleClick(p.x,p.y);return;}
   if(miniActive){e.preventDefault();var p=getCanvasCoords(e);miniCatcher=Math.max(30,Math.min(CW-30,p.x));return;}
+  // Let dedicated minigame touchstart handlers take over — just preventDefault to block scroll
+  if(tetActive||frogActive||digActive||racerActive||sockSortActive||gwynSneakActive){e.preventDefault();return;}
   if(paused||gameOver)return; // don't preventDefault — let clicks reach the dialog overlay
   e.preventDefault();
   var p=getCanvasCoords(e);
