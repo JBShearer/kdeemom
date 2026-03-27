@@ -1054,6 +1054,7 @@ function isDoor(h){return h.open&&h.open.indexOf("goto:")===0;}
 
 /* Click an object → walk to it → show interaction dialog */
 function interactWith(h){
+  if(fadeDir!==0)return; // don't start interactions during a room transition
   if(isDoor(h)){navigateToRoom(h);return;}
   var hx=h.x+h.w/2,hy=Math.max(480,Math.min(600,h.y+h.h+20));
   setDesc(h.name+"...");
@@ -2088,6 +2089,7 @@ function findHS(mx,my){
 }
 
 canvas.addEventListener("click",function(e){
+  if(fadeDir!==0)return; // ignore all clicks during room transitions
   if(paused&&!battleActive&&!activeHS){paused=false;document.getElementById("pausebtn").textContent="⏸";setDesc("What should K'Dee do?");return;}
   if(battleActive){var p=getCanvasCoords(e);battleClick(p.x,p.y);return;}
   // Holly meta minigame: any click advances round
@@ -2168,7 +2170,7 @@ canvas.addEventListener("touchend",function(e){
   if(!touchStart)return;
   var elapsed=Date.now()-touchStart.time;
   if(touchTimer){clearTimeout(touchTimer);touchTimer=null;}
-  if(elapsed<300&&!paused&&!gameOver){
+  if(elapsed<300&&!paused&&!gameOver&&fadeDir===0){
     // Short tap: interact
     var p=touchStart;
     var h=findHS(p.x,p.y);
