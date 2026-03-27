@@ -29,6 +29,11 @@ var gwynMsg="",gwynMsgTimer=0;
 /* Living room kids — who has been hugged/collected */
 var livingRoomKids={milo:false,greyson:false,gwyneth:false,forest:false,daed:false,holly:false};
 var hollyWasTripped=false;
+
+/* Holly Meta Minigame — "SHE REFUSES" */
+var hollyMetaActive=false,hollyMetaRound=0;
+/* Special dialog backgrounds */
+var greysonDialogActive=false,lintDialogActive=false;
 window._lrk=livingRoomKids; // expose for room painter
 window._ft=function(){return frameTick;}; // expose frameTick for room animations
 function drawKdee(c,x,y){
@@ -544,11 +549,13 @@ function drawGwyn(c){
   }
 }
 
+var walkCheckInterval=null;
 function walkTo(tx,ty,cb){
+  if(walkCheckInterval){clearInterval(walkCheckInterval);walkCheckInterval=null;}
   kdeeTargetX=Math.max(20,Math.min(340,tx));
   kdeeTargetY=Math.max(480,Math.min(600,ty));
   kdeeWalking=true;
-  if(cb){var check=setInterval(function(){if(!kdeeWalking){clearInterval(check);cb();}},50);}
+  if(cb){walkCheckInterval=setInterval(function(){if(!kdeeWalking){clearInterval(walkCheckInterval);walkCheckInterval=null;cb();}},50);}
 }
 
 /* Draw glowing navigation arrows with labels */
@@ -746,21 +753,27 @@ function drawScene(){
     tapFlash.t--;if(tapFlash.t<=0)tapFlash=null;
   }
 
+  // Greyson dialog atmospheric overlay
+  if(greysonDialogActive)drawGreysonAtmosphere(ctx);
+  // Lint monster dialog atmospheric overlay
+  if(lintDialogActive)drawLintAtmosphere(ctx);
+
   ctx.fillStyle="rgba(0,0,0,0.55)";ctx.fillRect(0,0,CW,22);
   ctx.fillStyle=P.gold;ctx.font="bold 10px monospace";ctx.textAlign="center";
   ctx.fillText(room.name,CW/2,15);ctx.textAlign="left";
+}
 
-  // Fade overlay
+var animRunning=false;
+function gameLoop(){if(!animRunning)return;frameTick++;if(battleActive){updateBattle();drawBattle(ctx);}else if(hollyMetaActive){drawHollyMeta(ctx);}else if(sockSortActive){updateSockSort();drawSockSort(ctx);}else if(gwynSneakActive){updateGwynSneak();drawGwynSneak(ctx);}else if(miniActive){updateCatchGame();drawCatchGame(ctx);}else if(frogActive){updateFrogger();drawFrogger(ctx);}else if(racerActive){updateRacer();drawRacer(ctx);}else if(tetActive){updateTetris();drawTetris(ctx);}else if(digActive){updateDig();drawDig(ctx);}else{updateWalk();updateHolly();updateMilo();updateGwyn();drawScene();}
+  // Fade overlay runs every frame regardless of active mode
   if(fadeDir!==0){
     fadeAlpha+=fadeDir*0.06;
     if(fadeAlpha>=1){fadeAlpha=1;if(fadeCb){fadeCb();fadeCb=null;}}
     if(fadeAlpha<=0){fadeAlpha=0;fadeDir=0;}
     ctx.fillStyle="rgba(0,0,0,"+fadeAlpha+")";ctx.fillRect(0,0,CW,CH);
   }
+  requestAnimationFrame(gameLoop);
 }
-
-var animRunning=false;
-function gameLoop(){if(!animRunning)return;frameTick++;if(battleActive){updateBattle();drawBattle(ctx);}else if(miniActive){updateCatchGame();drawCatchGame(ctx);}else if(frogActive){updateFrogger();drawFrogger(ctx);}else if(racerActive){updateRacer();drawRacer(ctx);}else if(tetActive){updateTetris();drawTetris(ctx);}else if(digActive){updateDig();drawDig(ctx);}else{updateWalk();updateHolly();updateMilo();updateGwyn();drawScene();}requestAnimationFrame(gameLoop);}
 function startLoop(){if(!animRunning){animRunning=true;gameLoop();}}
 
 function updateHUD(){
@@ -792,6 +805,7 @@ var verbColors={use:"#00CED1",take:"#FFD700",talk:"#FF69B4",open:"#FF8C00",push:
 
 function showInteraction(h){
   activeHS=h;
+  lintDialogActive=(h.id==="lint");
   var d=document.getElementById("dlg");
   var inner=document.getElementById("dlg-inner");
 
@@ -881,8 +895,8 @@ function performAction(h,v){
     return;
   }
 
-  // Quest item pickup
-  if(h.quest&&v==="take"){
+  // Quest item pickup (take or push)
+  if(h.quest&&(v==="take"||v==="push")){
     inv.push(h.quest);usedHS[uid]=true;
     questItems[h.quest]=true;
     setPortraitMode("excited");
@@ -932,6 +946,41 @@ function performAction(h,v){
   if(h.id==="clothespile"&&(v==="push"||v==="take")&&!usedHS[uid]){
     hideDlg();
     startTetris();
+    return;
+  }
+
+  // Mini-game trigger: Holly's room door
+  if(h.id==="hollyroom"&&v==="open"&&!usedHS[uid]){
+    hideDlg();
+    startHollyMeta();
+    return;
+  }
+
+  // Lint monster: use dryer sheet → PURRS, drops lintkey
+  if(h.id==="lint"&&v==="use"&&!usedHS[uid]){
+    if(inv.indexOf("tidepen")>=0||inv.indexOf("shelf")>=0){
+      usedHS[uid]=true;
+      inv.push("lintKey");questItems.lintKey=true;
+      setPortraitMode("excited");
+      typeText(document.getElementById("dlg-text"),"K'Dee holds out the dryer sheet.\n\nThe Lint Monster goes *completely still*.\n\n...then PURRS.\n\nIt dissolves in a slow, satisfied haze.\n\nWhere it sat: a key made entirely of compressed lint.\n\nK'Dee picks it up. It's surprisingly solid.\n\n*lintkey acquired*");
+      buildVerbButtons(h);updateInv();
+    }else{
+      typeText(document.getElementById("dlg-text"),"K'Dee has nothing to use. The Lint Monster watches. It always watches.");
+    }
+    return;
+  }
+
+  // LM2 sockpile: use triggers sock sort minigame
+  if(h.id==="sockpile"&&v==="use"&&!usedHS[uid]){
+    hideDlg();
+    startSockSort();
+    return;
+  }
+
+  // Gwyneth's room: sneak triggers don't-wake-gwyneth
+  if(h.id==="gwyndoor2"&&v==="use"&&!usedHS[uid]){
+    hideDlg();
+    startGwynSneak();
     return;
   }
 
@@ -986,6 +1035,7 @@ function hideDlg(){
   if(typeTimer){clearInterval(typeTimer);typeTimer=null;}
   document.getElementById("dlg").classList.remove("on");
   document.getElementById("dlg-continue").style.display="";
+  lintDialogActive=false;
   activeHS=null;paused=false;
 }
 
@@ -1031,7 +1081,11 @@ var invDetails={
   drinks:{emoji:"\uD83E\uDD64",name:"Energy Drinks",desc:"Confiscated from Greyson. Three empty cans. Gross.",type:"Contraband",battle:"Useful in battle vs. Greyson"},
   beds:{emoji:"\uD83C\uDF3F",name:"Fresh Herbs",desc:"Rosemary and basil. Tonight's dinner is going to be great.",type:"Ingredient"},
   fthermo:{emoji:"\uD83C\uDF21\uFE0F",name:"Thermometer",desc:"102.3. Poor Forest. Sending healing vibes.",type:"Medical"},
-  dumbbells:{emoji:"\uD83C\uDFCB\uFE0F",name:"Dumbbell",desc:"Almost lifted one. Almost.",type:"Equipment"}
+  dumbbells:{emoji:"\uD83C\uDFCB\uFE0F",name:"Dumbbell",desc:"Almost lifted one. Almost.",type:"Equipment"},
+  lostSock:{emoji:"\uD83E\uDDE6",name:"Lost Sock",desc:"One sock. Mate unknown. It's been alone a long time.",type:"Textile"},
+  lintKey:{emoji:"\uD83D\uDD11",name:"Lint Key",desc:"A key made of compressed lint. Opens... something? Probably nothing.",type:"Odd Item"},
+  gnomeNote:{emoji:"\uD83D\uDCDD",name:"Gnome Note",desc:"A note from the gnome: CHECK THE COUCH. In blood. Probably ketchup.",type:"Clue"},
+  coin:{emoji:"\uD83E\uDE99",name:"Quarter (2003)",desc:"A 2003 quarter. Found in the pipe drip puddle. It's been down there a while.",type:"Treasure"}
 };
 
 // Items that are super-effective somewhere
@@ -1618,6 +1672,406 @@ function getCanvasCoords(e){
   return{x:(cx-r.left)*sx,y:(cy-r.top)*sy};
 }
 
+/* ===== HOLLY META MINIGAME — "SHE REFUSES" ===== */
+var HOLLY_META_ROUNDS=[
+  // Round 0-3: All choices lead to ...no.
+  {choices:["Hi Holly.","Want to hang out?","Are you okay?","Come to the living room."],response:"...no."},
+  {choices:["Hi.","We could watch TV.","I made snacks.","Just for a little while?"],response:"...no."},
+  {choices:["I miss you.","Five minutes?","Everyone's there.","Please?"],response:"...no."},
+  {choices:["I won't make it weird.","Greyson is being weird instead.","Milo made a fort.","Free snacks."],response:"...no.\n\n(The no is getting quieter, which is somehow worse.)"},
+  // Round 4-5: fourth wall breaks
+  {choices:["Holly.","Come on.","...","(tap anywhere)"],response:"...why do I have a health bar.\n\nThis is weird. Who made this.\n\n(She looks directly at K'Dee. Then past K'Dee.)"},
+  {choices:["(tap anywhere)","(tap anywhere)","(tap anywhere)","(tap anywhere)"],response:"...who designed these controls.\n\nLeft half? Right half? A button that says 'PURSE'?\n\nK'Dee. Something is wrong with this house."},
+  // Round 6: single button
+  {choices:["Wait—"],response:"...I'm leaving now.\n\nOn my own terms.\n\nWhich is how I do everything."},
+  // Round 7: she closes it herself
+  {choices:[""],response:""}
+];
+
+function startHollyMeta(){
+  hollyMetaActive=true;hollyMetaRound=0;paused=true;
+}
+
+function hollyMetaAdvance(){
+  hollyMetaRound++;
+  if(hollyMetaRound>=8){
+    // Holly closes the dialog herself — done
+    hollyMetaActive=false;paused=false;
+    livingRoomKids.holly=true;
+    if(kdeeMaxHearts<10){kdeeMaxHearts++;kdeeMaxHP=kdeeMaxHearts*4;kdeeHP=kdeeMaxHP;}
+    updateHUD();
+    showSimpleDlg("HOLLY","She's right. This is her game too.\n\nHolly goes to the living room.\n\nOn her own terms.\n\nSomehow she's already there when K'Dee gets back.","excited");
+  }
+}
+
+function drawHollyMeta(c){
+  // Dimmed background
+  c.fillStyle="rgba(10,10,30,0.88)";c.fillRect(0,0,CW,CH);
+
+  var round=Math.min(hollyMetaRound,7);
+  var data=HOLLY_META_ROUNDS[round];
+
+  // Dialog box
+  RR(c,15,100,330,420,10,"#1a0a2e");
+  c.strokeStyle=P.gold;c.lineWidth=2;c.strokeRect(17,102,326,416);
+
+  // Holly portrait (simple drawn portrait)
+  // Face
+  var hx=CW/2,hy=175;
+  c.fillStyle="#c0a080";c.beginPath();c.arc(hx,hy,38,0,Math.PI*2);c.fill();
+  // Hair — dark red
+  c.fillStyle="#8B2020";
+  c.beginPath();c.arc(hx,hy-20,38,Math.PI,2*Math.PI);c.fill();
+  c.fillRect(hx-38,hy-20,76,20);
+  // Side hair
+  c.fillRect(hx-40,hy-10,12,35);c.fillRect(hx+28,hy-10,12,35);
+  // Eyes — one slightly narrowed (perpetually unimpressed)
+  c.fillStyle="#333";c.beginPath();c.arc(hx-13,hy,5,0,Math.PI*2);c.fill();
+  c.beginPath();c.arc(hx+13,hy,5,0,Math.PI*2);c.fill();
+  c.fillStyle="#fff";c.beginPath();c.arc(hx-12,hy-1,2,0,Math.PI*2);c.fill();
+  c.beginPath();c.arc(hx+14,hy-1,2,0,Math.PI*2);c.fill();
+  // Slight frown
+  c.strokeStyle="#7a5030";c.lineWidth=1.5;
+  c.beginPath();c.arc(hx,hy+14,8,0.2*Math.PI,0.8*Math.PI);c.stroke();
+  // Body hint
+  c.fillStyle="#556";c.fillRect(hx-22,hy+38,44,30);
+
+  // Name
+  c.fillStyle=P.gold;c.font="bold 13px monospace";c.textAlign="center";
+  c.fillText("HOLLY",CW/2,232);c.textAlign="left";
+
+  // Separator
+  c.strokeStyle="rgba(255,215,0,0.2)";c.lineWidth=1;
+  c.beginPath();c.moveTo(30,240);c.lineTo(330,240);c.stroke();
+
+  if(round===7){
+    // Holly closes it herself
+    c.fillStyle="#ccc";c.font="10px monospace";c.textAlign="center";
+    var closingLines=["","...","...","She reaches for the dialog box.","","She closes it herself.","","[ TAP ]"];
+    var lineY=270;
+    closingLines.forEach(function(ln){c.fillText(ln,CW/2,lineY);lineY+=22;});
+    c.textAlign="left";
+    return;
+  }
+
+  // Response text
+  c.fillStyle="#ddd";c.font="10px monospace";c.textAlign="center";
+  var resp=data.response||"";
+  var respLines=resp.split("\n");var ry=270;
+  respLines.forEach(function(ln){c.fillText(ln,CW/2,ry);ry+=16;});
+  c.textAlign="left";
+
+  // Choice buttons (all fake — all do same thing)
+  var btnY=380;
+  var btnColors=["#4a3060","#3a4060","#3a6040","#604030"];
+  if(round>=4){btnColors=["#333","#333","#333","#333"];}
+  var choices=data.choices||[];
+  for(var i=0;i<Math.min(choices.length,4);i++){
+    var bx=30,by=btnY+i*32,bw=300,bh=26;
+    if(choices[i]==="")continue;
+    RR(c,bx,by,bw,bh,5,btnColors[i]||"#3a3060");
+    c.fillStyle="#ddd";c.font="9px monospace";c.textAlign="center";
+    c.fillText(choices[i],CW/2,by+17);c.textAlign="left";
+  }
+
+  // Tap to continue hint
+  var pp=0.3+0.3*Math.sin(frameTick*0.1);
+  c.fillStyle="rgba(255,255,255,"+pp+")";c.font="8px monospace";c.textAlign="center";
+  c.fillText("[ TAP ANYTHING ]",CW/2,515);c.textAlign="left";
+}
+
+/* ===== SOCK SORT MINIGAME ===== */
+var sockSortActive=false,sockSortTimer=0,sockSortScore=0;
+var sockSortSocks=[],sockSortBaskets=[],sockSortSelected=null;
+var SOCK_COLORS=["#e74c3c","#3498db","#eee"];// red, blue, striped
+var SOCK_LABELS=["RED","BLUE","STRIPE"];
+var SOCK_MAX_TIME=1800;// 30 sec at 60fps
+
+function startSockSort(){
+  sockSortActive=true;sockSortTimer=0;sockSortScore=0;paused=true;
+  sockSortSelected=null;
+  sockSortBaskets=[
+    {x:20,y:490,w:80,h:50,color:SOCK_COLORS[0],label:SOCK_LABELS[0]},
+    {x:140,y:490,w:80,h:50,color:SOCK_COLORS[1],label:SOCK_LABELS[1]},
+    {x:260,y:490,w:80,h:50,color:SOCK_COLORS[2],label:SOCK_LABELS[2]}
+  ];
+  sockSortSocks=[];
+  for(var i=0;i<10;i++){
+    var t=Math.floor(Math.random()*3);
+    sockSortSocks.push({
+      x:30+Math.random()*(CW-60),y:-20-i*55,
+      vy:0.8+Math.random()*0.8,type:t,
+      color:SOCK_COLORS[t],label:SOCK_LABELS[t],
+      sorted:false,w:28,h:20,id:i
+    });
+  }
+}
+
+function updateSockSort(){
+  if(!sockSortActive)return;
+  sockSortTimer++;
+  sockSortSocks.forEach(function(s){
+    if(s.sorted)return;
+    s.y+=s.vy;
+    if(s.y>CH+30)s.y=-20-Math.random()*60;// respawn
+  });
+  if(sockSortTimer>=SOCK_MAX_TIME){
+    sockSortActive=false;paused=false;
+    var win=sockSortScore>=6;
+    if(win){kdeeHP=Math.min(kdeeMaxHP,kdeeHP+2);updateHUD();}
+    showSimpleDlg("SOCK SORT",win?"K'Dee sorted "+sockSortScore+" pairs! She solved the laundry. She is UNSTOPPABLE. +2 HP!":"The socks win. They always win. ("+sockSortScore+"/6 sorted)",win?"excited":"hurt");
+  }
+}
+
+function drawSockSort(c){
+  c.fillStyle="#2a2040";c.fillRect(0,0,CW,CH);
+  c.fillStyle="#ddd";c.font="bold 13px monospace";c.textAlign="center";
+  c.fillText("SOCK SORT!",CW/2,40);
+  // Timer bar
+  var tl=Math.max(0,1-sockSortTimer/SOCK_MAX_TIME);
+  D(c,20,55,CW-40,8,"#333");
+  D(c,20,55,Math.floor((CW-40)*tl),8,tl>0.3?"#2ecc71":"#e74c3c");
+  c.fillStyle=P.gold;c.font="10px monospace";
+  c.fillText("SORTED: "+sockSortScore+"/6",CW/2,80);c.textAlign="left";
+  // Socks
+  sockSortSocks.forEach(function(s){
+    if(s.sorted)return;
+    var sel=sockSortSelected&&sockSortSelected.id===s.id;
+    c.save();
+    if(sel){c.shadowColor="#fff";c.shadowBlur=10;}
+    // Sock shape: body + cuff
+    c.fillStyle=s.color;
+    c.beginPath();c.ellipse(s.x+14,s.y+12,13,8,0,0,Math.PI*2);c.fill();
+    c.fillRect(s.x+2,s.y+4,24,12);
+    if(s.type===2){// striped
+      c.fillStyle="rgba(0,0,0,0.25)";
+      for(var si=0;si<3;si++)c.fillRect(s.x+4+si*8,s.y+4,4,12);
+    }
+    // Cuff
+    c.fillStyle="rgba(255,255,255,0.2)";c.fillRect(s.x+2,s.y+4,24,5);
+    if(sel){c.shadowBlur=0;}
+    c.restore();
+  });
+  // Baskets
+  sockSortBaskets.forEach(function(b){
+    RR(c,b.x,b.y,b.w,b.h,5,b.color);
+    c.fillStyle="rgba(0,0,0,0.3)";c.font="bold 8px monospace";c.textAlign="center";
+    c.fillText(b.label,b.x+b.w/2,b.y+28);c.textAlign="left";
+  });
+  // Selection hint
+  if(!sockSortSelected){
+    c.fillStyle="rgba(255,255,255,0.4)";c.font="8px monospace";c.textAlign="center";
+    c.fillText("TAP a sock then TAP a basket",CW/2,460);c.textAlign="left";
+  }else{
+    c.fillStyle="#FFD700";c.font="8px monospace";c.textAlign="center";
+    c.fillText("Now TAP the matching basket!",CW/2,460);c.textAlign="left";
+  }
+}
+
+function sockSortClick(mx,my){
+  if(!sockSortActive)return;
+  // If a sock is selected, check basket click
+  if(sockSortSelected){
+    for(var i=0;i<sockSortBaskets.length;i++){
+      var b=sockSortBaskets[i];
+      if(mx>=b.x&&mx<=b.x+b.w&&my>=b.y&&my<=b.y+b.h){
+        if(b.label===sockSortSelected.label){
+          sockSortSelected.sorted=true;sockSortScore++;
+          if(sockSortScore>=6){sockSortTimer=SOCK_MAX_TIME;} // instant win check
+        }
+        sockSortSelected=null;return;
+      }
+    }
+    // Clicked somewhere else — deselect
+    sockSortSelected=null;
+    return;
+  }
+  // Select a sock
+  for(var i=0;i<sockSortSocks.length;i++){
+    var s=sockSortSocks[i];
+    if(s.sorted)continue;
+    if(mx>=s.x&&mx<=s.x+s.w&&my>=s.y&&my<=s.y+s.h+4){
+      sockSortSelected=s;return;
+    }
+  }
+}
+
+function sockSortClick(mx,my){
+  if(!sockSortActive)return;
+  // If a sock is selected, check basket click
+  if(sockSortSelected){
+    for(var i=0;i<sockSortBaskets.length;i++){
+      var b=sockSortBaskets[i];
+      if(mx>=b.x&&mx<=b.x+b.w&&my>=b.y&&my<=b.y+b.h){
+        if(b.label===sockSortSelected.label){
+          sockSortSelected.sorted=true;sockSortScore++;
+          if(sockSortScore>=6){sockSortTimer=SOCK_MAX_TIME;} // instant win check
+        }
+        sockSortSelected=null;return;
+      }
+    }
+    // Clicked somewhere else — deselect
+    sockSortSelected=null;
+    return;
+  }
+  // Select a sock
+  for(var i=0;i<sockSortSocks.length;i++){
+    var s=sockSortSocks[i];
+    if(s.sorted)continue;
+    if(mx>=s.x&&mx<=s.x+s.w&&my>=s.y&&my<=s.y+s.h+4){
+      sockSortSelected=s;return;
+    }
+  }
+}
+
+/* ===== DON'T WAKE GWYNETH MINIGAME ===== */
+var gwynSneakActive=false,gwynSneakX=30,gwynSneakLives=3,gwynSneakCrossings=0;
+var gwynSneakObstacles=[],gwynSneakMsg="",gwynSneakMsgTimer=0,gwynSneakDone=false;
+var GWYN_GOAL_X=330,GWYN_START_X=30;
+
+function startGwynSneak(){
+  gwynSneakActive=true;paused=true;
+  gwynSneakX=GWYN_START_X;gwynSneakLives=3;gwynSneakCrossings=0;
+  gwynSneakDone=false;gwynSneakMsg="Shhhh...";gwynSneakMsgTimer=80;
+  spawnGwynObstacles();
+}
+
+function spawnGwynObstacles(){
+  gwynSneakObstacles=[];
+  var count=3+gwynSneakCrossings;
+  for(var i=0;i<count;i++){
+    var dir=i%2===0?1:-1;
+    gwynSneakObstacles.push({
+      x:Math.random()*300+30,
+      y:280+Math.floor(Math.random()*3)*55,
+      vx:(0.6+Math.random()*0.8+gwynSneakCrossings*0.2)*dir,
+      w:28,h:22,
+      type:i%3// 0=toy, 1=book, 2=Z float
+    });
+  }
+}
+
+function updateGwynSneak(){
+  if(!gwynSneakActive||gwynSneakDone)return;
+  if(gwynSneakMsgTimer>0)gwynSneakMsgTimer--;
+  // Move obstacles
+  gwynSneakObstacles.forEach(function(o){
+    o.x+=o.vx;
+    if(o.x<10)o.x=10;
+    if(o.x>CW-40)o.x=CW-40;
+    if(o.x<=10||o.x>=CW-40)o.vx*=-1;
+  });
+  // Collision check
+  gwynSneakObstacles.forEach(function(o){
+    if(Math.abs(gwynSneakX-o.x-o.w/2)<18&&Math.abs(320-o.y-o.h/2)<20){
+      gwynSneakLives--;
+      gwynSneakX=GWYN_START_X;
+      var wakeQuips=["'...hm?'","'...mom?'","'...is someone there?'","'...five more minutes...'"];
+      gwynSneakMsg=wakeQuips[Math.floor(Math.random()*wakeQuips.length)];gwynSneakMsgTimer=90;
+      if(gwynSneakLives<=0){
+        gwynSneakDone=true;
+        gwynSneakMsg="Gwyneth wakes up. 'MOM. IT IS 3AM.'";gwynSneakMsgTimer=180;
+      }
+    }
+  });
+}
+
+function gwynSneakClick(mx,my){
+  if(!gwynSneakActive)return;
+  if(gwynSneakDone){
+    gwynSneakActive=false;paused=false;
+    var won=gwynSneakCrossings>=3;
+    if(won){if(kdeeMaxHearts<10){kdeeMaxHearts++;kdeeMaxHP=kdeeMaxHearts*4;kdeeHP=kdeeMaxHP;}updateHUD();}
+    showSimpleDlg("DON'T WAKE GWYNETH",won?"K'Dee made it through THREE TIMES. Gwyneth sleeps on. +1 heart container!":"K'Dee knocked everything over. Gwyneth is now extremely awake. K'Dee retreats.","excited");
+    return;
+  }
+  // Click right half = move right, left half = move left
+  var step=28;
+  if(mx>CW/2)gwynSneakX=Math.min(GWYN_GOAL_X,gwynSneakX+step);
+  else gwynSneakX=Math.max(GWYN_START_X,gwynSneakX-step);
+  // Check if reached goal
+  if(gwynSneakX>=GWYN_GOAL_X){
+    gwynSneakCrossings++;
+    gwynSneakX=GWYN_START_X;
+    spawnGwynObstacles();
+    if(gwynSneakCrossings>=3){
+      gwynSneakDone=true;
+      gwynSneakMsg="YOU MADE IT! 3/3 \u2665";gwynSneakMsgTimer=150;
+    }else{
+      gwynSneakMsg="Shhh... "+(3-gwynSneakCrossings)+" more...";gwynSneakMsgTimer=80;
+    }
+  }
+}
+
+function drawGwynSneak(c){
+  // Blue starry background (Gwyneth's room)
+  c.fillStyle="#1a2a4a";c.fillRect(0,0,CW,CH);
+  // Stars (fairy lights)
+  for(var i=0;i<20;i++){
+    var sx=(i*73)%360,sy=(i*41)%100+10;
+    c.fillStyle="rgba(100,200,255,"+(0.4+Math.sin(frameTick*0.08+i)*0.3)+")";
+    c.beginPath();c.arc(sx,sy,1.5,0,Math.PI*2);c.fill();
+  }
+  // Title
+  c.fillStyle="#87CEEB";c.font="bold 12px monospace";c.textAlign="center";
+  c.fillText("DON'T WAKE GWYNETH",CW/2,40);
+  // Lives & crossings
+  c.fillStyle=P.gold;c.font="10px monospace";
+  c.fillText("\u2665\u2665\u2665".substring(0,(gwynSneakLives*2))+"  "+gwynSneakCrossings+"/3",CW/2,60);
+  c.textAlign="left";
+  // Gwyneth sleeping in bed
+  RR(c,60,200,200,60,8,"#3a5a8a");// bed
+  c.fillStyle="#4a7ab0";c.fillRect(60,206,200,48);// blanket
+  // Gwyneth's head
+  c.fillStyle="#c0a080";c.beginPath();c.arc(130,200,16,0,Math.PI*2);c.fill();
+  c.fillStyle="#5c3a1e";c.beginPath();c.arc(130,192,16,Math.PI,2*Math.PI);c.fill();
+  c.fillRect(114,192,32,12);
+  // Closed eyes (sleeping)
+  c.strokeStyle="#333";c.lineWidth=1.5;
+  c.beginPath();c.arc(123,199,4,Math.PI,2*Math.PI);c.stroke();
+  c.beginPath();c.arc(137,199,4,Math.PI,2*Math.PI);c.stroke();
+  // Z floats
+  for(var z=0;z<3;z++){
+    var zx=155+(z*18),zy=175-z*18-Math.sin(frameTick*0.05+z)*5;
+    var za=(frameTick*0.02+z)*0.8%1;
+    c.fillStyle="rgba(135,206,235,"+(0.3+za*0.4)+")";
+    c.font="bold "+(10+z*3)+"px monospace";c.textAlign="center";
+    c.fillText("z",zx,zy);c.textAlign="left";
+  }
+  // Obstacles
+  var obsEmoji=["🧸","📚","✨"];
+  gwynSneakObstacles.forEach(function(o){
+    c.font="20px serif";c.textAlign="center";
+    c.fillText(obsEmoji[o.type]||"🧸",o.x+o.w/2,o.y+o.h);
+    c.textAlign="left";
+  });
+  // K'Dee sneaking figure (simplified)
+  var ky=320;
+  c.fillStyle=P.skin;c.beginPath();c.arc(gwynSneakX,ky-22,7,0,Math.PI*2);c.fill();
+  c.fillStyle=P.hair;c.beginPath();c.arc(gwynSneakX,ky-27,7,Math.PI,2*Math.PI);c.fill();
+  c.fillStyle=P.pink;c.fillRect(gwynSneakX-6,ky-15,12,12);
+  c.fillStyle="#4169E1";c.fillRect(gwynSneakX-4,ky-4,4,8);c.fillRect(gwynSneakX,ky-4,4,8);
+  // Tip-toe indicator (finger to lips)
+  c.fillStyle="rgba(255,255,255,0.6)";c.font="12px serif";c.textAlign="center";
+  c.fillText("🤫",gwynSneakX,ky-34);c.textAlign="left";
+  // Goal arrow
+  c.fillStyle="#0f0";c.font="bold 10px monospace";c.textAlign="center";
+  c.fillText("→ GOAL",320,330);c.textAlign="left";
+  // Message
+  if(gwynSneakMsgTimer>0){
+    c.fillStyle="rgba(255,255,255,0.9)";c.font="bold 10px monospace";c.textAlign="center";
+    c.fillText(gwynSneakMsg,CW/2,390);c.textAlign="left";
+  }
+  // Controls hint
+  c.fillStyle="rgba(255,255,255,0.3)";c.font="8px monospace";c.textAlign="center";
+  c.fillText("TAP LEFT to move left  |  TAP RIGHT to move right",CW/2,620);c.textAlign="left";
+  if(gwynSneakDone){
+    var pp=0.4+0.3*Math.sin(frameTick*0.1);
+    c.fillStyle="rgba(255,255,255,"+pp+")";c.font="bold 10px monospace";c.textAlign="center";
+    c.fillText("[ TAP TO CONTINUE ]",CW/2,460);c.textAlign="left";
+  }
+}
+
 function findHS(mx,my){
   var hs=hotspots[curRoom]||[];
   for(var i=hs.length-1;i>=0;i--){var h=hs[i];if(isDoor(h))continue;if(mx>=h.x&&mx<=h.x+h.w&&my>=h.y&&my<=h.y+h.h)return h;}
@@ -1636,6 +2090,12 @@ function findHS(mx,my){
 canvas.addEventListener("click",function(e){
   if(paused&&!battleActive){paused=false;document.getElementById("pausebtn").textContent="⏸";setDesc("What should K'Dee do?");return;}
   if(battleActive){var p=getCanvasCoords(e);battleClick(p.x,p.y);return;}
+  // Holly meta minigame: any click advances round
+  if(hollyMetaActive){hollyMetaAdvance();return;}
+  // Sock sort: click to select/place socks
+  if(sockSortActive){var p=getCanvasCoords(e);sockSortClick(p.x,p.y);return;}
+  // Gwyn sneak: click to move K'Dee
+  if(gwynSneakActive){var p=getCanvasCoords(e);gwynSneakClick(p.x,p.y);return;}
   // Dig minigame: any tap digs
   if(digActive){digTap();return;}
   // Frogger: click left/right half to move
@@ -1889,6 +2349,149 @@ var FIGHTERS={
 var battleRoomMap={3:"milo",5:"daed",10:"jesus",11:"demon",20:"gwyneth",21:"forest"};
 var gwynBattle=false;
 
+/* ── GREYSON ATMOSPHERE ───────────────────────────────────────────
+   Draws over Greyson's room while his dialog is active:
+   amber/orange chemistry-lab glow, bubbling flask particles,
+   a faint star-map on the wall, western-star motifs.
+*/
+function drawGreysonAtmosphere(c){
+  var t=frameTick;
+  c.save();
+  // Warm amber overlay tinting the whole scene
+  c.globalAlpha=0.18+0.04*Math.sin(t*0.03);
+  var grad=c.createRadialGradient(220,340,20,220,340,200);
+  grad.addColorStop(0,"#FF8C00");grad.addColorStop(0.6,"#cc5500");grad.addColorStop(1,"transparent");
+  c.fillStyle=grad;c.fillRect(0,0,CW,CH);
+  c.restore();
+
+  // Flask glow — three chemistry flasks sitting on Greyson's desk (right side mid-room)
+  var flasks=[{x:252,y:355,col:"#FF8C00"},{x:268,y:348,col:"#ffcc00"},{x:284,y:352,col:"#FF4500"}];
+  flasks.forEach(function(fl,i){
+    var pulse=0.5+0.5*Math.sin(t*0.07+i*1.1);
+    c.save();c.globalAlpha=0.25*pulse;
+    var fg=c.createRadialGradient(fl.x,fl.y,2,fl.x,fl.y,22);
+    fg.addColorStop(0,fl.col);fg.addColorStop(1,"transparent");
+    c.fillStyle=fg;c.beginPath();c.arc(fl.x,fl.y,22,0,Math.PI*2);c.fill();
+    c.restore();
+  });
+
+  // Bubble particles rising from flasks
+  c.save();
+  for(var i=0;i<6;i++){
+    var bph=(t*0.8+i*47)%200;
+    var bx=flasks[i%3].x+Math.sin(bph*0.12)*4;
+    var by=flasks[i%3].y-bph*0.4;
+    if(by>flasks[i%3].y-80){
+      c.globalAlpha=0.45*(1-bph/200);
+      c.fillStyle=["#FF8C00","#ffcc00","#FF4500"][i%3];
+      c.beginPath();c.arc(bx,by,1.5,0,Math.PI*2);c.fill();
+    }
+  }
+  c.restore();
+
+  // Faint star constellation on the back wall (left side, upper area)
+  var stars2=[[60,90],[72,78],[50,72],[80,100],[65,115],[44,105],[55,62]];
+  c.save();c.globalAlpha=0.22+0.08*Math.sin(t*0.02);
+  c.strokeStyle="#FFD700";c.lineWidth=0.6;
+  var edges=[[0,1],[1,2],[2,3],[3,4],[4,5],[5,0],[2,6]];
+  edges.forEach(function(e){
+    c.beginPath();c.moveTo(stars2[e[0]][0],stars2[e[0]][1]);c.lineTo(stars2[e[1]][0],stars2[e[1]][1]);c.stroke();
+  });
+  stars2.forEach(function(s){
+    c.fillStyle="#FFD700";c.beginPath();c.arc(s[0],s[1],1.3,0,Math.PI*2);c.fill();
+  });
+  c.restore();
+
+  // Western sheriff star badge glint (top-right area, like on his hat shelf)
+  c.save();
+  var gAlpha=0.28+0.18*Math.abs(Math.sin(t*0.04));
+  c.globalAlpha=gAlpha;c.fillStyle="#FFD700";
+  var sx=300,sy=130,sr=7;
+  for(var pt=0;pt<5;pt++){
+    var ang=-Math.PI/2+(pt*4*Math.PI/5);
+    var ang2=ang+2*Math.PI/10;
+    c.beginPath();
+    c.moveTo(sx+sr*Math.cos(ang),sy+sr*Math.sin(ang));
+    c.lineTo(sx+sr*0.4*Math.cos(ang2),sy+sr*0.4*Math.sin(ang2));
+    if(pt===4)c.closePath();
+    else{
+      ang=ang+(4*Math.PI/5);
+      c.lineTo(sx+sr*Math.cos(ang),sy+sr*Math.sin(ang));
+    }
+  }
+  // simpler: draw 5-point star with lines
+  c.beginPath();
+  for(var p=0;p<5;p++){
+    var a0=-Math.PI/2+p*4*Math.PI/5;
+    var a1=a0+2*Math.PI/10;
+    if(p===0)c.moveTo(sx+sr*Math.cos(a0),sy+sr*Math.sin(a0));
+    else c.lineTo(sx+sr*Math.cos(a0),sy+sr*Math.sin(a0));
+    c.lineTo(sx+sr*0.38*Math.cos(a1),sy+sr*0.38*Math.sin(a1));
+  }
+  c.closePath();c.fill();
+  c.restore();
+}
+
+/* ── LINT ATMOSPHERE ──────────────────────────────────────────────
+   Draws over LM3 while the lint monster dialog is active:
+   pulsing sickly green glow from the monster's position,
+   floating lint motes drifting upward, ethereal glowing eyes.
+*/
+function drawLintAtmosphere(c){
+  var t=frameTick;
+  c.save();
+  // Sickly green-grey pulsing radial glow where the lint monster sits (LM3 center-left)
+  var mx=130,my=430;
+  var pulse=0.5+0.5*Math.sin(t*0.05);
+  c.globalAlpha=(0.18+0.12*pulse);
+  var mg=c.createRadialGradient(mx,my,8,mx,my,140);
+  mg.addColorStop(0,"#88ff44");mg.addColorStop(0.4,"#336600");mg.addColorStop(1,"transparent");
+  c.fillStyle=mg;c.fillRect(0,0,CW,CH);
+  c.restore();
+
+  // Floating lint motes
+  c.save();
+  for(var i=0;i<12;i++){
+    var mph=(t*0.5+i*53)%320;
+    var lx=mx-60+((i*37)%120)+(Math.sin(t*0.04+i)*8);
+    var ly=my+30-mph*0.5;
+    if(ly>my-130){
+      c.globalAlpha=0.5*(1-mph/320);
+      c.fillStyle=i%3===0?"#aaddaa":i%3===1?"#88bb88":"#ccddcc";
+      c.beginPath();c.arc(lx,ly,1.2+Math.sin(t*0.06+i)*0.6,0,Math.PI*2);c.fill();
+    }
+  }
+  c.restore();
+
+  // Pair of glowing eyes hovering in the lint mass (follow monster position)
+  var eyePulse=0.7+0.3*Math.sin(t*0.08);
+  c.save();c.globalAlpha=0.65*eyePulse;
+  // Left eye glow
+  var lg=c.createRadialGradient(mx-10,my-12,1,mx-10,my-12,8);
+  lg.addColorStop(0,"#ffffff");lg.addColorStop(0.3,"#88ff44");lg.addColorStop(1,"transparent");
+  c.fillStyle=lg;c.beginPath();c.arc(mx-10,my-12,8,0,Math.PI*2);c.fill();
+  // Right eye glow
+  var rg=c.createRadialGradient(mx+10,my-12,1,mx+10,my-12,8);
+  rg.addColorStop(0,"#ffffff");rg.addColorStop(0.3,"#88ff44");rg.addColorStop(1,"transparent");
+  c.fillStyle=rg;c.beginPath();c.arc(mx+10,my-12,8,0,Math.PI*2);c.fill();
+  // Pupil dots
+  c.globalAlpha=eyePulse;c.fillStyle="#000";
+  c.beginPath();c.arc(mx-10,my-12,2.5,0,Math.PI*2);c.fill();
+  c.beginPath();c.arc(mx+10,my-12,2.5,0,Math.PI*2);c.fill();
+  c.restore();
+
+  // Yarn tendril wisps drifting outward
+  c.save();c.globalAlpha=0.20+0.10*Math.sin(t*0.03);
+  c.strokeStyle="#66aa44";c.lineWidth=1;
+  for(var j=0;j<4;j++){
+    var ta=j*Math.PI/2+t*0.01;
+    c.beginPath();c.moveTo(mx,my);
+    c.quadraticCurveTo(mx+Math.cos(ta)*30,my+Math.sin(ta)*20,mx+Math.cos(ta)*55,my+Math.sin(ta)*38);
+    c.stroke();
+  }
+  c.restore();
+}
+
 function checkBattle(roomIdx){
   var fid=battleRoomMap[roomIdx];
   if(!fid||battleDone[fid])return;
@@ -1898,6 +2501,7 @@ function checkBattle(roomIdx){
 
 function startGreysonDialog(){
   if(battleDone["greyson"])return;
+  greysonDialogActive=true;
   setPortraitMode("default");
   var d=document.getElementById("dlg");var inner=document.getElementById("dlg-inner");
   d.classList.remove("on");inner.style.animation="none";void inner.offsetWidth;inner.style.animation="";d.classList.add("on");
@@ -1913,7 +2517,7 @@ function startGreysonDialog(){
   document.getElementById("gd-keys").addEventListener("click",function(){
     document.getElementById("dlg-text").textContent="'Keys...' He strokes his moustache. 'Based on historical data and my own field research — garage. Near the Corvette. Scientifically speaking.'\n\n'GREYSON.'\n\n'I said scientifically.'";
     choices.innerHTML='<div class="dlg-ch" id="gd-thanks">Thanks, Greyson.</div><div class="dlg-ch" id="gd-hug-keys">🤗 Hug him.</div>';
-    document.getElementById("gd-thanks").addEventListener("click",function(){hideDlg();battleDone["greyson"]=true;});
+    document.getElementById("gd-thanks").addEventListener("click",function(){greysonDialogActive=false;hideDlg();battleDone["greyson"]=true;});
     document.getElementById("gd-hug-keys").addEventListener("click",function(){greysonHug();});
   });
   document.getElementById("gd-science").addEventListener("click",function(){
@@ -1924,10 +2528,10 @@ function startGreysonDialog(){
   document.getElementById("gd-mars").addEventListener("click",function(){
     document.getElementById("dlg-text").textContent="He slowly swivels his chair to face you fully. He removes his hat.\n\n'...I thought you'd never ask.'\n\nFifteen minutes later. You know more about Mars than NASA. You feel changed.\n\n'Anyway. Garage. Keys. Go.'";
     choices.innerHTML='<div class="dlg-ch" id="gd-done">I need a moment.</div><div class="dlg-ch" id="gd-hug-mars">🤗 Hug him.</div>';
-    document.getElementById("gd-done").addEventListener("click",function(){hideDlg();battleDone["greyson"]=true;});
+    document.getElementById("gd-done").addEventListener("click",function(){greysonDialogActive=false;hideDlg();battleDone["greyson"]=true;});
     document.getElementById("gd-hug-mars").addEventListener("click",function(){greysonHug();});
   });
-  document.getElementById("gd-leave").addEventListener("click",function(){hideDlg();battleDone["greyson"]=true;});
+  document.getElementById("gd-leave").addEventListener("click",function(){greysonDialogActive=false;hideDlg();battleDone["greyson"]=true;});
 }
 
 function greysonHug(){
@@ -1939,7 +2543,7 @@ function greysonHug(){
   choices.innerHTML='<div class="dlg-ch" id="gd-hug-done">❤️ Love you, kid.</div>';
   document.getElementById("dlg-continue").style.display="none";
   document.getElementById("gd-hug-done").addEventListener("click",function(){
-    hideDlg();battleDone["greyson"]=true;livingRoomKids.greyson=true;
+    greysonDialogActive=false;hideDlg();battleDone["greyson"]=true;livingRoomKids.greyson=true;
     if(kdeeMaxHearts<10)kdeeMaxHearts++;
     kdeeMaxHP=kdeeMaxHearts*4;kdeeHP=kdeeMaxHP;
     updateHUD();
@@ -2801,37 +3405,238 @@ function drawBattle(c){
   }
 
   // === MAIN BATTLE SCREEN ===
-  // Background
-  var bg=c.createLinearGradient(0,0,0,CH);bg.addColorStop(0,"#0a0a2a");bg.addColorStop(0.5,"#1a0a3e");bg.addColorStop(1,"#0a0a1a");
-  c.fillStyle=bg;c.fillRect(0,0,CW,CH);
+  // Per-fighter atmospheric background
+  var bid=bs.id;
+  if(bid==="milo"){
+    // Kids' room — blue walls, glow-in-dark stars, scattered books
+    var bg=c.createLinearGradient(0,0,0,CH);bg.addColorStop(0,"#1a2a5e");bg.addColorStop(1,"#0e1a3a");
+    c.fillStyle=bg;c.fillRect(0,0,CW,CH);
+    // Floor
+    var fg=c.createLinearGradient(0,370,0,CH);fg.addColorStop(0,"#2a1a3e");fg.addColorStop(1,"#150e28");
+    c.fillStyle=fg;c.fillRect(0,370,CW,CH-370);
+    // Glow-in-dark stars
+    for(var i=0;i<18;i++){
+      var sx=(i*97+13)%340+10,sy=(i*61+7)%160+20;
+      var sg=0.3+0.4*Math.sin(frameTick*0.05+i*0.8);
+      c.fillStyle="rgba(150,255,200,"+sg+")";
+      c.beginPath();for(var sp=0;sp<5;sp++){var sa=sp*Math.PI*4/5-Math.PI/2;c.lineTo(sx+3*Math.cos(sa),sy+3*Math.sin(sa));sa+=Math.PI*2/5;c.lineTo(sx+1.3*Math.cos(sa),sy+1.3*Math.sin(sa));}
+      c.closePath();c.fill();
+    }
+    // Bunk bed silhouette
+    c.fillStyle="rgba(40,30,80,0.7)";c.fillRect(0,220,90,150);c.fillRect(0,218,95,6);c.fillRect(0,290,95,5);
+    // Scattered books on floor
+    [[20,380,"#e74c3c",30,8],[55,390,"#3498db",26,7],[300,385,"#2ecc71",28,8],[320,395,"#FFD700",22,7]].forEach(function(b){
+      c.save();c.translate(b[0]+b[3]/2,b[1]+b[4]/2);c.rotate((b[0]%7-3)*0.12);
+      c.fillStyle=b[2];c.fillRect(-b[3]/2,-b[4]/2,b[3],b[4]);
+      c.fillStyle="rgba(255,255,255,0.15)";c.fillRect(-b[3]/2,-b[4]/2,b[3],2);
+      c.restore();
+    });
+    // Poster on back wall
+    c.fillStyle="rgba(30,20,60,0.8)";c.fillRect(155,55,60,50);c.fillStyle="rgba(0,255,100,0.4)";c.font="bold 7px monospace";c.textAlign="center";c.fillText("GAME",185,82);c.fillText("OVER",185,93);c.textAlign="left";
+  } else if(bid==="holly"){
+    // Dark hallway — Holly emerges from shadow
+    var bg=c.createLinearGradient(0,0,0,CH);bg.addColorStop(0,"#0d0d18");bg.addColorStop(0.6,"#1a0a2e");bg.addColorStop(1,"#0a0a10");
+    c.fillStyle=bg;c.fillRect(0,0,CW,CH);
+    var fg=c.createLinearGradient(0,370,0,CH);fg.addColorStop(0,"#120a1e");fg.addColorStop(1,"#080810");
+    c.fillStyle=fg;c.fillRect(0,370,CW,CH-370);
+    // Hallway walls — dark panels
+    c.fillStyle="rgba(40,20,60,0.6)";c.fillRect(0,0,22,370);c.fillRect(338,0,22,370);
+    // Faint baseboards
+    c.fillStyle="rgba(80,50,90,0.5)";c.fillRect(0,340,360,8);
+    // Single dim overhead light
+    var lp=0.5+0.2*Math.sin(frameTick*0.03);
+    c.save();c.globalAlpha=lp*0.15;
+    var lg=c.createRadialGradient(180,0,5,180,0,200);lg.addColorStop(0,"#DDA0DD");lg.addColorStop(1,"rgba(0,0,0,0)");
+    c.fillStyle=lg;c.fillRect(0,0,CW,CH);c.restore();
+    // Doorframes further down the hall
+    c.fillStyle="rgba(30,15,45,0.7)";c.fillRect(285,80,12,200);c.fillRect(305,80,50,200);
+    c.fillStyle="rgba(50,25,65,0.5)";c.fillRect(307,82,46,196);
+    // Shadow pool where Holly was standing
+    c.save();c.globalAlpha=0.4+0.1*Math.sin(frameTick*0.04);
+    var sg=c.createRadialGradient(270,300,5,270,300,80);sg.addColorStop(0,"rgba(180,100,200,0.25)");sg.addColorStop(1,"rgba(0,0,0,0)");
+    c.fillStyle=sg;c.fillRect(0,0,CW,CH);c.restore();
+  } else if(bid==="gwyneth"){
+    // Gwyneth's room — fairy lights, dreamy blue haze
+    var bg=c.createLinearGradient(0,0,0,CH);bg.addColorStop(0,"#0a1a3a");bg.addColorStop(0.5,"#0d2040");bg.addColorStop(1,"#06100e");
+    c.fillStyle=bg;c.fillRect(0,0,CW,CH);
+    var fg=c.createLinearGradient(0,370,0,CH);fg.addColorStop(0,"#0d1a30");fg.addColorStop(1,"#060e18");
+    c.fillStyle=fg;c.fillRect(0,370,CW,CH-370);
+    // Fairy lights string across top
+    c.strokeStyle="rgba(100,150,200,0.3)";c.lineWidth=1;
+    c.beginPath();c.moveTo(0,35);for(var fx=0;fx<CW;fx+=20)c.lineTo(fx,35+Math.sin(fx*0.15)*4);c.stroke();
+    for(var fx=5;fx<CW;fx+=20){
+      var fc=["#87CEEB","#00CED1","#4169E1","#DDA0DD"][(Math.floor(fx/20))%4];
+      var fb=0.5+0.5*Math.sin(frameTick*0.08+fx*0.3);
+      c.fillStyle=fc;c.globalAlpha=fb;c.beginPath();c.arc(fx,35+Math.sin(fx*0.15)*4,2.5,0,Math.PI*2);c.fill();c.globalAlpha=1;
+    }
+    // Floating Zs
+    for(var zi=0;zi<4;zi++){
+      var zt=(frameTick*0.4+zi*55)%220;
+      c.fillStyle="rgba(135,206,235,"+(Math.max(0,1-zt/180)*0.35)+")";
+      c.font="bold "+(10+zi*3)+"px monospace";c.textAlign="center";
+      c.fillText("z",200+zi*18,200-zt);c.textAlign="left";
+    }
+    // Gwyneth's bed silhouette
+    c.fillStyle="rgba(20,40,80,0.75)";c.fillRect(0,258,180,70);
+    c.fillStyle="rgba(30,55,110,0.5)";c.fillRect(0,258,180,15);// pillow
+    // Soft glow from bedside
+    c.save();c.globalAlpha=0.12;var gg=c.createRadialGradient(30,280,5,30,280,90);gg.addColorStop(0,"#4169E1");gg.addColorStop(1,"rgba(0,0,0,0)");c.fillStyle=gg;c.fillRect(0,0,CW,CH);c.restore();
+  } else if(bid==="forest"){
+    // Forest's gaming den — dark with RGB LED strips and screen glow
+    var bg=c.createLinearGradient(0,0,0,CH);bg.addColorStop(0,"#050510");bg.addColorStop(1,"#0a0a18");
+    c.fillStyle=bg;c.fillRect(0,0,CW,CH);
+    var fg=c.createLinearGradient(0,370,0,CH);fg.addColorStop(0,"#080810");fg.addColorStop(1,"#040408");
+    c.fillStyle=fg;c.fillRect(0,370,CW,CH-370);
+    // RGB LED strips along ceiling and floor edges — cycle colors
+    var ledHue=frameTick*1.2;
+    var ledColors=["#e74c3c","#ff8c00","#FFD700","#2ecc71","#3498db","#9b59b6"];
+    var lc=ledColors[Math.floor(ledHue/30)%ledColors.length];
+    var lcNext=ledColors[(Math.floor(ledHue/30)+1)%ledColors.length];
+    c.save();c.globalAlpha=0.18;c.fillStyle=lc;c.fillRect(0,0,CW,8);c.fillRect(0,CH-8,CW,8);c.restore();
+    // Gaming setup silhouette
+    c.fillStyle="rgba(15,10,30,0.85)";c.fillRect(160,80,180,200);// monitor
+    c.fillStyle="rgba(25,20,50,0.7)";c.fillRect(170,90,160,170);// screen
+    // Screen glow — shifts with frameTick
+    c.save();c.globalAlpha=0.25+0.1*Math.sin(frameTick*0.07);
+    var scg=c.createRadialGradient(250,175,10,250,175,100);scg.addColorStop(0,lc);scg.addColorStop(1,"rgba(0,0,0,0)");
+    c.fillStyle=scg;c.fillRect(0,0,CW,CH);c.restore();
+    // Snack cans on floor
+    [[290,380,"#e74c3c"],[310,376,"#3498db"],[295,388,"#e74c3c"]].forEach(function(s){
+      c.fillStyle=s[2];c.fillRect(s[0],s[1],8,14);
+      c.fillStyle="rgba(255,255,255,0.1)";c.fillRect(s[0]+1,s[1]+1,3,12);
+    });
+    // DO NOT DISTURB signs
+    c.fillStyle="rgba(200,50,50,0.4)";c.font="bold 6px monospace";c.textAlign="center";
+    c.fillText("DO NOT DISTURB",CW/2,60);c.textAlign="left";
+  } else if(bid==="daed"){
+    // Garage — oil stains, Corvette silhouette, harsh overhead light
+    var bg=c.createLinearGradient(0,0,0,CH);bg.addColorStop(0,"#1a1008");bg.addColorStop(1,"#0a0804");
+    c.fillStyle=bg;c.fillRect(0,0,CW,CH);
+    // Concrete floor with oil stains
+    var fg=c.createLinearGradient(0,370,0,CH);fg.addColorStop(0,"#2a2010");fg.addColorStop(1,"#181008");
+    c.fillStyle=fg;c.fillRect(0,370,CW,CH-370);
+    // Oil stain puddles
+    c.save();c.globalAlpha=0.35;
+    [[80,430,40,12],[200,450,30,8],[290,415,20,6]].forEach(function(o){c.fillStyle="#050401";c.beginPath();c.ellipse(o[0],o[1],o[2],o[3],0,0,Math.PI*2);c.fill();});
+    // Rainbow oil sheen
+    [[80,430,38,10],[200,450,28,6]].forEach(function(o){
+      var og=c.createRadialGradient(o[0]-5,o[1]-2,1,o[0],o[1],o[2]);
+      og.addColorStop(0,"rgba(150,50,200,0.2)");og.addColorStop(0.5,"rgba(50,200,150,0.15)");og.addColorStop(1,"rgba(200,100,50,0.1)");
+      c.fillStyle=og;c.beginPath();c.ellipse(o[0],o[1],o[2],o[3],0,0,Math.PI*2);c.fill();
+    });
+    c.restore();
+    // Corvette silhouette
+    c.fillStyle="rgba(180,30,10,0.55)";
+    c.beginPath();c.moveTo(0,410);c.lineTo(30,380);c.lineTo(80,368);c.lineTo(140,360);c.lineTo(200,362);c.lineTo(250,368);c.lineTo(290,372);c.lineTo(340,390);c.lineTo(360,410);c.closePath();c.fill();
+    // Headlights glow
+    c.save();c.globalAlpha=0.15+0.05*Math.sin(frameTick*0.04);
+    var hg=c.createRadialGradient(340,375,2,340,375,80);hg.addColorStop(0,"rgba(255,220,100,0.9)");hg.addColorStop(1,"rgba(0,0,0,0)");
+    c.fillStyle=hg;c.fillRect(0,0,CW,CH);c.restore();
+    // Garage door at back
+    c.fillStyle="rgba(35,25,10,0.8)";c.fillRect(60,30,240,280);
+    for(var gi=0;gi<4;gi++)c.fillStyle="rgba(20,15,5,0.6)",c.fillRect(62,32+gi*68,236,6);
+    // Single harsh worklight
+    c.save();c.globalAlpha=0.12;var wl=c.createRadialGradient(180,0,5,180,0,220);wl.addColorStop(0,"rgba(255,240,180,1)");wl.addColorStop(1,"rgba(0,0,0,0)");c.fillStyle=wl;c.fillRect(0,0,CW,CH);c.restore();
+  } else if(bid==="demon"){
+    // Basement — pentagram glow, hellfire cracks, brimstone
+    var bg=c.createLinearGradient(0,0,0,CH);bg.addColorStop(0,"#0a0000");bg.addColorStop(0.5,"#180000");bg.addColorStop(1,"#0a0000");
+    c.fillStyle=bg;c.fillRect(0,0,CW,CH);
+    var fg=c.createLinearGradient(0,370,0,CH);fg.addColorStop(0,"#1e0000");fg.addColorStop(1,"#0d0000");
+    c.fillStyle=fg;c.fillRect(0,370,CW,CH-370);
+    // Pentagram on floor — glowing
+    var pp=0.4+0.4*Math.sin(frameTick*0.06);
+    c.save();c.globalAlpha=pp*0.7;c.strokeStyle="#cc0000";c.lineWidth=2;
+    var pcx=180,pcy=430,pr=60;
+    c.beginPath();for(var pi=0;pi<5;pi++){var pa=pi*Math.PI*4/5-Math.PI/2;var pn=((pi+1)%5)*Math.PI*4/5-Math.PI/2;c.moveTo(pcx+pr*Math.cos(pa),pcy+pr*Math.sin(pa));c.lineTo(pcx+pr*Math.cos(pn),pcy+pr*Math.sin(pn));}c.stroke();
+    c.strokeStyle="rgba(255,50,0,0.3)";c.lineWidth=1;c.beginPath();c.arc(pcx,pcy,pr,0,Math.PI*2);c.stroke();
+    c.restore();
+    // Hellfire floor cracks
+    c.save();c.globalAlpha=0.3+0.2*Math.sin(frameTick*0.08);c.strokeStyle="#cc2200";c.lineWidth=1;
+    [[30,480,120,520],[160,500,200,540],[220,470,310,510],[80,540,180,560]].forEach(function(cr){
+      c.beginPath();c.moveTo(cr[0],cr[1]);c.lineTo((cr[0]+cr[2])/2,cr[3]-10);c.lineTo(cr[2],cr[3]);c.stroke();
+    });c.restore();
+    // Chains on wall
+    c.strokeStyle="rgba(80,60,40,0.6)";c.lineWidth=3;
+    for(var ci=0;ci<5;ci++){c.beginPath();c.moveTo(ci*80+10,0);c.lineTo(ci*80+10,120);c.stroke();}
+    // Red atmospheric glow from below
+    c.save();c.globalAlpha=0.18+0.08*Math.sin(frameTick*0.05);
+    var dg=c.createRadialGradient(180,CH,20,180,CH,280);dg.addColorStop(0,"#8B0000");dg.addColorStop(1,"rgba(0,0,0,0)");
+    c.fillStyle=dg;c.fillRect(0,0,CW,CH);c.restore();
+    // Candle flickers
+    [[20,200],[340,200],[20,350],[340,350]].forEach(function(cv){
+      var cf=0.4+0.3*Math.sin(frameTick*0.15+cv[0]*0.04);
+      c.save();c.globalAlpha=cf*0.5;var cg=c.createRadialGradient(cv[0],cv[1],1,cv[0],cv[1],30);cg.addColorStop(0,"rgba(255,150,0,0.8)");cg.addColorStop(1,"rgba(0,0,0,0)");c.fillStyle=cg;c.fillRect(cv[0]-30,cv[1]-30,60,60);c.restore();
+      c.fillStyle="#FFD700";c.fillRect(cv[0]-1,cv[1]-12,2,10);// wick
+      c.fillStyle="#FF8C00";c.beginPath();c.ellipse(cv[0],cv[1]-14,3,5,0,0,Math.PI*2);c.fill();
+    });
+  } else if(bid==="jesus"){
+    // Jesus Bathroom — golden light, tiled floor, divine radiance
+    var bg=c.createLinearGradient(0,0,0,CH);bg.addColorStop(0,"#1a1400");bg.addColorStop(0.4,"#2a1e00");bg.addColorStop(1,"#0e0d00");
+    c.fillStyle=bg;c.fillRect(0,0,CW,CH);
+    // Golden tiled floor
+    for(var ti=0;ti<CW;ti+=30)for(var tj=370;tj<CH;tj+=28){
+      c.fillStyle=(Math.floor(ti/30)+Math.floor((tj-370)/28))%2===0?"#2a2000":"#221a00";
+      c.fillRect(ti,tj,29,27);
+      c.strokeStyle="rgba(255,215,0,0.08)";c.lineWidth=0.5;c.strokeRect(ti,tj,29,27);
+    }
+    // Holy radiance from above
+    var hr=0.3+0.15*Math.sin(frameTick*0.04);
+    c.save();c.globalAlpha=hr;
+    var hg=c.createRadialGradient(CW/2,-20,5,CW/2,-20,320);hg.addColorStop(0,"rgba(255,215,0,0.9)");hg.addColorStop(0.4,"rgba(255,180,0,0.3)");hg.addColorStop(1,"rgba(0,0,0,0)");
+    c.fillStyle=hg;c.fillRect(0,0,CW,CH);c.restore();
+    // Golden toilet silhouette
+    c.fillStyle="rgba(180,140,0,0.5)";c.fillRect(280,310,55,55);c.fillRect(276,298,63,14);c.fillRect(282,286,50,14);
+    // Space Jesus vs Devil painting on wall
+    c.fillStyle="rgba(30,20,0,0.8)";c.fillRect(140,40,80,100);
+    c.save();c.globalAlpha=0.5;c.fillStyle="#FFD700";c.font="5px monospace";c.textAlign="center";c.fillText("★ VS ★",180,95);c.textAlign="left";c.restore();
+    // Pinup girl painting
+    c.fillStyle="rgba(30,20,0,0.8)";c.fillRect(0,40,100,110);
+    c.save();c.globalAlpha=0.4;c.fillStyle="#FF69B4";c.beginPath();c.ellipse(50,85,15,22,0,0,Math.PI*2);c.fill();c.restore();
+    // Candle glow from sides
+    [[10,220],[350,220]].forEach(function(cv){
+      var cf=0.5+0.3*Math.sin(frameTick*0.1+cv[0]);
+      c.save();c.globalAlpha=cf*0.3;var cg=c.createRadialGradient(cv[0],cv[1],1,cv[0],cv[1],55);cg.addColorStop(0,"rgba(255,200,50,0.9)");cg.addColorStop(1,"rgba(0,0,0,0)");c.fillStyle=cg;c.fillRect(cv[0]-55,cv[1]-55,110,110);c.restore();
+    });
+    // Frankincense smoke wisps
+    for(var fi=0;fi<3;fi++){
+      var fy=(frameTick*0.5+fi*70)%160;
+      c.fillStyle="rgba(255,215,0,"+(Math.max(0,0.15-fy*0.001))+")";c.font="10px monospace";c.textAlign="center";
+      c.fillText("~",20+fi*170,100+fy);c.textAlign="left";
+    }
+  } else {
+    // Generic fallback
+    var bg=c.createLinearGradient(0,0,0,CH);bg.addColorStop(0,"#0a0a2a");bg.addColorStop(0.5,"#1a0a3e");bg.addColorStop(1,"#0a0a1a");
+    c.fillStyle=bg;c.fillRect(0,0,CW,CH);
+    var fg=c.createLinearGradient(0,370,0,CH);fg.addColorStop(0,"#2a1a3e");fg.addColorStop(1,"#0a0a1a");
+    c.fillStyle=fg;c.fillRect(0,370,CW,CH-370);
+  }
 
-  // Arena floor with perspective lines
-  var fg=c.createLinearGradient(0,370,0,CH);fg.addColorStop(0,"#2a1a3e");fg.addColorStop(1,"#0a0a1a");
-  c.fillStyle=fg;c.fillRect(0,370,CW,CH-370);
-  for(var i=0;i<CW;i+=25){c.strokeStyle="rgba(255,255,255,0.02)";c.lineWidth=1;c.beginPath();c.moveTo(i,370);c.lineTo(CW/2+(i-CW/2)*2,CH);c.stroke();}
-  // Horizontal lines
-  for(var j=380;j<CH;j+=30){c.strokeStyle="rgba(255,255,255,0.015)";c.beginPath();c.moveTo(0,j);c.lineTo(CW,j);c.stroke();}
-
-  // Ambient glow behind fighters
+  // Ambient glow behind fighters (tinted to fighter color)
   var pulse=0.5+0.5*Math.sin(frameTick*0.04);
-  c.fillStyle="rgba(255,105,180,"+(0.03+0.02*pulse)+")";c.beginPath();c.arc(80,400,70,0,Math.PI*2);c.fill();
-  c.fillStyle="rgba("+(f.color?parseInt(f.color.slice(1,3),16)+","+parseInt(f.color.slice(3,5),16)+","+parseInt(f.color.slice(5,7),16):"150,150,255")+","+(0.03+0.02*pulse)+")";
-  c.beginPath();c.arc(265,270,70,0,Math.PI*2);c.fill();
+  c.save();c.globalAlpha=0.06+0.03*pulse;
+  c.fillStyle="#FF69B4";c.beginPath();c.arc(80,400,80,0,Math.PI*2);c.fill();
+  var fr=parseInt((f.color||"#9966cc").slice(1,3),16),fg2=parseInt((f.color||"#9966cc").slice(3,5),16),fb2=parseInt((f.color||"#9966cc").slice(5,7),16);
+  c.fillStyle="rgb("+fr+","+fg2+","+fb2+")";c.beginPath();c.arc(265,270,80,0,Math.PI*2);c.fill();
+  c.restore();
+
+  // Arena floor line
+  c.strokeStyle="rgba(255,255,255,0.06)";c.lineWidth=1;c.beginPath();c.moveTo(0,370);c.lineTo(CW,370);c.stroke();
 
   // Enemy (top right, facing left)
   drawBattleEnemy(c,f,265,280,bs.enemyPose,bs.enemyActionTimer,bs.enemyAnim);
   // K'Dee (bottom left, facing right) — raised so full body is visible above action buttons
   drawBattleKdee(c,80,430,bs.kdeePose,bs.kdeeActionTimer);
 
-  // HP Bars
-  // Enemy HP bar
-  var ebx=170,eby=170;
-  c.fillStyle="#222";RR(c,ebx-2,eby-2,148,16,4,"#222");
-  var ehpW=Math.max(0,bs.enemyHP/f.maxHp)*140;
-  var ehCol=bs.enemyHP>f.maxHp*0.5?"#2ecc71":bs.enemyHP>f.maxHp*0.25?"#e8a820":"#e74c3c";
-  if(ehpW>0)RR(c,ebx+2,eby+2,ehpW,8,3,ehCol);
-  c.fillStyle="#fff";c.font="bold 11px monospace";c.fillText(f.name,ebx+2,eby-4);
-  c.fillStyle="#ccc";c.font="9px monospace";c.fillText(bs.enemyHP+"/"+f.maxHp,ebx+100,eby-4);
+  // Enemy heart containers (same system as K'Dee — each HP = 1 quarter)
+  var ebx=170,eby=160;
+  c.fillStyle="#fff";c.font="bold 11px monospace";c.fillText(f.name,ebx,eby-4);
+  var eMaxHearts=Math.ceil(f.maxHp/4);
+  for(var hi=0;hi<eMaxHearts;hi++){
+    var hx2=ebx+(hi%5)*22,hy2=eby+2+Math.floor(hi/5)*18;
+    var q=bs.enemyHP-hi*4;
+    var hemoji=q>=4?"\u2764\uFE0F":q===3?"\uD83D\uDC97":q===2?"\uD83D\uDC9B":q===1?"\uD83E\uDDE1":"\uD83E\uDD0D";
+    c.font="13px monospace";c.fillText(hemoji,hx2,hy2+12);
+  }
 
   // K'Dee heart containers (Zelda-style)
   var kbx=20,kby=350;
@@ -2896,7 +3701,7 @@ function drawBattle(c){
       c.fillStyle="#1a0a2e";c.font="bold 11px monospace";c.fillText(a.label,a.x+8,btnY+22);
     });
     // Big Hug for Milo, ITEM otherwise
-    if(bs.id==="milo"||bs.id==="gwyneth"||bs.id==="forest"){
+    if(bs.id==="milo"||bs.id==="gwyneth"||bs.id==="forest"||bs.id==="daed"||bs.id==="jesus"||bs.id==="demon"){
       RR(c,258,btnY,92,btnH,6,"#FF69B4");
       c.fillStyle="rgba(0,0,0,0.25)";c.font="bold 11px monospace";c.fillText("\uD83E\uDD17 HUG",267,btnY+23);
       c.fillStyle="#1a0a2e";c.font="bold 11px monospace";c.fillText("\uD83E\uDD17 HUG",266,btnY+22);
@@ -2991,7 +3796,7 @@ function battleClick(mx,my){
     battleActive=false;paused=false;battleDone[bs.id]=true;
     battleState=null;
     // Hug a kid = +1 heart container + full heal
-    if(wasHug&&(wasId==="milo"||wasId==="gwyneth"||wasId==="forest")){
+    if(wasHug&&(wasId==="milo"||wasId==="gwyneth"||wasId==="forest"||wasId==="daed"||wasId==="jesus"||wasId==="demon")){
       if(kdeeMaxHearts<10)kdeeMaxHearts++;
       kdeeMaxHP=kdeeMaxHearts*4;
       kdeeHP=kdeeMaxHP;
@@ -3088,6 +3893,33 @@ function battleClick(mx,my){
         addDmgFloat(265,290,"🎮","#556b2f");
         return;
       }
+      if(bs.id==="daed"){
+        bs.kdeePose="item";bs.kdeeActionTimer=1;
+        bs.enemyHP=0;
+        bs.msg="K'Dee opens her arms.\n\nDaed FREEZES.\n\nThen — full bear hug. ENORMOUS. The man commits.\n\n'I LOVE YOU MOM!' He spins her once.\n\nThen he's out the door.\n\nEngine revving before she finishes exhaling.";
+        bs.phase="victory";bs.hugWin=true;
+        bs.flashTimer=15;bs.flashColor="rgba(255,165,0,0.35)";
+        addDmgFloat(265,290,"🧡","#FF8C00");
+        return;
+      }
+      if(bs.id==="jesus"){
+        bs.kdeePose="item";bs.kdeeActionTimer=1;
+        bs.enemyHP=0;
+        bs.msg="K'Dee opens her arms to Space Jesus.\n\nA long pause.\n\nHis halo flickers.\n\n'...I'm not going to do that.'\n\nAnother pause.\n\n'I am... not a hugger, K'Dee.'\n\n'Jesus.'\n\n'I will BLESS you instead.'\n\nHe puts two fingers to her forehead. She feels briefly wonderful.\n\nThe pinup girl slow-claps from her painting.";
+        bs.phase="victory";bs.hugWin=true;
+        bs.flashTimer=15;bs.flashColor="rgba(255,215,0,0.35)";
+        addDmgFloat(265,290,"✨","#FFD700");
+        return;
+      }
+      if(bs.id==="demon"){
+        bs.kdeePose="item";bs.kdeeActionTimer=1;
+        bs.enemyHP=0;
+        bs.msg="K'Dee opens her arms.\n\nBaal'thazar stares.\n\n'...what are you doing.'\n\n'Come here.'\n\n'I am a DEMON OF—'\n\n'Come. Here.'\n\nA pause longer than the pentagram has existed.\n\n*very small awkward hug*\n\nHe immediately dissolves into a poof of...\n\n...cinnamon?\n\n'...tell no one.' The smoke smells like a Yankee Candle.\n\nThe basement feels weirdly cozy.";
+        bs.phase="victory";bs.hugWin=true;
+        bs.flashTimer=15;bs.flashColor="rgba(139,0,139,0.35)";
+        addDmgFloat(265,290,"🕯️","#9B59B6");
+        return;
+      }
       if(inv.length>0){bs.phase="items";bs.msg="Choose an item to use...";return;}
     }
   }
@@ -3095,15 +3927,6 @@ function battleClick(mx,my){
 
 function doPlayerAttack(name,dmg,msg,pose){
   var bs=battleState;
-  // Daed special
-  if(bs.id==="daed"){
-    bs.kdeePose=pose;bs.kdeeActionTimer=1;
-    bs.enemyHP=0;
-    var lines=bs.fighter.defeat;
-    bs.msg=lines.join("\n");bs.phase="victory";
-    bs.flashTimer=10;bs.flashColor="rgba(255,215,0,0.3)";
-    return;
-  }
   // Gwyneth reduced damage
   if(bs.id==="gwyneth"){
     dmg=Math.max(0,dmg-1);
@@ -3858,7 +4681,7 @@ document.getElementById("startbtn").addEventListener("click",function(){
 })();
 
 document.getElementById("pausebtn").addEventListener("click",function(){
-  if(gameOver||battleActive||miniActive||frogActive||racerActive||tetActive||digActive)return;
+  if(gameOver||battleActive||miniActive||frogActive||racerActive||tetActive||digActive||hollyMetaActive||sockSortActive||gwynSneakActive)return;
   paused=!paused;
   document.getElementById("pausebtn").textContent=paused?"▶":"⏸";
   if(paused){saveGame();setDesc("— PAUSED — tap anywhere to resume");}

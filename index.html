@@ -55,8 +55,17 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:mon
 .tk{color:#FFD700}.tr{color:#00CED1}.ts{color:#FF69B4}
 #scene-wrap{flex:1;display:flex;align-items:center;justify-content:center;background:#000;min-height:0;overflow:hidden;position:relative}
 #scene{image-rendering:pixelated;cursor:crosshair;display:block;aspect-ratio:9/16;max-height:100%;width:auto;height:100%}
-#desc-bar{height:24px;background:#0a0a1a;border-top:1px solid #222;display:flex;align-items:center;justify-content:center;padding:0 8px;flex-shrink:0}
-#desc-text{font-size:9px;color:#ccc;letter-spacing:1px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+#desc-bar{height:32px;background:#0a0a1a;border-top:1px solid #222;display:flex;align-items:center;padding:0 6px;flex-shrink:0;gap:6px}
+#desc-text{font-size:9px;color:#ccc;letter-spacing:1px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;flex:1;text-align:center}
+#qbtn{position:absolute;top:2px;right:6px;z-index:20;font-family:monospace;font-size:0.6rem;color:#666;background:none;border:1px solid #333;padding:1px 6px;border-radius:4px;cursor:pointer}
+#pausebtn{position:absolute;top:2px;right:44px;z-index:20;font-family:monospace;font-size:0.75rem;color:#aaa;background:none;border:1px solid #444;padding:1px 5px;border-radius:4px;cursor:pointer;transition:color 0.15s,border-color 0.15s}
+#pausebtn:hover{color:#FFD700;border-color:#FFD700}
+#bagbtn{font-family:monospace;font-size:0.75rem;font-weight:bold;color:#1a0a2e;background:linear-gradient(135deg,#4CAF50,#2e8b2e);border:2px solid #2e8b2e;padding:2px 9px;border-radius:6px;cursor:pointer;transition:background 0.15s,transform 0.1s,box-shadow 0.15s;box-shadow:0 0 6px rgba(76,175,80,0.3);letter-spacing:0.5px;flex-shrink:0}
+#bagbtn:hover{background:linear-gradient(135deg,#5DBF60,#3a9a3a);transform:scale(1.06);box-shadow:0 0 12px rgba(76,175,80,0.5)}
+#bagbtn:active{transform:scale(0.97)}
+#bagbtn.new-item{animation:bagPulse 0.6s ease-in-out 3}
+@keyframes bagPulse{0%{box-shadow:0 0 6px rgba(76,175,80,0.3)}50%{box-shadow:0 0 18px rgba(76,175,80,0.9),0 0 30px rgba(76,175,80,0.4);transform:scale(1.1)}100%{box-shadow:0 0 6px rgba(76,175,80,0.3)}}
+#bag-count{color:#fff;font-weight:bold;background:rgba(0,0,0,0.3);border-radius:8px;padding:0 3px;font-size:0.7rem}
 #dlg{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0);display:none;flex-direction:column;align-items:center;justify-content:center;padding:0;transition:background 0.2s}
 #dlg.on{display:flex;animation:dlgBgIn 0.2s forwards}
 @keyframes dlgBgIn{from{background:rgba(0,0,0,0)}to{background:rgba(0,0,0,0.92)}}
@@ -71,15 +80,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:mon
 .dlg-ch:hover{background:rgba(255,255,255,0.08);transform:scale(1.03)}
 .dlg-ch:active{transform:scale(0.97);background:rgba(255,255,255,0.12)}
 #dlg-continue{font-family:monospace;font-size:0.7rem;color:#555;cursor:pointer;padding:12px 20px;letter-spacing:2px;margin-top:8px}
-#qbtn{position:absolute;top:2px;right:6px;z-index:20;font-family:monospace;font-size:0.6rem;color:#666;background:none;border:1px solid #333;padding:1px 6px;border-radius:4px;cursor:pointer}
-#pausebtn{position:absolute;top:2px;right:44px;z-index:20;font-family:monospace;font-size:0.75rem;color:#aaa;background:none;border:1px solid #444;padding:1px 5px;border-radius:4px;cursor:pointer;transition:color 0.15s,border-color 0.15s}
-#pausebtn:hover{color:#FFD700;border-color:#FFD700}
-#bagbtn{position:absolute;top:1px;right:90px;z-index:20;font-family:monospace;font-size:0.75rem;font-weight:bold;color:#1a0a2e;background:linear-gradient(135deg,#4CAF50,#2e8b2e);border:2px solid #2e8b2e;padding:2px 9px;border-radius:6px;cursor:pointer;transition:background 0.15s,transform 0.1s,box-shadow 0.15s;box-shadow:0 0 6px rgba(76,175,80,0.3);letter-spacing:0.5px}
-#bagbtn:hover{background:linear-gradient(135deg,#5DBF60,#3a9a3a);transform:scale(1.06);box-shadow:0 0 12px rgba(76,175,80,0.5)}
-#bagbtn:active{transform:scale(0.97)}
-#bagbtn.new-item{animation:bagPulse 0.6s ease-in-out 3}
-@keyframes bagPulse{0%{box-shadow:0 0 6px rgba(76,175,80,0.3)}50%{box-shadow:0 0 18px rgba(76,175,80,0.9),0 0 30px rgba(76,175,80,0.4);transform:scale(1.1)}100%{box-shadow:0 0 6px rgba(76,175,80,0.3)}}
-#bag-count{color:#fff;font-weight:bold;background:rgba(0,0,0,0.3);border-radius:8px;padding:0 3px;font-size:0.7rem}
 #inv-screen{position:fixed;inset:0;z-index:250;background:#000;display:none;flex-direction:column;align-items:center;justify-content:flex-start}
 #inv-screen.on{display:flex}
 #inv-inner{width:100%;max-width:360px;height:100%;max-height:640px;background:rgba(10,5,30,0.99);display:flex;flex-direction:column;overflow:hidden;margin:auto}
@@ -134,12 +134,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:mon
     <span class="tr" id="hr">THE FOYER</span>
     <span id="hhp" style="font-size:11px;letter-spacing:1px;flex-shrink:0;max-width:120px;overflow:hidden;white-space:nowrap">❤️❤️❤️❤️</span>
     <span class="ts" id="hs">⏰ 13:00</span>
-    <button id="bagbtn">🎒 <span id="bag-count">0</span></button>
     <button id="pausebtn">⏸</button>
     <button id="qbtn">QUIT</button>
   </div>
   <div id="scene-wrap"><canvas id="scene" width="360" height="640"></canvas></div>
-  <div id="desc-bar"><span id="desc-text">What should K'Dee do?</span></div>
+  <div id="desc-bar">
+    <button id="bagbtn">🎒 <span id="bag-count">0</span></button>
+    <span id="desc-text">What should K'Dee do?</span>
+  </div>
 </div>
 <div id="inv-screen">
   <div id="inv-inner">
