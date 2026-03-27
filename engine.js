@@ -1058,6 +1058,7 @@ function interactWith(h){
   if(isDoor(h)){navigateToRoom(h);return;}
   var hx=h.x+h.w/2,hy=Math.max(480,Math.min(600,h.y+h.h+20));
   setDesc(h.name+"...");
+  paused=true; // block further taps while walking to object
   walkTo(hx,hy,function(){showInteraction(h);});
 }
 
@@ -2090,7 +2091,7 @@ function findHS(mx,my){
 
 canvas.addEventListener("click",function(e){
   if(fadeDir!==0)return; // ignore all clicks during room transitions
-  if(paused&&!battleActive&&!activeHS){paused=false;document.getElementById("pausebtn").textContent="⏸";setDesc("What should K'Dee do?");return;}
+  if(paused&&!battleActive&&!activeHS&&!kdeeWalking){paused=false;document.getElementById("pausebtn").textContent="⏸";setDesc("What should K'Dee do?");return;}
   if(battleActive){var p=getCanvasCoords(e);battleClick(p.x,p.y);return;}
   // Holly meta minigame: any click advances round
   if(hollyMetaActive){hollyMetaAdvance();return;}
