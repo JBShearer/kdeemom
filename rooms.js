@@ -453,11 +453,47 @@ function paintBackyard(c){
   // Legs
   D(c,242,428,4,8,"#777");D(c,250,428,4,8,"#777");
   SH(c,238,438,24);
-  // Hole
-  c.fillStyle="#1a4a1a";c.beginPath();c.ellipse(158,456,18,6,0,0,Math.PI*2);c.fill();
-  c.fillStyle="#0a3a0a";c.beginPath();c.ellipse(158,456,14,4,0,0,Math.PI*2);c.fill();
+  // Hole — bigger, more inviting with a shovel nearby
+  c.fillStyle="#1a4a1a";c.beginPath();c.ellipse(158,456,22,8,0,0,Math.PI*2);c.fill();
+  c.fillStyle="#0a3a0a";c.beginPath();c.ellipse(158,456,17,5,0,0,Math.PI*2);c.fill();
+  c.fillStyle="#050f05";c.beginPath();c.ellipse(158,456,10,3,0,0,Math.PI*2);c.fill();
+  // Dirt pile beside hole
+  c.fillStyle="#5a3a18";c.beginPath();c.ellipse(174,462,8,4,Math.PI*0.2,0,Math.PI*2);c.fill();
+  // Shovel stuck in dirt
+  D(c,178,438,3,28,"#8B6914");// handle
+  c.fillStyle="#aaa";c.beginPath();c.moveTo(175,454);c.lineTo(181,454);c.lineTo(183,466);c.lineTo(173,466);c.closePath();c.fill();
+  // Small sparkle above hole to hint at interactivity
+  c.fillStyle="rgba(255,215,0,0.65)";c.font="bold 8px monospace";c.textAlign="center";
+  c.fillText("✦",158,445);c.textAlign="left";
   // BBQ
   RR(c,300,380,36,36,6,"#333");RR(c,304,370,28,12,4,"#555");
+  // Shed — small wooden structure (hotspot x:100,y:340,w:70,h:55)
+  D(c,100,355,70,40,"#8B5E3C");// shed body
+  c.fillStyle="#704a2a";c.beginPath();c.moveTo(96,355);c.lineTo(135,335);c.lineTo(174,355);c.closePath();c.fill();// roof
+  c.strokeStyle="#5a3a1a";c.lineWidth=1;// roof edge
+  c.beginPath();c.moveTo(96,355);c.lineTo(135,335);c.lineTo(174,355);c.stroke();
+  D(c,127,375,16,20,"#4a2a10");// door
+  RR(c,130,382,4,4,1,"#c0a030");// door knob
+  c.strokeStyle="rgba(0,0,0,0.15)";c.lineWidth=1;// shed planks
+  c.beginPath();c.moveTo(118,355);c.lineTo(118,395);c.stroke();
+  c.beginPath();c.moveTo(152,355);c.lineTo(152,395);c.stroke();
+  SH(c,100,395,70);
+  // Garden patch — lower right (hotspot x:270,y:490,w:80,h:50)
+  c.fillStyle="#3a2a10";c.beginPath();c.ellipse(310,510,38,18,0,0,Math.PI*2);c.fill();// soil
+  c.strokeStyle="#2a1a08";c.lineWidth=1;
+  c.beginPath();c.moveTo(276,510);c.lineTo(344,510);c.stroke();// furrow
+  c.beginPath();c.moveTo(293,504);c.lineTo(293,516);c.stroke();
+  // Flowers / plants in garden
+  var gPlants=[[290,496],[302,492],[316,494],[330,497],[342,493]];
+  gPlants.forEach(function(gp,gi){
+    D(c,gp[0],gp[1]+4,2,10,"#2a6a10");// stem
+    var gcol=["#e74c3c","#FFD700","#FF69B4","#9b59b6","#FF8C00"][gi];
+    c.fillStyle=gcol;c.beginPath();c.arc(gp[0]+1,gp[1],4,0,Math.PI*2);c.fill();
+  });
+  // Garage door — left side indicator (hotspot x:0,y:310,w:14,h:200)
+  // Draw a subtle arrow/label at the left edge
+  c.fillStyle="rgba(180,160,120,0.55)";c.font="bold 7px monospace";c.textAlign="left";
+  c.fillText("◄ GARAGE",4,490);c.textAlign="left";
 }
 function paintAttic(c){
   D(c,0,370,360,270,"#5c4a3a");
@@ -851,12 +887,18 @@ function paintPantry(c){
       RR(c,cx+23,sy+8,12,6,2,"#8B6914");
     }
   }
-  // Rice bag
+  // Rice bag — with subtle "something's here" sparkle
   RR(c,278,328,62,42,5,"#fff");
   c.fillStyle="rgba(0,0,0,0.03)";c.fillRect(278,348,62,22);
   c.fillStyle="#333";c.font="bold 7px monospace";c.fillText("RICE",296,355);
   c.fillStyle="#888";c.font="5px monospace";c.fillText("50 LBS",296,363);
   SH(c,278,372,62);
+  // Tiny sparkle on rice bag to hint it's interactive
+  c.fillStyle="rgba(255,215,0,0.7)";c.font="bold 8px monospace";c.textAlign="center";
+  c.fillText("✦",330,332);c.textAlign="left";
+  // Door indicator — left edge
+  c.fillStyle="rgba(180,160,120,0.5)";c.font="bold 7px monospace";c.textAlign="left";
+  c.fillText("◄ KITCHEN",4,350);c.textAlign="left";
   // Mystery can — expired 2009 label
   RR(c,12,328,22,42,3,"#777");
   c.fillStyle="rgba(255,255,255,0.15)";c.fillRect(14,328,5,42);
@@ -1477,7 +1519,7 @@ function makeHS(){return[
 [{id:"tub",x:5,y:285,w:190,h:85,name:"Bathtub",look:"Five ducks stare back.",talk:"'Where are my keys?' Silence."},{id:"ducks",x:22,y:295,w:140,h:20,name:"Duck Army",look:"General Quackers sees all.",take:"Takes General Quackers.",quest:"duck"},{id:"toilet",x:216,y:305,w:55,h:70,name:"Toilet",look:"Kids say haunted.",open:"Just a toilet."},{id:"bsink",x:276,y:265,w:75,h:40,name:"Sink",look:"Toothpaste EVERYWHERE.",use:"Toy boat surfaces."},{id:"towel",x:162,y:125,w:42,h:80,name:"Towel",look:"Seen better days.",take:"Grabs it."},{id:"bdoorL",x:0,y:260,w:14,h:200,name:"Kids' Room",open:"goto:3"},{id:"bdoorR",x:346,y:260,w:14,h:200,name:"Garage",open:"goto:5"}],
 [{id:"gdoor",x:70,y:25,w:220,h:310,name:"Garage Door",look:"Stuck since 2022.",open:"Still stuck."},{id:"bench",x:8,y:160,w:58,h:60,name:"Workbench",look:"Tools and abandoned ambition.",use:"Finds a flashlight!",quest:"flashlight"},{id:"car",x:25,y:375,w:145,h:70,name:"'85 Corvette",look:"Golden beauty.",push:"Behind it: a KEY in a coffee can!",hasKey:true},{id:"boxes",x:308,y:135,w:45,h:45,name:"Boxes",look:"'STUFF.' 3 moves ago.",open:"Christmas decs from 2017."},{id:"tools",x:10,y:160,w:60,h:55,name:"Tools",look:"Hammers, wrenches.",take:"Takes the wrench."},{id:"gdoorL",x:0,y:380,w:14,h:150,name:"Bathroom",open:"goto:4"},{id:"gdoorR",x:346,y:380,w:14,h:150,name:"Backyard",open:"goto:7"}],
 [{id:"washer",x:10,y:205,w:100,h:120,name:"Washer",look:"Running. Always.",open:"One sock."},{id:"dryer",x:120,y:205,w:100,h:120,name:"Dryer",look:"Lavender and regret.",open:"Three socks. None match."},{id:"laundry",x:225,y:355,w:128,h:125,name:"Mt. Washmore",look:"Sentient laundry.",push:"Missing homework."},{id:"iron",x:275,y:335,w:45,h:18,name:"Iron",look:"Last used 2021.",use:"Too much commitment."},{id:"shelf",x:236,y:44,w:115,h:48,name:"Shelf",look:"Almost empty bottles.",take:"Grabs tide pen."},{id:"lstairsdown",x:8,y:470,w:80,h:65,name:"Stairs Down",look:"Stairs down to the basement. Smells like projects and regret.",open:"goto:11"},{id:"ldoorB",x:0,y:260,w:14,h:200,name:"Kitchen",open:"goto:1"},{id:"mazedoor",x:346,y:380,w:14,h:150,name:"Strange Door",look:"Goes... down?",open:"goto:14"}],
-[{id:"tree",x:28,y:80,w:45,h:200,name:"Oak Tree",look:"Treehouse 'in progress' 2 years.",talk:"Talks to the tree."},{id:"cat",x:225,y:400,w:45,h:38,name:"Neighbor's Cat",look:"Judging everyone from next door. Again.",talk:"*slow blink* This cat owns all it surveys.",use:"Cat stares. Unmoving. Untouched."},{id:"hole",x:136,y:445,w:42,h:18,name:"Hole",look:"Someone dug this. Mysterious.",push:"Dirt, a toy car, and something sparkly."},{id:"bbq",x:296,y:375,w:42,h:42,name:"BBQ",look:"The BBQ sits in a minefield. The whole yard is covered in... evidence. The neighbor's cat is NOT responsible.",open:"K'Dee opens the BBQ lid. The smell triggers a chain reaction. Poop everywhere. Time to navigate."},{id:"fence",x:0,y:222,w:360,h:48,name:"Fence",look:"Keeps the cat out. Theoretically. It doesn't."},{id:"bdoorB",x:0,y:310,w:14,h:200,name:"Garage",open:"goto:5"},{id:"shed",x:100,y:340,w:70,h:55,name:"Shed",open:"goto:17"},{id:"garden",x:270,y:490,w:80,h:50,name:"Garden",open:"goto:18"}],
+[{id:"tree",x:28,y:80,w:45,h:200,name:"Oak Tree",look:"Treehouse 'in progress' 2 years.",talk:"Talks to the tree."},{id:"cat",x:225,y:400,w:45,h:38,name:"Neighbor's Cat",look:"Judging everyone from next door. Again.",talk:"*slow blink* This cat owns all it surveys.",use:"Cat stares. Unmoving. Untouched."},{id:"hole",x:136,y:445,w:42,h:18,name:"The Hole",look:"Something dug this. Recently. Could be anything in there.",push:"Dig in!",use:"Dig in!"},{id:"bbq",x:296,y:375,w:42,h:42,name:"BBQ",look:"The BBQ sits in a minefield. The whole yard is covered in... evidence. The neighbor's cat is NOT responsible.",open:"K'Dee opens the BBQ lid. The smell triggers a chain reaction. Poop everywhere. Time to navigate."},{id:"fence",x:0,y:222,w:360,h:48,name:"Fence",look:"Keeps the cat out. Theoretically. It doesn't."},{id:"bdoorB",x:0,y:310,w:14,h:200,name:"Garage",open:"goto:5"},{id:"shed",x:100,y:340,w:70,h:55,name:"Shed",open:"goto:17"},{id:"garden",x:270,y:490,w:80,h:50,name:"Garden",open:"goto:18"}],
 [{id:"xmas",x:15,y:315,w:60,h:45,name:"Xmas Box",look:"Tinsel entity.",open:"Tangled lights."},{id:"myst",x:80,y:305,w:55,h:55,name:"Mystery Box",look:"Nobody remembers this.",open:"Photo albums! VHS: DO NOT WATCH."},{id:"mirror2",x:130,y:155,w:60,h:80,name:"Old Mirror",look:"Spookier K'Dee.",talk:"Mirror-K'Dee winks."},{id:"trunk",x:255,y:335,w:85,h:30,name:"Trunk",look:"Locked. Treasure or taxes.",open:"Locked!",use:"Wrench opens it: old curtains."},{id:"crystal",x:310,y:300,w:35,h:35,name:"Crystal Ball",look:"Halloween 2022.",talk:"'Check the bedroom, dummy.'"},{id:"adoorR",x:346,y:370,w:14,h:150,name:"Bedroom",open:"goto:9"},{id:"gymdoor",x:200,y:365,w:50,h:30,name:"Gym",open:"goto:12"}],
 [{id:"bed",x:12,y:255,w:215,h:95,name:"Bed",look:"Made this morning. Clothes pile using it as a base camp.",push:"More clothes. Not what you need."},{id:"clothespile",x:38,y:465,w:105,h:60,name:"Clothes Mountain",look:"Mt. Washmore's bedroom cousin. Phone is definitely in here.",push:"K'Dee digs in. The pile FIGHTS BACK. Clothes are flying!",take:"K'Dee reaches in. An avalanche starts. Stack them or be buried!",quest:"phone"},{id:"nightstand",x:232,y:305,w:55,h:60,name:"Nightstand",look:"Book page 12 for 6 months.",open:"Charger #3, melatonin, and a KEY!",hasKey:true},{id:"vanity",x:238,y:205,w:115,h:65,name:"Vanity",look:"Lipstick, mascara, dry shampoo.",use:"Hair ties, bobby pins."},{id:"vmirror",x:258,y:130,w:75,h:65,name:"Mirror",look:"Survived another morning.",talk:"'Have fun, don't die.'"},{id:"window",x:95,y:30,w:115,h:100,name:"Window",look:"Neighbor's cat is staring in. Judging.",open:"'MOM!' from downstairs."},{id:"closet",x:307,y:95,w:52,h:135,name:"Closet",look:"Overflow situation. Two more piles fell out.",open:"An avalanche of shirts and regret."},{id:"flowers",x:248,y:190,w:22,h:22,name:"Flowers",look:"Self-care purchase.",take:"Smells nice."},{id:"bdoorL",x:0,y:270,w:14,h:200,name:"Attic",open:"goto:8"},{id:"forestdoor",x:346,y:270,w:14,h:200,name:"Forest's Den",open:"goto:21"},{id:"greysondoor",x:120,y:0,w:60,h:28,name:"Greyson's Room",open:"goto:19"},{id:"gwyndoor",x:220,y:0,w:60,h:28,name:"Gwyneth's Room",open:"goto:20"}],
 [{id:"jcross",x:40,y:45,w:60,h:80,name:"Cross",look:"Holy energy.",talk:"K'Dee prays. Warm light."},{id:"jbattle",x:10,y:35,w:105,h:125,name:"Space Jesus vs Devil",look:"A painting of Space Jesus locked in battle with the Devil. Among the stars. It's intense.",talk:"The figures in the painting seem to move. Space Jesus winks."},{id:"jpinup",x:245,y:35,w:105,h:125,name:"Rescued by Grace",look:"Jesus pulls a glamorous pinup girl out of the ocean. She looks delighted. Her red lipstick is perfect somehow.",talk:"The pinup girl waves from the painting. K'Dee waves back. This bathroom is a LOT."},{id:"jport",x:142,y:36,w:75,h:105,name:"Jesus Portrait",look:"Kind smile. Halo. He seems like he's about to step out.",talk:"'Seen my keys?' The smile widens."},{id:"jtub",x:10,y:285,w:178,h:80,name:"Golden Tub",look:"Pure gold. Holy water.",use:"Hand sparkles."},{id:"jbible",x:150,y:225,w:52,h:32,name:"Bible",look:"Proverbs 31.",take:"'Divine guidance.'",quest:"bible"},{id:"jtoilet",x:270,y:305,w:60,h:65,name:"Golden Toilet",look:"Jesus saves, bathroom SPENDS.",use:"Not that throne."},{id:"jcandles",x:315,y:205,w:35,h:38,name:"Candles",look:"Frankincense."},{id:"jdoorB",x:346,y:270,w:14,h:200,name:"Foyer",open:"goto:0"}],

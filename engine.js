@@ -695,6 +695,9 @@ function fadeToRoom(roomIdx){
   fadeDir=1;fadeCb=function(){
     curRoom=roomIdx;
     kdeeX=180;kdeeY=560;kdeeTargetX=180;kdeeTargetY=560;kdeeWalking=false;
+    // Always clear Holly state on room change — prevents body lingering
+    hollyRunning=false;hollyTrip=false;hollyX=-40;hollyMsg="";hollyMsgTimer=0;
+    hollyCatchable=false;hollyStaring=false;hollyStareTimer=0;
     spawnParticles(curRoom);
     updateHUD();setDesc("Entered "+ROOMS[curRoom].name);
     fadeDir=-1;
@@ -757,7 +760,7 @@ function drawScene(){
 }
 
 var animRunning=false;
-function gameLoop(){if(!animRunning)return;frameTick++;if(battleActive){updateBattle();drawBattle(ctx);}else if(miniActive){updateCatchGame();drawCatchGame(ctx);}else if(frogActive){updateFrogger();drawFrogger(ctx);}else if(racerActive){updateRacer();drawRacer(ctx);}else if(tetActive){updateTetris();drawTetris(ctx);}else{updateWalk();updateHolly();updateMilo();updateGwyn();drawScene();}requestAnimationFrame(gameLoop);}
+function gameLoop(){if(!animRunning)return;frameTick++;if(battleActive){updateBattle();drawBattle(ctx);}else if(miniActive){updateCatchGame();drawCatchGame(ctx);}else if(frogActive){updateFrogger();drawFrogger(ctx);}else if(racerActive){updateRacer();drawRacer(ctx);}else if(tetActive){updateTetris();drawTetris(ctx);}else if(digActive){updateDig();drawDig(ctx);}else{updateWalk();updateHolly();updateMilo();updateGwyn();drawScene();}requestAnimationFrame(gameLoop);}
 function startLoop(){if(!animRunning){animRunning=true;gameLoop();}}
 
 function updateHUD(){
@@ -791,22 +794,25 @@ function showInteraction(h){
   activeHS=h;
   var d=document.getElementById("dlg");
   var inner=document.getElementById("dlg-inner");
-  // Fix: reflow on inner (not d) to properly reset animation
+
+  // Set content BEFORE showing overlay so there's no blank-box flash
+  setPortraitMode(getPortraitMode(h.id,"look"));
+  document.getElementById("dlg-name").textContent=h.name;
+  // Pre-clear any running type animation and set initial text immediately
+  if(typeTimer){clearInterval(typeTimer);typeTimer=null;}
+  var dlgText=document.getElementById("dlg-text");
+  dlgText.textContent=h.look||"Hmm... nothing special.";
+  buildVerbButtons(h);
+
+  // Now animate the overlay in
   d.classList.remove("on");
   inner.style.animation="none";
-  void inner.offsetWidth;  // reflow on inner — this is the critical fix
+  void inner.offsetWidth;
   inner.style.animation="";
   d.classList.add("on");
 
-  // Set portrait based on hotspot category (default: look)
-  setPortraitMode(getPortraitMode(h.id,"look"));
-  document.getElementById("dlg-name").textContent=h.name;
-
-  // Always show LOOK description first
-  typeText(document.getElementById("dlg-text"),h.look||"Hmm... nothing special.");
-
-  // Build verb buttons for all available actions
-  buildVerbButtons(h);
+  // Start typewriter after a short delay so animation starts with text visible
+  typeText(dlgText,h.look||"Hmm... nothing special.");
   paused=true;
 }
 
@@ -915,6 +921,13 @@ function performAction(h,v){
     return;
   }
 
+  // Mini-game trigger: hole (starts digging game — repeatable, no usedHS lock)
+  if(h.id==="hole"&&(v==="push"||v==="use")){
+    hideDlg();
+    startDig();
+    return;
+  }
+
   // Mini-game trigger: clothes pile (starts Tetris)
   if(h.id==="clothespile"&&(v==="push"||v==="take")&&!usedHS[uid]){
     hideDlg();
@@ -953,12 +966,18 @@ function typeText(el,text){
 function showSimpleDlg(name,text,mode){
   var d=document.getElementById("dlg");
   var inner=document.getElementById("dlg-inner");
-  d.classList.remove("on");inner.style.animation="none";
-  void inner.offsetWidth;inner.style.animation="";d.classList.add("on");
+  // Set content before showing to prevent blank-box flash
   setPortraitMode(mode||"look");
   document.getElementById("dlg-name").textContent=name;
-  typeText(document.getElementById("dlg-text"),text);
   document.getElementById("dlg-choices").innerHTML="";
+  document.getElementById("dlg-continue").style.display="";
+  if(typeTimer){clearInterval(typeTimer);typeTimer=null;}
+  var dlgText=document.getElementById("dlg-text");
+  dlgText.textContent=text;
+  // Now animate overlay in
+  d.classList.remove("on");inner.style.animation="none";
+  void inner.offsetWidth;inner.style.animation="";d.classList.add("on");
+  typeText(dlgText,text);
   paused=true;
 }
 
@@ -999,7 +1018,7 @@ var invDetails={
   bible:{emoji:"\uD83D\uDCD6",name:"Bible",desc:"Proverbs 31. Divine guidance for finding lost keys. (Results may vary.)",type:"Sacred Text",battle:"Super effective vs. Greyson, Space Jesus & Baal'thazar!"},
   flashlight:{emoji:"\uD83D\uDD26",name:"Flashlight",desc:"Found at the workbench. Batteries at 12%. Classic.",type:"Tool",battle:"Useful in battle vs. Forest"},
   necronomicon:{emoji:"\uD83D\uDCDA",name:"Necronomicon",desc:"It whispers. Mostly complaints. Do NOT read aloud at bedtime.",type:"Forbidden Text",battle:"Super effective vs. Greyson, Space Jesus & Baal'thazar!"},
-  shovel:{emoji:"\u26CF\uFE0F",name:"Shovel",desc:"From the shed. The dog is VERY interested in this.",type:"Tool",battle:"Super effective vs. Baal'thazar!"},
+  shovel:{emoji:"\u26CF\uFE0F",name:"Shovel",desc:"From the shed. Good for digging. The cat is suspicious of it.",type:"Tool",battle:"Super effective vs. Baal'thazar!"},
   wrench:{emoji:"\uD83D\uDD27",name:"Wrench",desc:"A sturdy wrench. Opens things that shouldn't be opened.",type:"Tool",battle:"Super effective vs. Daed!"},
   towel:{emoji:"\uD83E\uDDF4",name:"Towel",desc:"Seen better days. Mostly decorative at this point.",type:"Textile",battle:"Super effective vs. Holly & Forest!"},
   book:{emoji:"\uD83D\uDCDA",name:"Parenting Book",desc:"'Parenting Without Losing Your Mind.' Chapter 1: Too late.",type:"Literature",battle:"Super effective vs. Holly!"},
@@ -1089,6 +1108,155 @@ document.getElementById("bagbtn").addEventListener("click",function(){
   if(document.getElementById("inv-screen").classList.contains("on")){hideInv();}else{showInv();}
 });
 document.getElementById("inv-close").addEventListener("click",hideInv);
+
+/* --- DIG MINIGAME --- */
+/* Tap to dig through layers in the backyard hole. Each layer reveals something. */
+var digActive=false,digLayer=0,digProgress=0,digComplete=false;
+var digDirt=[],digMsg="",digMsgTimer=0,digResultTimer=0;
+var DIG_LAYERS=[
+  {name:"TOPSOIL",depth:"6 inches",find:null,color:"#5a3a18",quip:"Just dirt. Good, honest dirt."},
+  {name:"WORM ZONE",depth:"1 foot",find:"🪱",color:"#4a2e0e",quip:"A big fat worm. Judging you."},
+  {name:"MYSTERY LAYER",depth:"2 feet",find:"🚗",color:"#3a2208",quip:"A toy car! Hot Wheels. From 2008."},
+  {name:"OLD ROOTS",depth:"3 feet",find:null,color:"#2a1a04",quip:"Ancient tree roots. Very ominous."},
+  {name:"TREASURE?",depth:"4 feet",find:"✨",color:"#1a0e02",quip:"Something sparkly! ...A bottle cap. Still, sparkly."}
+];
+var DIG_TAPS_PER_LAYER=12;
+
+function startDig(){
+  digActive=true;digLayer=0;digProgress=0;digComplete=false;
+  digDirt=[];digMsg="TAP TO DIG!";digMsgTimer=60;digResultTimer=0;
+  paused=true;
+  // Spawn initial dirt particles
+  for(var i=0;i<20;i++){
+    digDirt.push({x:80+Math.random()*200,y:350+Math.random()*100,vx:(Math.random()-0.5)*3,vy:-(Math.random()*4+1),life:40+Math.random()*30,size:3+Math.random()*4});
+  }
+}
+
+function digTap(){
+  if(!digActive)return;
+  if(digComplete){
+    // close
+    var finalMsg="Something was down there. K'Dee feels accomplished. +1 HP.";
+    digActive=false;paused=false;
+    kdeeHP=Math.min(kdeeMaxHP,kdeeHP+1);updateHUD();
+    showSimpleDlg("THE HOLE",finalMsg,"excited");
+    return;
+  }
+  if(digMsgTimer>0&&digLayer===0&&digProgress===0)digMsgTimer=0;
+  digProgress++;
+  // Spray some dirt
+  for(var i=0;i<6;i++){
+    digDirt.push({x:140+Math.random()*80,y:430+Math.random()*40,vx:(Math.random()-0.5)*5,vy:-(Math.random()*6+2),life:30+Math.random()*20,size:2+Math.random()*4});
+  }
+  if(digProgress>=DIG_TAPS_PER_LAYER){
+    var layer=DIG_LAYERS[digLayer];
+    digMsg=(layer.find?layer.find+" ":"")+layer.quip;
+    digMsgTimer=100;digResultTimer=100;
+    digLayer++;
+    digProgress=0;
+    if(digLayer>=DIG_LAYERS.length){
+      digComplete=true;
+      digMsg="✨ THE HOLE HAS BEEN CONQUERED.";digMsgTimer=150;
+    }
+  }
+}
+
+function updateDig(){
+  if(digMsgTimer>0)digMsgTimer--;
+  if(digResultTimer>0)digResultTimer--;
+  // Update dirt particles
+  for(var i=digDirt.length-1;i>=0;i--){
+    var d=digDirt[i];
+    d.x+=d.vx;d.y+=d.vy;d.vy+=0.25;d.life--;
+    if(d.life<=0)digDirt.splice(i,1);
+  }
+}
+
+function drawDig(c){
+  var CW=360,CH=640;
+  // Background — backyard view, darkened
+  c.fillStyle="#0a2a0a";c.fillRect(0,0,CW,CH);
+  c.fillStyle="#1a4a1a";c.fillRect(0,300,CW,CH-300);
+  // Sky strip
+  var sg=c.createLinearGradient(0,0,0,300);sg.addColorStop(0,"#1a3a5a");sg.addColorStop(1,"#0a2a0a");
+  c.fillStyle=sg;c.fillRect(0,0,CW,300);
+
+  // Header
+  c.fillStyle="#8B5E3C";c.font="bold 11px monospace";c.textAlign="center";
+  c.fillText("⛏ DIG THE HOLE",CW/2,30);
+  c.fillStyle="#aaa";c.font="8px monospace";
+  var layerName=digLayer<DIG_LAYERS.length?DIG_LAYERS[digLayer].name:(digComplete?"DONE":"...");
+  c.fillText("LAYER "+(digLayer+1)+": "+layerName,CW/2,46);
+  c.textAlign="left";
+
+  // Depth cross-section — draw all passed layers + current
+  var sectionH=52,sectionTop=60;
+  for(var li=0;li<=Math.min(digLayer,DIG_LAYERS.length-1);li++){
+    var ly=DIG_LAYERS[li];
+    var secY=sectionTop+li*sectionH;
+    // Layer fill
+    c.fillStyle=ly.color;c.fillRect(80,secY,200,sectionH);
+    // Layer top edge crack line
+    c.strokeStyle="rgba(255,255,255,0.08)";c.lineWidth=1;
+    c.beginPath();c.moveTo(80,secY);c.lineTo(280,secY);c.stroke();
+    // Depth label
+    c.fillStyle="rgba(255,255,255,0.3)";c.font="6px monospace";c.textAlign="center";
+    c.fillText(ly.depth,180,secY+sectionH-6);c.textAlign="left";
+    // If this layer was completed and has a find, draw it
+    if(li<digLayer&&ly.find){
+      c.font="18px monospace";c.textAlign="center";
+      c.fillText(ly.find,180,secY+sectionH/2+6);c.textAlign="left";
+    }
+  }
+
+  // Current layer dig hole — dark oval
+  var holeY=sectionTop+Math.min(digLayer,DIG_LAYERS.length-1)*sectionH+sectionH-10;
+  c.fillStyle="#0a0a0a";c.beginPath();c.ellipse(180,holeY,40,12,0,0,Math.PI*2);c.fill();
+  c.strokeStyle="rgba(255,255,255,0.1)";c.lineWidth=1;c.beginPath();c.ellipse(180,holeY,40,12,0,0,Math.PI*2);c.stroke();
+
+  // Progress bar
+  var pbY=sectionTop+(Math.min(digLayer,DIG_LAYERS.length-1)+1)*sectionH+8;
+  if(!digComplete){
+    c.fillStyle="#222";c.fillRect(80,pbY,200,10);
+    var prog=digProgress/DIG_TAPS_PER_LAYER;
+    var pbCol=prog>0.7?"#FFD700":prog>0.4?"#FF8C00":"#8B5E3C";
+    c.fillStyle=pbCol;c.fillRect(80,pbY,200*prog,10);
+    c.strokeStyle="#444";c.lineWidth=1;c.strokeRect(80,pbY,200,10);
+    c.fillStyle="#fff";c.font="bold 7px monospace";c.textAlign="center";
+    c.fillText("TAP TO DIG  "+Math.floor(prog*100)+"%",180,pbY+8);c.textAlign="left";
+  }
+
+  // Dirt particles
+  digDirt.forEach(function(d){
+    c.save();c.globalAlpha=d.life/60;
+    c.fillStyle="#8B5E3C";c.beginPath();c.arc(d.x,d.y,d.size,0,Math.PI*2);c.fill();
+    c.restore();
+  });
+
+  // Message banner
+  if(digMsgTimer>0&&digMsg){
+    var ma=Math.min(1,digMsgTimer/20);
+    c.save();c.globalAlpha=ma;
+    c.fillStyle="rgba(0,0,0,0.7)";
+    var tw=c.measureText(digMsg).width+24;
+    RR(c,CW/2-tw/2,580,tw,26,4,"rgba(20,10,5,0.9)");
+    c.strokeStyle=digComplete?"#FFD700":"#8B5E3C";c.lineWidth=1;c.strokeRect(CW/2-tw/2,580,tw,26);
+    c.fillStyle=digComplete?"#FFD700":"#eee";c.font="bold 9px monospace";c.textAlign="center";
+    c.fillText(digMsg,CW/2,597);c.textAlign="left";
+    c.restore();
+  }
+
+  // Tap prompt (pulsing)
+  if(!digComplete){
+    var pp=0.4+0.3*Math.sin(frameTick*0.12);
+    c.fillStyle="rgba(255,255,255,"+pp+")";c.font="bold 9px monospace";c.textAlign="center";
+    c.fillText("[ TAP ANYWHERE TO DIG ]",CW/2,620);c.textAlign="left";
+  } else {
+    var pp2=0.5+0.3*Math.sin(frameTick*0.1);
+    c.fillStyle="rgba(255,215,0,"+pp2+")";c.font="bold 9px monospace";c.textAlign="center";
+    c.fillText("[ TAP TO FILL IT BACK IN ]",CW/2,620);c.textAlign="left";
+  }
+}
 
 /* --- FROGGER MINI-GAME --- */
 /* Backyard poop dodger: tap/click to hop K'Dee across the yard avoiding dog poop. */
@@ -1276,6 +1444,17 @@ canvas.addEventListener("touchend",function(e){
   frogMove(dx,dy);
 },{passive:false});
 
+// Dig minigame touch
+canvas.addEventListener("touchstart",function(e){
+  if(!digActive)return;
+  e.preventDefault();
+},{passive:false});
+canvas.addEventListener("touchend",function(e){
+  if(!digActive)return;
+  e.preventDefault();
+  digTap();
+},{passive:false});
+
 document.addEventListener("keydown",function(e){
   if(!frogActive)return;
   if(e.key==="ArrowUp"||e.key==="w")frogMove(0,-1);
@@ -1457,6 +1636,8 @@ function findHS(mx,my){
 canvas.addEventListener("click",function(e){
   if(paused&&!battleActive){paused=false;document.getElementById("pausebtn").textContent="⏸";setDesc("What should K'Dee do?");return;}
   if(battleActive){var p=getCanvasCoords(e);battleClick(p.x,p.y);return;}
+  // Dig minigame: any tap digs
+  if(digActive){digTap();return;}
   // Frogger: click left/right half to move
   if(frogActive){
     if(frogComplete){
@@ -3677,7 +3858,7 @@ document.getElementById("startbtn").addEventListener("click",function(){
 })();
 
 document.getElementById("pausebtn").addEventListener("click",function(){
-  if(gameOver||battleActive||miniActive||frogActive||racerActive||tetActive)return;
+  if(gameOver||battleActive||miniActive||frogActive||racerActive||tetActive||digActive)return;
   paused=!paused;
   document.getElementById("pausebtn").textContent=paused?"▶":"⏸";
   if(paused){saveGame();setDesc("— PAUSED — tap anywhere to resume");}
