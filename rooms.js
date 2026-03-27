@@ -384,11 +384,11 @@ function paintBathroom(c){
   D(c,165,125,38,7,"#ccc");
   RR(c,165,130,38,75,3,P.pink);
   c.fillStyle="rgba(255,255,255,0.06)";c.fillRect(165,130,12,75);
-  // Greyson's room door — left back wall, mid-height clear space
-  D(c,50,165,65,120,P.dbrown);RR(c,53,168,59,114,4,"#4a2a10");
-  c.fillStyle="rgba(20,10,5,0.25)";c.fillRect(54,169,57,112);
-  c.fillStyle="#888";c.beginPath();c.arc(103,228,3,0,Math.PI*2);c.fill();
-  c.fillStyle="rgba(255,215,0,0.55)";c.font="bold 5px monospace";c.textAlign="center";c.fillText("GREYSON",82,200);c.textAlign="left";
+  // Greyson's room door — back wall between towel and mirror, clear gap
+  D(c,210,100,55,170,P.dbrown);RR(c,213,103,49,164,4,"#4a2a10");
+  c.fillStyle="rgba(20,10,5,0.25)";c.fillRect(214,104,47,162);
+  c.fillStyle="#888";c.beginPath();c.arc(252,200,3,0,Math.PI*2);c.fill();
+  c.fillStyle="rgba(255,215,0,0.55)";c.font="bold 5px monospace";c.textAlign="center";c.fillText("GREYSON",237,145);c.textAlign="left";
 }
 function paintGarage(c){
   D(c,0,370,360,270,"#808080");for(var i=0;i<360;i+=50)D(c,i,370,1,270,"rgba(0,0,0,0.08)");
@@ -1607,7 +1607,7 @@ function makeHS(){return[
 // Room 3: Kids' Room
 [{id:"bunk",x:8,y:140,w:120,h:220,name:"Bunk Bed",look:"Top: fort. Bottom: stuffed animals.",open:"Half-eaten granola bar."},{id:"toybox",x:128,y:400,w:90,h:52,name:"Toy Box",look:"90% random objects.",open:"Avalanche of action figures."},{id:"lego",x:160,y:455,w:195,h:65,name:"LEGO Minefield",look:"Colorful landmines.",push:"OW. OWWW."},{id:"dino",x:285,y:375,w:65,h:75,name:"Mr. Rex",look:"Kids say he's real.",talk:"'Keys are in the garage.'"},{id:"poster",x:170,y:45,w:85,h:80,name:"Poster",look:"GAME OVER. Ominous."},{id:"desk",x:218,y:218,w:130,h:112,name:"Desk",look:"Crayon drawings.",open:"'Mom But Cool.'"},{id:"hollyroom",x:122,y:165,w:52,h:115,name:"Holly's Room",look:"The door is closed. A sign: DO NOT.",open:"Knock knock..."},{id:"kdoorL",x:0,y:370,w:14,h:180,name:"Living Room",open:"goto:2"},{id:"kdoorR",x:346,y:260,w:14,h:200,name:"Bathroom",open:"goto:4"}],
 // Room 4: Bathroom
-[{id:"tub",x:5,y:290,w:185,h:80,name:"Bathtub",look:"Five ducks stare back.",talk:"'Where are my keys?' Silence."},{id:"ducks",x:15,y:295,w:155,h:50,name:"Duck Army",look:"General Quackers sees all.",take:"Takes General Quackers.",quest:"duck"},{id:"toilet",x:208,y:300,w:75,h:80,name:"Toilet",look:"Kids say haunted.",open:"Just a toilet."},{id:"bsink",x:270,y:260,w:80,h:55,name:"Sink",look:"Toothpaste EVERYWHERE.",use:"Toy boat surfaces."},{id:"towel",x:155,y:125,w:55,h:80,name:"Towel",look:"Seen better days.",take:"Grabs it."},{id:"bdoorL",x:0,y:380,w:14,h:180,name:"Kids' Room",open:"goto:3"},{id:"bdoorR",x:346,y:260,w:14,h:200,name:"Garage",open:"goto:5"},{id:"greysondoor",x:50,y:165,w:65,h:120,name:"Greyson's Room",open:"goto:19"}],
+[{id:"tub",x:5,y:290,w:185,h:80,name:"Bathtub",look:"Five ducks stare back.",talk:"'Where are my keys?' Silence."},{id:"ducks",x:15,y:295,w:155,h:50,name:"Duck Army",look:"General Quackers sees all.",take:"Takes General Quackers.",quest:"duck"},{id:"toilet",x:208,y:300,w:75,h:80,name:"Toilet",look:"Kids say haunted.",open:"Just a toilet."},{id:"bsink",x:270,y:260,w:80,h:55,name:"Sink",look:"Toothpaste EVERYWHERE.",use:"Toy boat surfaces."},{id:"towel",x:155,y:125,w:55,h:80,name:"Towel",look:"Seen better days.",take:"Grabs it."},{id:"bdoorL",x:0,y:380,w:14,h:180,name:"Kids' Room",open:"goto:3"},{id:"bdoorR",x:346,y:260,w:14,h:200,name:"Garage",open:"goto:5"},{id:"greysondoor",x:210,y:100,w:55,h:170,name:"Greyson's Room",open:"goto:19"}],
 // Room 5: Garage
 [{id:"gdoor",x:70,y:25,w:220,h:310,name:"Garage Door",look:"Stuck since 2022.",open:"Still stuck."},{id:"bench",x:5,y:145,w:80,h:85,name:"Workbench",look:"Tools and abandoned ambition.",use:"Finds a flashlight!",quest:"flashlight"},{id:"car",x:20,y:360,w:160,h:90,name:"'85 Corvette",look:"Golden beauty.",push:"Behind it: a KEY in a coffee can!",hasKey:true},{id:"boxes",x:295,y:120,w:65,h:70,name:"Boxes",look:"'STUFF.' 3 moves ago.",open:"Christmas decs from 2017."},{id:"tools",x:5,y:235,w:80,h:60,name:"Tools",look:"Hammers, wrenches.",take:"Takes the wrench."},{id:"gdoorL",x:0,y:380,w:14,h:150,name:"Bathroom",open:"goto:4"},{id:"gdoorR",x:346,y:380,w:14,h:150,name:"Backyard",open:"goto:7"}],
 // Room 6: Laundry
