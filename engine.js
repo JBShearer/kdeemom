@@ -810,23 +810,19 @@ function showInteraction(h){
   var d=document.getElementById("dlg");
   var inner=document.getElementById("dlg-inner");
 
-  // Set content BEFORE showing overlay so there's no blank-box flash
   setPortraitMode(getPortraitMode(h.id,"look"));
   document.getElementById("dlg-name").textContent=h.name;
-  // Pre-clear any running type animation and set initial text immediately
   if(typeTimer){clearInterval(typeTimer);typeTimer=null;}
   var dlgText=document.getElementById("dlg-text");
   dlgText.textContent=h.look||"Hmm... nothing special.";
   buildVerbButtons(h);
 
-  // Now animate the overlay in
-  d.classList.remove("on");
-  inner.style.animation="none";
+  // Trigger entry animation cleanly
+  inner.classList.remove("entering");
   void inner.offsetWidth;
-  inner.style.animation="";
+  inner.classList.add("entering");
   d.classList.add("on");
 
-  // Start typewriter after a short delay so animation starts with text visible
   typeText(dlgText,h.look||"Hmm... nothing special.");
   paused=true;
 }
@@ -1025,8 +1021,8 @@ function showSimpleDlg(name,text,mode){
   var dlgText=document.getElementById("dlg-text");
   dlgText.textContent=text;
   // Now animate overlay in
-  d.classList.remove("on");inner.style.animation="none";
-  void inner.offsetWidth;inner.style.animation="";d.classList.add("on");
+  inner.classList.remove("entering");void inner.offsetWidth;inner.classList.add("entering");
+  d.classList.add("on");
   typeText(dlgText,text);
   paused=true;
 }
@@ -1034,7 +1030,9 @@ function showSimpleDlg(name,text,mode){
 function hideDlg(){
   if(gameOver)return; // Don't dismiss win/lose dialogs
   if(typeTimer){clearInterval(typeTimer);typeTimer=null;}
-  document.getElementById("dlg").classList.remove("on");
+  var d=document.getElementById("dlg");
+  d.classList.remove("on");
+  document.getElementById("dlg-inner").classList.remove("entering");
   document.getElementById("dlg-continue").style.display="";
   lintDialogActive=false;
   activeHS=null;paused=false;
@@ -2508,7 +2506,7 @@ function startGreysonDialog(){
   greysonDialogActive=true;
   setPortraitMode("default");
   var d=document.getElementById("dlg");var inner=document.getElementById("dlg-inner");
-  d.classList.remove("on");inner.style.animation="none";void inner.offsetWidth;inner.style.animation="";d.classList.add("on");
+  inner.classList.remove("entering");void inner.offsetWidth;inner.classList.add("entering");d.classList.add("on");
   document.getElementById("dlg-name").textContent="GREYSON";
   document.getElementById("dlg-text").textContent="Greyson is deep in thought at his chemistry set. He tilts his hat without looking up.\n\n'Hey mom. You look... statistically stressed.'";
   var choices=document.getElementById("dlg-choices");
@@ -2540,7 +2538,7 @@ function startGreysonDialog(){
 
 function greysonHug(){
   var d=document.getElementById("dlg");var inner=document.getElementById("dlg-inner");
-  d.classList.remove("on");inner.style.animation="none";void inner.offsetWidth;inner.style.animation="";d.classList.add("on");
+  inner.classList.remove("entering");void inner.offsetWidth;inner.classList.add("entering");d.classList.add("on");
   document.getElementById("dlg-name").textContent="GREYSON";
   document.getElementById("dlg-text").textContent="K'Dee hugs him.\n\nGreyson goes completely rigid.\n\nFive full seconds of silence.\n\nHis hat tips 2 degrees. Maximum emotion.\n\n'...statistically speaking, that was... acceptable.'\n\nHe picks up a book and heads downstairs.";
   var choices=document.getElementById("dlg-choices");
@@ -4551,7 +4549,7 @@ function racerFinish(){
   }
   gameOver=true;clearInterval(timerInterval);
   var d=document.getElementById("dlg");var inner=document.getElementById("dlg-inner");
-  d.classList.remove("on");inner.style.animation="none";void inner.offsetWidth;inner.style.animation="";d.classList.add("on");
+  inner.classList.remove("entering");void inner.offsetWidth;inner.classList.add("entering");d.classList.add("on");
   setPortraitMode("excited");
   document.getElementById("dlg-name").textContent="HOME FREE!";
   typeText(document.getElementById("dlg-text"),msg);
@@ -4566,8 +4564,7 @@ function winGame(){
   document.getElementById("dlg-continue").style.display="none";
   var d=document.getElementById("dlg");
   var inner=document.getElementById("dlg-inner");
-  d.classList.remove("on");inner.style.animation="none";
-  void inner.offsetWidth;inner.style.animation="";d.classList.add("on");
+  inner.classList.remove("entering");void inner.offsetWidth;inner.classList.add("entering");d.classList.add("on");
   // Check for secret movie night ending
   var lrk=livingRoomKids;
   var allKids=lrk.milo&&lrk.greyson&&lrk.gwyneth&&lrk.forest&&lrk.daed&&lrk.holly;
@@ -4608,8 +4605,7 @@ function loseGame(){
   document.getElementById("dlg-continue").style.display="none";
   var d=document.getElementById("dlg");
   var inner=document.getElementById("dlg-inner");
-  d.classList.remove("on");inner.style.animation="none";
-  void inner.offsetWidth;inner.style.animation="";d.classList.add("on");
+  inner.classList.remove("entering");void inner.offsetWidth;inner.classList.add("entering");d.classList.add("on");
   setPortraitMode("hurt");
   document.getElementById("dlg-name").textContent="TIME'S UP!";
   typeText(document.getElementById("dlg-text"),"K'Dee is officially late. The kids are feral. The neighbor's cat is judging everyone through the window. "+keys+"/3 keys found. Try again?");
